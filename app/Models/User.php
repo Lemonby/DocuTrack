@@ -2,31 +2,64 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Database\Factories\UserFactory;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
+use Spatie\Permission\Traits\HasRoles;
 
-#[Fillable(['name', 'email', 'password'])]
-#[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
-    /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, HasRoles, Notifiable, SoftDeletes;
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
+    protected $primaryKey = 'user_id';
+    protected $guard_name = 'sanctum';
+
+    protected $fillable = [
+        'nama', 'email', 'password', 'nama_jurusan', 'status',
+    ];
+
+    protected $hidden = ['password', 'remember_token'];
+
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    // --- Relationships ---
+
+    public function jurusan()
+    {
+        return $this->belongsTo(Jurusan::class, 'nama_jurusan', 'nama_jurusan');
+    }
+
+    public function kegiatans()
+    {
+        return $this->hasMany(Kegiatan::class, 'user_id');
+    }
+
+    public function activityLogs()
+    {
+        return $this->hasMany(ActivityLog::class, 'user_id');
+    }
+
+    public function logStatuses()
+    {
+        return $this->hasMany(LogStatus::class, 'user_id');
+    }
+
+    // --- Scopes ---
+
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'Aktif');
+    }
+
+    public function scopeByJurusan($query, string $jurusan)
+    {
+        return $query->where('nama_jurusan', $jurusan);
     }
 }
