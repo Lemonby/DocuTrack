@@ -17,7 +17,7 @@ class LpjController extends Controller
                 'jurusan' => 'Teknik Informatika dan Komputer',
                 'tanggal_pengajuan' => now()->subDays(10),
                 'tenggatLpj' => now()->addDays(5),
-                'status' => 'Menunggu_Upload'
+                'status' => 'menunggu_upload'
             ],
             [
                 'id' => 2,
@@ -26,7 +26,7 @@ class LpjController extends Controller
                 'jurusan' => 'Teknik Informatika dan Komputer',
                 'tanggal_pengajuan' => now()->subDays(15),
                 'tenggatLpj' => now()->subDays(1),
-                'status' => 'Menunggu'
+                'status' => 'menunggu'
             ],
             [
                 'id' => 3,
@@ -35,7 +35,7 @@ class LpjController extends Controller
                 'jurusan' => 'Teknik Informatika dan Komputer',
                 'tanggal_pengajuan' => now()->subDays(20),
                 'tenggatLpj' => now()->addDays(10),
-                'status' => 'Disetujui'
+                'status' => 'disetujui'
             ],
             [
                 'id' => 4,
@@ -44,7 +44,7 @@ class LpjController extends Controller
                 'jurusan' => 'Teknik Informatika dan Komputer',
                 'tanggal_pengajuan' => now()->subDays(25),
                 'tenggatLpj' => now()->addDays(2),
-                'status' => 'Revisi'
+                'status' => 'revisi'
             ],
             [
                 'id' => 5,
@@ -53,7 +53,7 @@ class LpjController extends Controller
                 'jurusan' => 'Teknik Elektro',
                 'tanggal_pengajuan' => now()->subDays(5),
                 'tenggatLpj' => now()->addDays(7),
-                'status' => 'Telah Direvisi'
+                'status' => 'telah_direvisi'
             ],
             [
                 'id' => 6,
@@ -62,7 +62,7 @@ class LpjController extends Controller
                 'jurusan' => 'Teknik Informatika dan Komputer',
                 'tanggal_pengajuan' => now()->subDays(3),
                 'tenggatLpj' => now()->addDays(12),
-                'status' => 'Siap_Submit'
+                'status' => 'siap_submit'
             ],
         ];
         return view('admin.lpj.index', compact('list_lpj'));
@@ -74,12 +74,12 @@ class LpjController extends Controller
         // Simulate finding the LPJ
         // Sync with DashboardController IDs
         $status_map = [
-            1 => 'Menunggu_Upload',
-            2 => 'Menunggu',
-            3 => 'Disetujui',
-            4 => 'Revisi',
-            5 => 'Telah Direvisi',
-            6 => 'Siap_Submit',
+            1 => 'menunggu_upload',
+            2 => 'menunggu',
+            3 => 'disetujui',
+            4 => 'revisi',
+            5 => 'telah_direvisi',
+            6 => 'siap_submit',
         ];
 
         $status = $status_map[$id] ?? 'Draft';

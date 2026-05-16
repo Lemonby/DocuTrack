@@ -143,6 +143,7 @@ document.addEventListener('DOMContentLoaded', () => {
             'disetujui': { text: 'Disetujui', cls: 'status-ok', icon: 'fa-check-circle' },
             'selesai': { text: 'Selesai', cls: 'status-ok', icon: 'fa-check-circle' },
             'revisi': { text: 'Revisi', cls: 'status-rev', icon: 'fa-exclamation-triangle' },
+            'telah_direvisi': { text: 'Telah Direvisi', cls: 'text-cyan-800 bg-cyan-100 border border-cyan-200', icon: 'fa-history' },
             'menunggu_upload': { text: 'Perlu Upload', cls: 'status-upload', icon: 'fa-upload' },
             'siap_submit': { text: 'Siap Submit', cls: 'text-blue-700 bg-blue-100 border border-blue-200', icon: 'fa-file-upload' },
             'menunggu': { text: 'Menunggu', cls: 'status-wait', icon: 'fa-hourglass-half' },
@@ -159,6 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
             'disetujui': { text: 'Lihat Detail', cls: 'bg-green-600 hover:bg-green-700', icon: 'fa-eye' },
             'selesai': { text: 'Lihat Detail', cls: 'bg-green-600 hover:bg-green-700', icon: 'fa-eye' },
             'revisi': { text: 'Lihat Revisi', cls: 'bg-yellow-600 hover:bg-yellow-700', icon: 'fa-eye' },
+            'telah_direvisi': { text: 'Cek Revisi', cls: 'bg-cyan-600 hover:bg-cyan-700', icon: 'fa-check-double' },
         };
         return m[s] || { text: 'Review', cls: 'bg-indigo-600 hover:bg-indigo-700', icon: 'fa-eye' };
     }

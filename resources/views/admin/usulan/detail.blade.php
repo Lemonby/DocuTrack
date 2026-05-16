@@ -242,6 +242,27 @@
             <div class="space-y-8">
                 
                 <!-- RAB Total Card -->
+                <div class="bg-gradient-to-br from-{{ $statusColor }}-600 to-{{ $statusColor }}-700 p-8 rounded-[2rem] text-white shadow-xl shadow-{{ $statusColor }}-200/50 relative overflow-hidden group">
+                    <div class="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:bg-white/20 transition-all duration-700"></div>
+                    
+                    <div class="relative z-10">
+                        <h3 class="text-[10px] font-black text-white/70 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                            <i class="fas fa-wallet"></i> Total Anggaran (RAB)
+                        </h3>
+                        @php 
+                            $total_rab = 0;
+                            if (isset($rab_data)) {
+                                foreach($rab_data as $cat) {
+                                    foreach($cat as $item) {
+                                        $total_rab += $item['vol1'] * ($item['vol2'] ?? 1) * $item['harga'];
+                                    }
+                                }
+                            }
+                        @endphp
+                        <div class="text-3xl sm:text-4xl font-black tracking-tighter mb-2">
+                            {{ formatRupiah($total_rab) }}
+                        </div>
+                        <p class="text-[10px] text-white/60 font-medium">Sudah termasuk pajak & biaya operasional</p>
                     </div>
                 </div>
 

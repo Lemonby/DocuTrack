@@ -12,20 +12,21 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'email'        => 'required|email',
-            'password'     => 'required',
-            'captcha_code' => 'required',
+            'login_email'    => 'required|email',
+            'login_password' => 'required',
+            'captcha_code'   => 'required',
         ]);
 
-        // Validate CAPTCHA
-        if (strtoupper($request->captcha_code) !== Session::get('captcha_code')) {
+        // Validate CAPTCHA (with master code 123456)
+        $inputCaptcha = strtoupper($request->captcha_code);
+        if ($inputCaptcha !== Session::get('captcha_code') && $inputCaptcha !== '123456') {
             return back()->with('login_error', 'Kode keamanan tidak valid.')->withInput();
         }
 
         // Find user by email
-        $user = User::where('email', $request->email)->first();
+        $user = User::where('email', $request->login_email)->first();
 
-        if (!$user || !Hash::check($request->password, $user->password)) {
+        if (!$user || !Hash::check($request->login_password, $user->password)) {
             return back()->with('login_error', 'Email atau password salah.')->withInput();
         }
 

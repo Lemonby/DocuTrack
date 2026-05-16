@@ -395,48 +395,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ===================================
-    // PRE-POPULATE TAHAPAN & INDIKATOR
-    // ===================================
-    if (window.initialTahapanData) {
-        Object.entries(window.initialTahapanData).forEach(([bulan, desc]) => {
-            if(tambahTahapanBtn) {
-                tambahTahapanBtn.click();
-                const rows = tahapanContainer.querySelectorAll('.repeater-row-tahapan');
-                const latestRow = rows[rows.length - 1];
-                if(latestRow) {
-                    const input = latestRow.querySelector('input');
-                    if(input) input.value = desc;
-                }
-            }
-        });
-    }
-
-    if (window.initialIndikatorData) {
-        Object.entries(window.initialIndikatorData).forEach(([bulanStr, data]) => {
-            if(tambahIndikatorBtn) {
-                tambahIndikatorBtn.click();
-                const rows = indikatorContainer.querySelectorAll('.repeater-row-indikator');
-                const latestRow = rows[rows.length - 1];
-                if(latestRow) {
-                    const blnNum = bulanStr.replace(/[^0-9]/g, '');
-                    const select = latestRow.querySelector('select');
-                    const inputs = latestRow.querySelectorAll('input');
-                    
-                    const desc = typeof data === 'object' ? data.deskripsi : data;
-                    const target = typeof data === 'object' && data.target_persen ? data.target_persen : 100;
-
-                    if(select && blnNum) {
-                        select.value = blnNum;
-                        select.setAttribute('filled', 'true');
-                    }
-                    if(inputs.length >= 1) inputs[0].value = desc;
-                    if(inputs.length >= 2) inputs[1].value = target;
-                }
-            }
-        });
-    }
-
-    // ===================================
     // FIX DROPDOWN COLOR (Step 1 Dropdowns)
     // ===================================
     const dropdownsStep1 = document.querySelectorAll('#form-tahap-1 select');
@@ -462,7 +420,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // LOGIKA MODAL INDIKATOR KINERJA UTAMA
     // ===================================
     const allIndicators = ["Mendapat Pekerjaan", "Melanjutkan studi", "Menjadi Wiraswasta", "Kegiatan luar prodi", "Prestasi", "Pengabdian Masyarakat"];
-    let selectedIndicators = window.initialIkuData ? new Set(window.initialIkuData) : new Set();
+    let selectedIndicators = new Set();
     const openBtn = document.getElementById('open-indicator-modal-btn');
     const closeBtn = document.getElementById('close-indicator-modal-btn');
     const doneBtn = document.getElementById('done-indicator-modal-btn');
@@ -527,21 +485,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // LOGIKA FORM RAB (Tahap 4 - MODIFIED)
     // ===================================
     // Data Structure Updated for double volume (vol1, sat1, vol2, sat2)
-    let budgetData = window.initialBudgetData || {
+    let budgetData = {
         "Belanja Barang": [],
         "Belanja Jasa": [],
         "Belanja Perjalanan": []
     };
-    
-    // Assign unique IDs if they don't exist
-    if (window.initialBudgetData) {
-        let idCounter = Date.now();
-        for(let cat in budgetData) {
-            budgetData[cat] = budgetData[cat].map(item => ({...item, id: idCounter++}));
-        }
-    }
-    
-    let activeCategory = Object.keys(budgetData).length > 0 ? Object.keys(budgetData)[0] : "Belanja Barang";
+    let activeCategory = "Belanja Barang";
 
     const rabSidebar = document.getElementById('category-sidebar');
     const rabContent = document.getElementById('rab-content');
@@ -687,5 +636,83 @@ document.addEventListener('DOMContentLoaded', () => {
             } 
         });
     }
+
+    // ===================================
+    // LOGIKA INITIALIZATION (EDIT MODE)
+    // ===================================
+    function initEditMode() {
+        // 1. Pre-fill Tahapan
+        if (window.initialTahapanData && typeof window.initialTahapanData === 'object' && Object.keys(window.initialTahapanData).length > 0) {
+            if (tahapanContainer) {
+                tahapanContainer.innerHTML = '';
+                Object.values(window.initialTahapanData).forEach(val => {
+                    addRepeaterRow(tahapanContainer, tahapanTemplateHTML, () => {
+                        const lastInput = tahapanContainer.querySelector('.repeater-row-tahapan:last-child input');
+                        if (lastInput) lastInput.value = val;
+                        updateTahapanNumbers();
+                    });
+                });
+            }
+        } else {
+            // Default first row if empty
+            if (tahapanContainer && tahapanContainer.children.length === 0) {
+                addRepeaterRow(tahapanContainer, tahapanTemplateHTML, updateTahapanNumbers);
+            }
+        }
+
+        // 2. Pre-fill Indikator
+        if (window.initialIndikatorData && typeof window.initialIndikatorData === 'object' && Object.keys(window.initialIndikatorData).length > 0) {
+            if (indikatorContainer) {
+                indikatorContainer.innerHTML = '';
+                Object.entries(window.initialIndikatorData).forEach(([bulan, data]) => {
+                    addRepeaterRow(indikatorContainer, indikatorTemplateHTML, () => {
+                        const row = indikatorContainer.querySelector('.repeater-row-indikator:last-child');
+                        if (row) {
+                            const bulanSelect = row.querySelector('select[name="indikator_bulan[]"]');
+                            const namaInput = row.querySelector('input[name="indikator_nama[]"]');
+                            const targetInput = row.querySelector('input[name="indikator_target[]"]');
+                            
+                            if (bulanSelect) {
+                                bulanSelect.value = bulan;
+                                bulanSelect.setAttribute('filled', 'true');
+                            }
+                            if (namaInput) namaInput.value = (typeof data === 'object') ? data.deskripsi : data;
+                            if (targetInput && typeof data === 'object') targetInput.value = data.target_persen;
+                        }
+                    });
+                });
+            }
+        } else {
+            // Default first row if empty
+            if (indikatorContainer && indikatorContainer.children.length === 0) {
+                addRepeaterRow(indikatorContainer, indikatorTemplateHTML);
+            }
+        }
+
+        // 3. Pre-fill IKU
+        if (window.initialIkuData && Array.isArray(window.initialIkuData)) {
+            window.initialIkuData.forEach(item => selectedIndicators.add(item));
+            renderTags();
+        }
+
+        // 4. Pre-fill RAB
+        if (window.initialBudgetData && typeof window.initialBudgetData === 'object') {
+            // Merge initial data into budgetData
+            budgetData = { ...budgetData, ...window.initialBudgetData };
+            
+            // Set active category to first available
+            const keys = Object.keys(budgetData);
+            if (keys.length > 0) {
+                activeCategory = keys[0];
+            }
+            
+            renderRabSidebar();
+            renderRabContent();
+            calculateTotals();
+        }
+    }
+
+    // Jalankan inisialisasi edit mode
+    initEditMode();
 
 });
