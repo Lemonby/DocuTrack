@@ -25,6 +25,7 @@ class UserSeeder extends Seeder
             ['nama' => 'Wakil Direktur', 'email' => 'wadir@gmail.com', 'nama_jurusan' => null, 'role' => 'Wadir'],
             ['nama' => 'PPK', 'email' => 'ppk@gmail.com', 'nama_jurusan' => null, 'role' => 'PPK'],
             ['nama' => 'Bendahara', 'email' => 'bendahara@gmail.com', 'nama_jurusan' => null, 'role' => 'Bendahara'],
+            ['nama' => 'Direktur', 'email' => 'direktur@gmail.com', 'nama_jurusan' => null, 'role' => 'Direktur'],
             ['nama' => 'Super Admin', 'email' => 'superadmin@gmail.com', 'nama_jurusan' => null, 'role' => 'SuperAdmin'],
         ];
 
@@ -33,8 +34,14 @@ class UserSeeder extends Seeder
             unset($userData['role']);
             $userData['password'] = $password;
 
-            $user = User::create($userData);
-            $user->assignRole($role);
+            $user = User::updateOrCreate(
+                ['email' => $userData['email']],
+                $userData
+            );
+
+            if (!$user->hasRole($role)) {
+                $user->assignRole($role);
+            }
         }
     }
 }

@@ -1,0 +1,124 @@
+/* --- 1. STEPPER ANIMATION (BRILLIANT STYLE) --- */
+    #stepper-container {
+        padding: 40px 0 40px 0;
+        position: relative;
+        width: 100%;
+        margin-bottom: 40px;
+    }
+
+    /* Flowing Gradient Line */
+    .stepper-line-bg {
+        background-color: #e2e8f0;
+        height: 6px;
+        border-radius: 99px;
+        position: absolute;
+        top: 24px;
+        left: 0;
+        width: 100%;
+        z-index: 0;
+    }
+
+    .stepper-line-fill {
+        background: linear-gradient(90deg, #3b82f6, #06b6d4, #3b82f6);
+        background-size: 200% 100%;
+        animation: flowGradient 2s linear infinite;
+        height: 6px;
+        border-radius: 99px;
+        position: absolute;
+        top: 24px;
+        left: 0;
+        z-index: 0;
+        width: 0%;
+        transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+    }
+
+    @keyframes flowGradient {
+        0% { background-position: 100% 0; }
+        100% { background-position: -100% 0; }
+    }
+
+    /* Circles */
+    .step-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+        cursor: pointer;
+        width: 80px;
+        z-index: 10;
+    }
+
+    .step-circle {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background-color: white;
+        border: 4px solid #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 1.125rem;
+        color: #94a3b8;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        transition: all 0.4s ease;
+    }
+
+    .step-item.active .step-circle {
+        transform: scale(1.2);
+        border-color: white;
+        color: #2563eb;
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.2), 0 10px 15px -3px rgba(37, 99, 235, 0.3);
+    }
+
+    .step-item.done .step-circle {
+        background: linear-gradient(135deg, #2563eb, #06b6d4);
+        color: white;
+        border-color: #2563eb;
+    }
+
+    .step-label {
+        margin-top: 12px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: #94a3b8;
+        text-align: center;
+        background-color: rgba(255,255,255,0.9);
+        padding: 4px 8px;
+        border-radius: 12px;
+    }
+    .step-item.active .step-label { color: #2563eb; }
+    .step-item.done .step-label { color: #334155; }
+
+    /* --- 2. DROPDOWN FIX --- */
+    select.custom-select {
+        appearance: none;
+        background-color: #fff;
+        color: #1e293b !important;
+        background-image: none; 
+    }
+    select.custom-select option { color: #1e293b; padding: 8px; }
+
+    /* --- 3. FORM UI (The Clean Card Style) --- */
+    .form-card {
+        background: white;
+        border-radius: 1.5rem; /* rounded-3xl */
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        border: 1px solid #f1f5f9;
+        overflow: hidden;
+    }
+    .card-gradient-top {
+        height: 8px;
+        background: linear-gradient(to right, #3b82f6, #06b6d4);
+    }
+    .form-step { display: none; animation: slideUp 0.5s ease forwards; }
+    .form-step.active { display: block; }
+    
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Scrollbar */
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }

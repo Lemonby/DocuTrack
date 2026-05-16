@@ -1,0 +1,126 @@
+/* ===== TAB STYLES (Updated untuk match design) ===== */
+.riwayat-filter-tab {
+    padding: 0.625rem 1.25rem;
+    border-radius: 0.625rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #6b7280;
+    background-color: transparent;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    border: none;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    position: relative;
+}
+
+.riwayat-filter-tab:hover:not(.active-tab) {
+    color: #1f2937;
+    background-color: #f3f4f6;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.1);
+}
+
+.riwayat-filter-tab.active-tab {
+    color: #ffffff;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    transform: translateY(-2px);
+}
+
+.riwayat-filter-tab i {
+    font-size: 0.75rem;
+    opacity: 0.8;
+}
+
+.riwayat-filter-tab.active-tab i {
+    opacity: 1;
+}
+
+/* ===== RESPONSIVE TABS ===== */
+@media (max-width: 768px) {
+    .riwayat-filter-tab {
+        padding: 0.5rem 0.875rem;
+        font-size: 0.8125rem;
+    }
+    
+    .riwayat-filter-tab i {
+        display: none; /* Hide icons on mobile untuk save space */
+    }
+}
+
+/* ===== INPUT HOVER EFFECTS ===== */
+#jurusan-filter:hover,
+#search-monitoring-input:hover {
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+/* ===== FOCUS RING ENHANCEMENT ===== */
+#jurusan-filter:focus,
+#search-monitoring-input:focus {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15), 0 4px 12px rgba(59, 130, 246, 0.2);
+}
+
+/* ===== ANIMASI REVEAL (Stagger Animation) ===== */
+@keyframes reveal {
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-reveal {
+    opacity: 0;
+    animation: reveal 0.5s ease-out forwards;
+}
+
+/* ===== ANIMASI FADE IN ===== */
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.4s ease-out;
+}
+
+/* ===== LOADING SPINNER TRANSITION ===== */
+#loading-spinner {
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+/* ===== HOVER EFFECTS UNTUK ROWS ===== */
+.monitoring-row {
+    transition: all 0.3s ease;
+}
+
+.monitoring-row:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    transform: translateY(-2px);
+}
+
+/* ===== SMOOTH TRANSITION UNTUK PAGINATION ===== */
+nav a, nav span {
+    transition: all 0.2s ease;
+}
+
+nav a:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* ===== LOADING BACKDROP BLUR ===== */
+.backdrop-blur-sm {
+    backdrop-filter: blur(4px);
+}
