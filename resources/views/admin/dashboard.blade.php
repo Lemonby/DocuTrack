@@ -3,96 +3,57 @@
 @section('content')
 <main class="main-content font-poppins p-3 sm:p-4 md:p-7 -mt-8 md:-mt-20 max-w-7xl mx-auto w-full">
 
-    <!-- Statistics Cards & Notifications -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-8">
-        <!-- Stats (Left) -->
-        <div class="lg:col-span-8 grid grid-cols-2 gap-4">
-            <div class="relative group p-6 rounded-2xl shadow-sm overflow-hidden text-white bg-gradient-to-br from-blue-500 to-blue-600 hover:shadow-blue-200/50 hover:-translate-y-1 transition-all duration-300">
-                <div class="relative z-10 flex flex-col justify-between h-full">
-                    <div class="p-3 w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center mb-4">
-                        <i class="fas fa-layer-group text-xl"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-4xl font-black mb-1">{{ $stats['total'] ?? 0 }}</h3>
-                        <p class="text-xs font-bold uppercase tracking-widest opacity-80">Total Usulan</p>
-                    </div>
+    <!-- Statistics Cards -->
+    <section class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
+        <div class="relative group p-6 rounded-2xl shadow-sm overflow-hidden text-white bg-gradient-to-br from-blue-500 to-blue-600 hover:shadow-blue-200/50 hover:-translate-y-1 transition-all duration-300">
+            <div class="relative z-10 flex flex-col justify-between h-full">
+                <div class="p-3 w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center mb-4">
+                    <i class="fas fa-layer-group text-xl"></i>
                 </div>
-            </div>
-
-            <div class="relative group p-6 rounded-2xl shadow-sm overflow-hidden text-white bg-gradient-to-br from-emerald-500 to-emerald-600 hover:shadow-emerald-200/50 hover:-translate-y-1 transition-all duration-300">
-                <div class="relative z-10 flex flex-col justify-between h-full">
-                    <div class="p-3 w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center mb-4">
-                        <i class="fas fa-check-circle text-xl"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-4xl font-black mb-1">{{ $stats['disetujui'] ?? 0 }}</h3>
-                        <p class="text-xs font-bold uppercase tracking-widest opacity-80">Disetujui</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="relative group p-6 rounded-2xl shadow-sm overflow-hidden text-white bg-gradient-to-br from-rose-500 to-rose-600 hover:shadow-rose-200/50 hover:-translate-y-1 transition-all duration-300">
-                <div class="relative z-10 flex flex-col justify-between h-full">
-                    <div class="p-3 w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center mb-4">
-                        <i class="fas fa-times-circle text-xl"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-4xl font-black mb-1">{{ $stats['ditolak'] ?? 0 }}</h3>
-                        <p class="text-xs font-bold uppercase tracking-widest opacity-80">Ditolak</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="relative group p-6 rounded-2xl shadow-sm overflow-hidden text-slate-800 bg-amber-300 hover:shadow-amber-200/50 hover:-translate-y-1 transition-all duration-300">
-                <div class="relative z-10 flex flex-col justify-between h-full">
-                    <div class="p-3 w-12 h-12 rounded-xl bg-black/5 flex items-center justify-center mb-4">
-                        <i class="fas fa-hourglass-half text-xl"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-4xl font-black mb-1">{{ $stats['menunggu'] ?? 0 }}</h3>
-                        <p class="text-xs font-bold uppercase tracking-widest opacity-70">Menunggu</p>
-                    </div>
+                <div>
+                    <h3 class="text-4xl font-black mb-1">{{ $stats['total'] ?? 0 }}</h3>
+                    <p class="text-xs font-bold uppercase tracking-widest opacity-80">Total Usulan</p>
                 </div>
             </div>
         </div>
 
-        <!-- Notifications (Right) -->
-        <div class="lg:col-span-4">
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 h-full flex flex-col overflow-hidden">
-                <div class="p-5 border-b border-slate-50 flex items-center justify-between bg-slate-50/50">
-                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2">
-                        <i class="fas fa-bell text-blue-600"></i> Notifikasi Terbaru
-                    </h3>
-                    <span class="w-2 h-2 bg-rose-500 rounded-full animate-ping"></span>
+        <div class="relative group p-6 rounded-2xl shadow-sm overflow-hidden text-white bg-gradient-to-br from-emerald-500 to-emerald-600 hover:shadow-emerald-200/50 hover:-translate-y-1 transition-all duration-300">
+            <div class="relative z-10 flex flex-col justify-between h-full">
+                <div class="p-3 w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center mb-4">
+                    <i class="fas fa-check-circle text-xl"></i>
                 </div>
-                <div class="flex-1 overflow-y-auto p-4 space-y-3" style="max-height: 280px;">
-                    @foreach($notifications as $notif)
-                        <div class="p-3 rounded-xl border border-slate-50 hover:bg-slate-50 transition-colors group cursor-pointer">
-                            <div class="flex gap-3">
-                                <div class="w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center 
-                                    @if($notif['type'] == 'success') bg-emerald-50 text-emerald-500
-                                    @elseif($notif['type'] == 'warning') bg-amber-50 text-amber-500
-                                    @elseif($notif['type'] == 'danger') bg-rose-50 text-rose-500
-                                    @else bg-blue-50 text-blue-500 @endif">
-                                    <i class="fas {{ $notif['icon'] }} text-xs"></i>
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <div class="flex items-center justify-between mb-0.5">
-                                        <h4 class="text-[11px] font-black text-slate-800 uppercase truncate">{{ $notif['title'] }}</h4>
-                                        <span class="text-[9px] font-bold text-slate-400 whitespace-nowrap">{{ $notif['time'] }}</span>
-                                    </div>
-                                    <p class="text-[10px] text-slate-500 font-medium leading-relaxed line-clamp-2">{{ $notif['message'] }}</p>
-                                </div>
-                            </div>
-                        </div>
-                    @endforeach
+                <div>
+                    <h3 class="text-4xl font-black mb-1">{{ $stats['disetujui'] ?? 0 }}</h3>
+                    <p class="text-xs font-bold uppercase tracking-widest opacity-80">Disetujui</p>
                 </div>
-                <button class="w-full py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest hover:bg-slate-50 hover:text-blue-600 transition-all border-t border-slate-50">
-                    Lihat Semua Aktivitas
-                </button>
             </div>
         </div>
-    </div>
+
+        <div class="relative group p-6 rounded-2xl shadow-sm overflow-hidden text-white bg-gradient-to-br from-rose-500 to-rose-600 hover:shadow-rose-200/50 hover:-translate-y-1 transition-all duration-300">
+            <div class="relative z-10 flex flex-col justify-between h-full">
+                <div class="p-3 w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center mb-4">
+                    <i class="fas fa-times-circle text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-4xl font-black mb-1">{{ $stats['ditolak'] ?? 0 }}</h3>
+                    <p class="text-xs font-bold uppercase tracking-widest opacity-80">Ditolak</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="relative group p-6 rounded-2xl shadow-sm overflow-hidden text-slate-800 bg-amber-300 hover:shadow-amber-200/50 hover:-translate-y-1 transition-all duration-300">
+            <div class="relative z-10 flex flex-col justify-between h-full">
+                <div class="p-3 w-12 h-12 rounded-xl bg-black/5 flex items-center justify-center mb-4">
+                    <i class="fas fa-hourglass-half text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-4xl font-black mb-1">{{ $stats['menunggu'] ?? 0 }}</h3>
+                    <p class="text-xs font-bold uppercase tracking-widest opacity-70">Menunggu</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
 
     <!-- Progress Workflow Sections -->
 

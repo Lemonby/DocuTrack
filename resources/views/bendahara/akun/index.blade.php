@@ -22,7 +22,7 @@
                 {{-- Info --}}
                 <div class="text-center sm:text-left">
                     <h1 class="text-2xl md:text-3xl font-bold">{{ $userName ?? 'Pengguna' }}</h1>
-                    <p class="text-white/80 mt-1 capitalize">{{ str_replace('_', ' ', $userRole ?? 'wadir') }} &bull; DocuTrack PNJ</p>
+                    <p class="text-white/80 mt-1 capitalize">{{ str_replace('_', ' ', $userRole ?? 'bendahara') }} &bull; DocuTrack PNJ</p>
                     <div class="mt-3 flex flex-wrap gap-2 justify-center sm:justify-start">
                         <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-white/20 rounded-full text-xs font-medium backdrop-blur-sm">
                             <i class="fas fa-shield-alt"></i> Akun Aktif
@@ -72,7 +72,7 @@
                 <h2 class="text-base font-bold text-gray-800">Informasi Profil</h2>
             </div>
             <div class="p-6">
-                <form action="{{ url('/wadir/akun/update') }}" method="POST">
+                <form action="{{ url('/bendahara/akun/update') }}" method="POST">
                     @csrf
                     @method('PATCH')
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -107,7 +107,7 @@
                 <h2 class="text-base font-bold text-gray-800">Ubah Password</h2>
             </div>
             <div class="p-6">
-                <form action="{{ url('/wadir/akun/password') }}" method="POST">
+                <form action="{{ url('/bendahara/akun/password') }}" method="POST">
                     @csrf
                     @method('PATCH')
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">

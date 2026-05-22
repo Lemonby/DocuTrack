@@ -151,6 +151,8 @@ Route::middleware([CheckRole::class])->group(function () {
         Route::get('/monitoring', [WadirMonitoringController::class, 'index'])->name('wadir.monitoring.index');
         Route::get('/monitoring/data', [WadirMonitoringController::class, 'getData'])->name('wadir.monitoring.data');
         Route::get('/akun', [WadirAkunController::class, 'index'])->name('wadir.akun.index');
+        Route::patch('/akun/update', [WadirAkunController::class, 'update'])->name('wadir.akun.update');
+        Route::patch('/akun/password', [WadirAkunController::class, 'changePassword'])->name('wadir.akun.password');
     });
 
     // ─── DIREKTUR ROUTES ───────────────────────────────────────────
@@ -160,6 +162,8 @@ Route::middleware([CheckRole::class])->group(function () {
         Route::get('/monitoring', [DirekturMonitoringController::class, 'index'])->name('direktur.monitoring.index');
         Route::get('/monitoring/data', [DirekturMonitoringController::class, 'getData'])->name('direktur.monitoring.data');
         Route::get('/akun', [DirekturAkunController::class, 'index'])->name('direktur.akun.index');
+        Route::patch('/akun/update', [DirekturAkunController::class, 'update'])->name('direktur.akun.update');
+        Route::patch('/akun/password', [DirekturAkunController::class, 'changePassword'])->name('direktur.akun.password');
     });
 
     // ─── SUPERADMIN ROUTES ─────────────────────────────────────────
@@ -170,5 +174,7 @@ Route::middleware([CheckRole::class])->group(function () {
         Route::get('/buat-iku', [SuperAdminIkuController::class, 'index'])->name('superadmin.iku.index');
         Route::get('/monitoring', [SuperAdminController::class, 'monitoring'])->name('superadmin.monitoring');
         Route::get('/akun', [SuperAdminAkunController::class, 'index'])->name('superadmin.akun.index');
+        Route::patch('/akun/update', [SuperAdminAkunController::class, 'update'])->name('superadmin.akun.update');
+        Route::patch('/akun/password', [SuperAdminAkunController::class, 'changePassword'])->name('superadmin.akun.password');
     });
 });

@@ -88,18 +88,6 @@
                                 class="w-full px-4 py-3 text-sm text-gray-800 bg-white rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                                 placeholder="email@pnj.ac.id">
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">NIP / NIM</label>
-                            <input type="text" name="nip"
-                                class="w-full px-4 py-3 text-sm text-gray-800 bg-white rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                                placeholder="NIP atau NIM">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Jurusan</label>
-                            <input type="text" name="jurusan" readonly
-                                value="Teknik Informatika dan Komputer"
-                                class="w-full px-4 py-3 text-sm text-gray-500 bg-gray-50 rounded-xl border border-gray-200 cursor-not-allowed">
-                        </div>
                     </div>
                     <div class="mt-6 flex justify-end">
                         <button type="submit" class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-semibold text-sm shadow-md hover:from-blue-600 hover:to-blue-700 hover:-translate-y-0.5 transition-all duration-300">

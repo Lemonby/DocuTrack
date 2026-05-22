@@ -17,7 +17,7 @@ class AkunController extends Controller
 
     public function update(Request $request)
     {
-        // Handle profile update
+        Session::put('user_name', $request->nama);
         return back()->with('success', 'Profil berhasil diperbarui.');
     }
 
