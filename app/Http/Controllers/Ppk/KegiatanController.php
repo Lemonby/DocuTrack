@@ -4,43 +4,31 @@ namespace App\Http\Controllers\Ppk;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\Kegiatan;
+use App\Services\KegiatanService;
+use App\Services\WorkflowService;
 
 class KegiatanController extends Controller
 {
     public function index()
     {
-        $list_kegiatan = [
-            [
-                'id' => 1,
-                'nama' => 'Pengadaan Laptop Laboratorium TI',
-                'pengusul' => 'Yovana Ibnu Sina',
-                'nim' => '2407411059',
-                'prodi' => 'Teknik Informatika',
-                'jurusan' => 'Teknik Informatika dan Komputer',
-                'tanggal_pengajuan' => '2026-05-15',
-                'status' => 'Menunggu',
-            ],
-            [
-                'id' => 2,
-                'nama' => 'Workshop UI/UX Design Modern',
-                'pengusul' => 'Muhammad Syafri',
-                'nim' => '2407411085',
-                'prodi' => 'Teknik Informatika',
-                'jurusan' => 'Teknik Informatika dan Komputer',
-                'tanggal_pengajuan' => '2026-05-14',
-                'status' => 'Disetujui',
-            ],
-            [
-                'id' => 3,
-                'nama' => 'Seminar Nasional Teknologi 2026',
-                'pengusul' => 'Budi Santoso',
-                'nim' => '2407411001',
-                'prodi' => 'Teknik Komputer',
-                'jurusan' => 'Teknik Informatika dan Komputer',
-                'tanggal_pengajuan' => '2026-05-13',
-                'status' => 'Menunggu',
-            ],
-        ];
+        $kegiatanList = Kegiatan::with(['statusUtama', 'user'])
+            ->atPosition(WorkflowService::POSITION_PPK)
+            ->latest()
+            ->get();
+
+        $list_kegiatan = $kegiatanList->map(function ($kegiatan) {
+            return [
+                'id' => $kegiatan->kegiatan_id,
+                'nama' => $kegiatan->nama_kegiatan,
+                'pengusul' => $kegiatan->user->nama ?? $kegiatan->pemilik_kegiatan,
+                'nim' => $kegiatan->nim_pelaksana,
+                'prodi' => $kegiatan->prodi_penyelenggara,
+                'jurusan' => $kegiatan->jurusan_penyelenggara,
+                'tanggal_pengajuan' => $kegiatan->created_at ? $kegiatan->created_at->format('Y-m-d') : null,
+                'status' => $kegiatan->statusUtama->nama_status_usulan ?? 'Menunggu',
+            ];
+        })->toArray();
 
         $jurusan_list = [
             'Teknik Informatika dan Komputer',
@@ -56,54 +44,71 @@ class KegiatanController extends Controller
 
     public function show($id)
     {
-        // Dummy data detail
-        $status = ($id % 2 == 0) ? 'Disetujui' : 'Menunggu';
+        $kegiatan = (new KegiatanService())->getDetailLengkap($id);
+        
+        $status = $kegiatan->statusUtama->nama_status_usulan ?? 'Menunggu';
         
         $kegiatan_data = [
-            'nama_pengusul' => 'Yovana Ibnu Sina',
-            'nim_nip' => '2407411059',
-            'jurusan' => 'Teknik Informatika dan Komputer',
-            'prodi' => 'Teknik Informatika',
-            'nama_penanggung_jawab' => 'Dr. Heri Herwanto',
-            'nip_penanggung_jawab' => '198001012005011001',
-            'nama_kegiatan' => 'Pengadaan Laptop Laboratorium TI Terpadu',
-            'mak_code' => '521211.001.052.A.524111',
-            'gambaran_umum' => 'Kegiatan ini bertujuan untuk meremajakan perangkat komputer di Lab TI guna mendukung pembelajaran mata kuliah Pemrograman Web dan AI.',
-            'penerima_manfaat' => 'Seluruh mahasiswa tingkat 2 dan 3 prodi Teknik Informatika.',
-            'metode_pelaksanaan' => 'Pembelian melalui vendor resmi dengan spesifikasi minimal i7 Gen 13, 16GB RAM.',
-            'tahapan_kegiatan' => "1. Survei Harga\n2. Pengajuan Vendor\n3. Verifikasi Barang\n4. Instalasi & Inventarisasi",
-            'surat_pengantar' => 'SURAT_PENGANTAR_059.pdf',
-            'tanggal_mulai' => '2026-06-01',
-            'tanggal_selesai' => '2026-06-30',
+            'nama_pengusul' => $kegiatan->user->nama ?? $kegiatan->pemilik_kegiatan,
+            'nim_nip' => $kegiatan->nim_pelaksana,
+            'jurusan' => $kegiatan->jurusan_penyelenggara,
+            'prodi' => $kegiatan->prodi_penyelenggara,
+            'nama_penanggung_jawab' => $kegiatan->nama_pj ?? '-',
+            'nip_penanggung_jawab' => $kegiatan->nip ?? '-',
+            'nama_kegiatan' => $kegiatan->nama_kegiatan,
+            'mak_code' => $kegiatan->bukti_mak ?? '-',
+            'gambaran_umum' => $kegiatan->kak->gambaran_umum ?? '-',
+            'penerima_manfaat' => $kegiatan->kak->penerima_manfaat ?? '-',
+            'metode_pelaksanaan' => $kegiatan->kak->metode_pelaksanaan ?? '-',
+            'tahapan_kegiatan' => $kegiatan->kak ? $kegiatan->kak->tahapans->pluck('nama_tahapan')->implode("\n") : '',
+            'surat_pengantar' => $kegiatan->surat_pengantar,
+            'tanggal_mulai' => $kegiatan->tanggal_mulai ? $kegiatan->tanggal_mulai->format('Y-m-d') : '-',
+            'tanggal_selesai' => $kegiatan->tanggal_selesai ? $kegiatan->tanggal_selesai->format('Y-m-d') : '-',
         ];
 
-        $iku_data = ['IKU 1: Lulusan Mendapat Pekerjaan Layak', 'IKU 7: Kelas yang Kolaboratif dan Partisipatif'];
+        $iku_data = $kegiatan->kak ? explode(',', $kegiatan->kak->iku ?? '') : [];
         
-        $tahapan_pelaksanaan = [
-            6 => 'Survei dan Pemilihan Vendor',
-            7 => 'Pengiriman dan QC Barang'
-        ];
+        $tahapan_pelaksanaan = [];
+        $indikator_keberhasilan = [];
+        if ($kegiatan->kak) {
+            foreach ($kegiatan->kak->indikators as $ind) {
+                if ($ind->bulan) {
+                    $indikator_keberhasilan[$ind->bulan] = [
+                        'deskripsi' => $ind->indikator_keberhasilan,
+                        'target_persen' => $ind->target_persen
+                    ];
+                }
+            }
+            foreach ($kegiatan->kak->tahapans as $key => $tahap) {
+                $tahapan_pelaksanaan[$key] = $tahap->nama_tahapan;
+            }
+        }
 
-        $indikator_keberhasilan = [
-            6 => ['deskripsi' => 'Tersedianya 3 penawaran vendor', 'target_persen' => 100],
-            7 => ['deskripsi' => 'Barang sampai dan sesuai spek', 'target_persen' => 100]
-        ];
-
-        $rab_data = [
-            'Belanja Barang' => [
-                ['uraian' => 'Laptop ASUS ROG Strix', 'rincian' => 'Spek i7/16GB/512GB', 'vol1' => 10, 'sat1' => 'Unit', 'harga' => 15000000],
-            ],
-            'Honorarium' => [
-                ['uraian' => 'Honor Tim Teknis', 'rincian' => 'Instalasi Software', 'vol1' => 2, 'sat1' => 'Orang', 'vol2' => 1, 'sat2' => 'Kegiatan', 'harga' => 500000],
-            ]
-        ];
+        $rab_data = [];
+        if ($kegiatan->kak) {
+            foreach ($kegiatan->kak->rabs as $rab) {
+                $cat = $rab->kategori->nama_kategori ?? 'Lainnya';
+                $rab_data[$cat][] = [
+                    'uraian' => $rab->uraian,
+                    'rincian' => $rab->rincian,
+                    'vol1' => $rab->vol1,
+                    'sat1' => $rab->sat1,
+                    'vol2' => $rab->vol2,
+                    'sat2' => $rab->sat2,
+                    'harga' => $rab->harga
+                ];
+            }
+        }
 
         return view('ppk.kegiatan.show', compact('id', 'status', 'kegiatan_data', 'iku_data', 'tahapan_pelaksanaan', 'indikator_keberhasilan', 'rab_data'));
     }
 
     public function store(Request $request, $id)
     {
-        // Logika simpan persetujuan
+        $workflowService = new WorkflowService();
+        // Assume basic approval for now. You can expand based on request logic.
+        $workflowService->moveToNextPosition($id, WorkflowService::POSITION_PPK);
+        
         return redirect()->route('ppk.dashboard')->with('success', 'Usulan #' . $id . ' berhasil diproses.');
     }
 }

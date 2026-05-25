@@ -4,49 +4,36 @@ namespace App\Http\Controllers\Ppk;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\Kegiatan;
+use App\Services\KegiatanService;
+use App\Services\WorkflowService;
 
 class PpkController extends Controller
 {
     public function dashboard()
     {
-        $list_usulan = [
-            [
-                'id' => 901,
-                'nama' => 'Workshop UI/UX Design 2026',
-                'pengusul' => 'Siti Aminah',
-                'nim' => '2407411059',
-                'prodi' => 'D4 Teknik Informatika',
-                'jurusan' => 'Teknik Informatika dan Komputer',
-                'tanggal_pengajuan' => '2026-05-14',
-                'status' => 'Menunggu'
-            ],
-            [
-                'id' => 902,
-                'nama' => 'Seminar Internasional Blockchain',
-                'pengusul' => 'Ahmad Fauzi',
-                'nim' => '2407411052',
-                'prodi' => 'Teknik Informatika',
-                'jurusan' => 'Teknik Informatika dan Komputer',
-                'tanggal_pengajuan' => '2026-05-15',
-                'status' => 'Menunggu'
-            ],
-            [
-                'id' => 903,
-                'nama' => 'Peningkatan Kompetensi AI',
-                'pengusul' => 'Budi Santoso',
-                'nim' => '2407411003',
-                'prodi' => 'Teknik Elektro',
-                'jurusan' => 'Teknik Elektro',
-                'tanggal_pengajuan' => '2026-05-15',
-                'status' => 'Disetujui'
-            ],
-        ];
+        $kegiatanService = new KegiatanService();
+        $stats = $kegiatanService->getDashboardStats();
 
-        $stats = [
-            'total' => count($list_usulan),
-            'disetujui' => 1,
-            'menunggu' => 2,
-        ];
+        $kegiatanList = Kegiatan::with(['statusUtama', 'user'])
+            ->atPosition(WorkflowService::POSITION_PPK)
+            ->withStatus(WorkflowService::STATUS_MENUNGGU)
+            ->latest()
+            ->take(5)
+            ->get();
+
+        $list_usulan = $kegiatanList->map(function ($kegiatan) {
+            return [
+                'id' => $kegiatan->kegiatan_id,
+                'nama' => $kegiatan->nama_kegiatan,
+                'pengusul' => $kegiatan->user->nama ?? $kegiatan->pemilik_kegiatan,
+                'nim' => $kegiatan->nim_pelaksana,
+                'prodi' => $kegiatan->prodi_penyelenggara,
+                'jurusan' => $kegiatan->jurusan_penyelenggara,
+                'tanggal_pengajuan' => $kegiatan->created_at ? $kegiatan->created_at->format('Y-m-d') : null,
+                'status' => $kegiatan->statusUtama->nama_status_usulan ?? 'Menunggu',
+            ];
+        })->toArray();
 
         $jurusan_list = [
             'Teknik Informatika dan Komputer',
