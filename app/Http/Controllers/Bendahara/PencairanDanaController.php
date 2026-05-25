@@ -4,168 +4,138 @@ namespace App\Http\Controllers\Bendahara;
 
 use App\Http\Controllers\Controller;
 
+use App\Models\Kegiatan;
+use App\Models\Lpj;
+use App\Models\TahapanPencairan;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Session;
+
 class PencairanDanaController extends Controller
 {
     public function index()
     {
-        $list_kak = [
-            [
-                'id' => 1101,
-                'nama' => 'Workshop UI/UX Design Modern',
-                'pengusul' => 'Rizki Pratama',
-                'nim' => '2407411050',
-                'prodi' => 'Teknik Informatika',
-                'jurusan' => 'Teknik Informatika dan Komputer',
-                'tanggal_pengajuan' => '2026-05-12',
-                'status' => 'Belum Dicairkan'
-            ],
-            [
-                'id' => 1102,
-                'nama' => 'Seminar Internasional Blockchain',
-                'pengusul' => 'Ahmad Fauzi',
-                'nim' => '2407411052',
-                'prodi' => 'Teknik Informatika',
-                'jurusan' => 'Teknik Informatika dan Komputer',
-                'tanggal_pengajuan' => '2026-05-13',
-                'status' => 'Sudah Dicairkan'
-            ],
-            [
-                'id' => 1103,
-                'nama' => 'Pengadaan Alat Praktikum Elektro',
-                'pengusul' => 'Bambang Sudarsono',
-                'nim' => '2407411055',
-                'prodi' => 'Teknik Elektro',
-                'jurusan' => 'Teknik Elektro',
-                'tanggal_pengajuan' => '2026-05-15',
-                'status' => 'Belum Dicairkan'
-            ],
-            [
-                'id' => 1104,
-                'nama' => 'Lomba Karya Tulis Ilmiah Nasional',
-                'pengusul' => 'Dewi Lestari',
-                'nim' => '2407411051',
-                'prodi' => 'Akuntansi',
-                'jurusan' => 'Akuntansi',
-                'tanggal_pengajuan' => '2026-05-16',
-                'status' => 'Belum Dicairkan'
-            ],
-        ];
+        $list_kak = Kegiatan::where('posisi_id', '>=', 5)
+            ->with('statusUtama')
+            ->orderBy('updated_at', 'desc')
+            ->get()
+            ->map(function ($k) {
+                $status = ($k->status_utama_id == 5) ? 'Sudah Dicairkan' : 'Belum Dicairkan';
+                return [
+                    'id' => $k->kegiatan_id,
+                    'nama' => $k->nama_kegiatan,
+                    'pengusul' => $k->pemilik_kegiatan ?? $k->nama_pj ?? '-',
+                    'nim' => $k->nim_pelaksana ?? $k->nip ?? '-',
+                    'prodi' => $k->prodi_penyelenggara ?? '-',
+                    'jurusan' => $k->jurusan_penyelenggara ?? '-',
+                    'tanggal_pengajuan' => $k->created_at ? $k->created_at->format('Y-m-d') : '-',
+                    'status' => $status
+                ];
+            })->toArray();
+
         return view('bendahara.pencairan-dana.index', compact('list_kak'));
     }
 
     public function detail($id)
     {
-        $id = (int) $id;
+        $kegiatan = Kegiatan::with([
+            'kak.rabs.kategori', 
+            'kak.indikators', 
+            'kak.tahapans', 
+            'wadir', 
+            'statusUtama',
+            'lpj.status',
+            'tahapanPencairans'
+        ])->findOrFail($id);
 
-        // Status & pencairan per ID — menyerupai kondisi nyata dari DB
-        $pencairan_map = [
-            1101 => [
-                'status'           => 'Menunggu',
-                'jumlah_dicairkan' => 0,
-                'boleh_cairkan'    => true,
-                'lpj_status'       => 'Belum Ada',
-                'riwayat'          => [],
-            ],
-            1102 => [
-                'status'           => 'Dana Diberikan',
-                'jumlah_dicairkan' => 2150000,
-                'boleh_cairkan'    => false,
-                'lpj_status'       => 'Disetujui',
-                'riwayat'          => [
-                    ['tanggal_pencairan' => '2026-05-17', 'termin' => 'Termin 1', 'nominal' => 1500000, 'catatan' => 'Pencairan tahap pertama'],
-                    ['tanggal_pencairan' => '2026-05-20', 'termin' => 'Termin 2', 'nominal' => 650000,  'catatan' => 'Pencairan tahap akhir'],
-                ],
-            ],
-            1103 => [
-                'status'           => 'Dana Belum Diberikan Semua',
-                'jumlah_dicairkan' => 1750000,
-                'boleh_cairkan'    => true,
-                'lpj_status'       => 'Menunggu Verifikasi',
-                'riwayat'          => [
-                    ['tanggal_pencairan' => '2026-05-18', 'termin' => 'Termin 1', 'nominal' => 1750000, 'catatan' => 'Pencairan uang muka'],
-                ],
-            ],
-            1104 => [
-                'status'           => 'Menunggu',
-                'jumlah_dicairkan' => 0,
-                'boleh_cairkan'    => true,
-                'lpj_status'       => 'Belum Ada',
-                'riwayat'          => [],
-            ],
-        ];
+        $status = 'Menunggu';
+        if ($kegiatan->status_utama_id == 5) {
+            $status = 'Dana Diberikan';
+        } elseif ($kegiatan->status_utama_id == 3 && $kegiatan->jumlah_dicairkan > 0) {
+            $status = 'Dana Belum Diberikan Semua';
+        }
 
-        $p = $pencairan_map[$id] ?? $pencairan_map[1101];
-        $status           = $p['status'];
-        $jumlah_dicairkan = $p['jumlah_dicairkan'];
-        $boleh_cairkan    = $p['boleh_cairkan'];
-        $riwayat_pencairan = $p['riwayat'];
+        $jumlah_dicairkan = (float)($kegiatan->jumlah_dicairkan ?? 0);
+        
+        $riwayat_pencairan = $kegiatan->tahapanPencairans->map(function ($t) {
+            return [
+                'tanggal_pencairan' => $t->tgl_pencairan ? $t->tgl_pencairan->format('Y-m-d') : now()->format('Y-m-d'),
+                'termin' => $t->termin,
+                'nominal' => (float)$t->nominal,
+                'catatan' => $t->catatan
+            ];
+        })->toArray();
 
-        $rab_data = [
-            'Belanja Barang' => [
-                ['uraian' => 'Konsumsi',      'rincian' => 'Snack & Lunch Box',      'vol1' => 50, 'sat1' => 'Paket',  'vol2' => 1, 'sat2' => 'Kali', 'harga' => 35000],
-                ['uraian' => 'ATK',           'rincian' => 'Kertas & Tinta Print',   'vol1' => 2,  'sat1' => 'Rim',    'vol2' => 1, 'sat2' => 'Kali', 'harga' => 55000],
-                ['uraian' => 'Sertifikat',    'rincian' => 'Cetak Sertifikat Desain','vol1' => 50, 'sat1' => 'Lembar', 'vol2' => 1, 'sat2' => 'Kali', 'harga' => 5000],
-            ],
-            'Belanja Jasa' => [
-                ['uraian' => 'Honor Pemateri','rincian' => 'Narasumber Ahli Eksternal','vol1' => 1, 'sat1' => 'Orang', 'vol2' => 4, 'sat2' => 'Jam', 'harga' => 500000],
-            ],
-        ];
-
-        // Hitung total anggaran dari RAB
+        $rab_data = [];
         $anggaran_disetujui = 0;
-        foreach ($rab_data as $items) {
-            foreach ($items as $item) {
-                $anggaran_disetujui += $item['vol1'] * ($item['vol2'] ?? 1) * $item['harga'];
+        if ($kegiatan->kak) {
+            foreach ($kegiatan->kak->rabs as $rab) {
+                $catName = $rab->kategori ? $rab->kategori->nama_kategori : 'Belanja Barang';
+                $total_harga = $rab->vol1 * ($rab->vol2 ?? 1) * $rab->harga;
+                $anggaran_disetujui += $total_harga;
+                $rab_data[$catName][] = [
+                    'uraian' => $rab->uraian,
+                    'rincian' => $rab->rincian,
+                    'vol1' => (float)$rab->vol1,
+                    'sat1' => $rab->sat1,
+                    'vol2' => (float)$rab->vol2,
+                    'sat2' => $rab->sat2,
+                    'harga' => (float)$rab->harga,
+                    'total_harga' => (float)$total_harga,
+                ];
             }
         }
+
         $sisa_dana = $anggaran_disetujui - $jumlah_dicairkan;
+        $boleh_cairkan = ($kegiatan->status_utama_id != 5);
 
-        $iku_data = [
-            'IKU 2 - Mahasiswa mendapat pengalaman di luar kampus',
-            'IKU 4 - Praktisi mengajar di kampus',
-            'IKU 7 - Kelas kolaborasi dengan mitra industri',
-        ];
+        $iku_data = array_filter(explode(',', $kegiatan->kak->iku ?? ''));
 
-        // Tahapan Pelaksanaan per bulan
-        $tahapan_pelaksanaan = [
-            5 => 'Persiapan materi dan koordinasi pemateri.',
-            6 => 'Pelaksanaan workshop dan evaluasi awal.',
-            7 => 'Penyusunan laporan pertanggungjawaban.'
-        ];
+        $tahapan_pelaksanaan = [];
+        if ($kegiatan->kak) {
+            foreach ($kegiatan->kak->tahapans as $index => $t) {
+                $tahapan_pelaksanaan[$index + 1] = $t->nama_tahapan;
+            }
+        }
 
-        // Indikator Keberhasilan per bulan
-        $indikator_keberhasilan = [
-            5 => ['target_persen' => 100, 'deskripsi' => 'Materi telah disetujui dan pemateri konfirmasi kehadiran.'],
-            6 => ['target_persen' => 80,  'deskripsi' => 'Acara berjalan lancar dengan tingkat kepuasan peserta minimal 80%.'],
-            7 => ['target_persen' => 100, 'deskripsi' => 'LPJ diserahkan tepat waktu dan disetujui tanpa revisi major.']
-        ];
+        $indikator_keberhasilan = [];
+        if ($kegiatan->kak) {
+            foreach ($kegiatan->kak->indikators as $index => $ind) {
+                $indikator_keberhasilan[$index + 1] = [
+                    'target_persen' => $ind->target_persen,
+                    'deskripsi' => $ind->indikator_keberhasilan
+                ];
+            }
+        }
 
         $kegiatan_data = [
-            'id'                    => $id,
-            'nama_pengusul'         => 'Siti Aminah',
-            'nim_nip'               => '2407411059',
-            'nim_pengusul'          => '2407411059',
-            'nama_pelaksana'        => 'Tim Mahasiswa TIK Semester 4 & 6',
-            'nama_penanggung_jawab' => 'Andi Wijaya, S.T., M.Kom.',
-            'nip_penanggung_jawab'  => '198501012010011001',
-            'penanggung_jawab'      => 'Andi Wijaya, S.T., M.Kom.',
-            'nip_pj'                => '198501012010011001',
-            'jurusan'               => 'Teknik Informatika dan Komputer',
-            'prodi'                 => 'D4 Teknik Informatika',
-            'nama_kegiatan'         => 'Workshop UI/UX Design 2026',
-            'wadir_tujuan'          => 'Wakil Direktur Bidang Kemahasiswaan',
-            'penerima_manfaat'      => 'Mahasiswa TIK Semester 4 & 6',
-            'gambaran_umum'         => 'Workshop ini dirancang untuk memberikan pemahaman mendalam tentang prinsip desain UI/UX kepada mahasiswa. Fokus pada User Research, Wireframing, dan Prototyping menggunakan Figma.',
-            'metode_pelaksanaan'    => 'Sesi teori di pagi hari diikuti dengan workshop praktik di siang hari. Peserta akan bekerja dalam kelompok kecil untuk menyelesaikan proyek mini.',
-            'tahapan_kegiatan'      => "1. Persiapan materi dan koordinasi pemateri.\n2. Publikasi acara dan pendaftaran peserta.\n3. Pelaksanaan workshop dan evaluasi awal.\n4. Penyusunan laporan pertanggungjawaban.",
-            'tanggal_mulai'         => '2026-05-20',
-            'tanggal_selesai'       => '2026-05-21',
+            'id'                    => $kegiatan->kegiatan_id,
+            'nama_pengusul'         => $kegiatan->pemilik_kegiatan,
+            'nim_nip'               => $kegiatan->nim_pelaksana ?? $kegiatan->nip,
+            'nim_pengusul'          => $kegiatan->nim_pelaksana,
+            'nama_pelaksana'        => $kegiatan->pemilik_kegiatan,
+            'nama_penanggung_jawab' => $kegiatan->nama_pj ?? $kegiatan->pemilik_kegiatan,
+            'nip_penanggung_jawab'  => $kegiatan->nip ?? $kegiatan->nim_pelaksana,
+            'penanggung_jawab'      => $kegiatan->nama_pj ?? $kegiatan->pemilik_kegiatan,
+            'nip_pj'                => $kegiatan->nip ?? $kegiatan->nim_pelaksana,
+            'jurusan'               => $kegiatan->jurusan_penyelenggara,
+            'prodi'                 => $kegiatan->prodi_penyelenggara,
+            'nama_kegiatan'         => $kegiatan->nama_kegiatan,
+            'wadir_tujuan'          => $kegiatan->wadir ? ('Wakil Direktur Bidang ' . $kegiatan->wadir->nama_wadir) : 'Wakil Direktur',
+            'gambaran_umum'         => $kegiatan->kak ? $kegiatan->kak->gambaran_umum : '',
+            'metode_pelaksanaan'    => $kegiatan->kak ? $kegiatan->kak->metode_pelaksanaan : '',
+            'tanggal_mulai'         => $kegiatan->tanggal_mulai ? $kegiatan->tanggal_mulai->format('Y-m-d') : '',
+            'tanggal_selesai'       => $kegiatan->tanggal_selesai ? $kegiatan->tanggal_selesai->format('Y-m-d') : '',
         ];
 
-        $lpj_status        = $p['lpj_status'];
-        $riwayat_pencairan = $p['riwayat'];
-        $kode_mak          = '521211.001.052.A.5211.001';
-        $catatan_bendahara = '';
+        $lpj_status = 'Belum Ada';
+        if ($kegiatan->lpj) {
+            $lpj_status = 'Menunggu Verifikasi';
+            if ($kegiatan->lpj->status_id == 2) $lpj_status = 'Revisi';
+            elseif ($kegiatan->lpj->status_id == 3) $lpj_status = 'Disetujui';
+        }
+
+        $kode_mak = $kegiatan->bukti_mak ?? 'MAK-PENDING-REV';
+        $catatan_bendahara = $kegiatan->catatan_bendahara;
 
         return view('bendahara.pencairan-dana.detail', compact(
             'id', 'status', 'lpj_status', 'iku_data', 'rab_data', 'kegiatan_data',
@@ -173,5 +143,55 @@ class PencairanDanaController extends Controller
             'sisa_dana', 'boleh_cairkan', 'riwayat_pencairan',
             'kode_mak', 'catatan_bendahara'
         ));
+    }
+
+    public function proses(Request $request, $id)
+    {
+        $kegiatan = Kegiatan::findOrFail($id);
+
+        $anggaran_disetujui = 0;
+        if ($kegiatan->kak) {
+            foreach ($kegiatan->kak->rabs as $rab) {
+                $anggaran_disetujui += $rab->vol1 * ($rab->vol2 ?? 1) * $rab->harga;
+            }
+        }
+
+        $request->validate([
+            'nominalTahapan' => 'required|array',
+            'nominalTahapan.*' => 'required',
+            'tanggalTahapan' => 'required|array',
+            'terminTahapan' => 'required|array',
+        ]);
+
+        $total_pencairan_baru = 0;
+        foreach ($request->nominalTahapan as $index => $nominalRaw) {
+            $nominal = (float)str_replace('.', '', $nominalRaw);
+            $total_pencairan_baru += $nominal;
+
+            TahapanPencairan::create([
+                'kegiatan_id' => $kegiatan->kegiatan_id,
+                'tgl_pencairan' => $request->tanggalTahapan[$index],
+                'termin' => $request->terminTahapan[$index],
+                'nominal' => $nominal,
+                'catatan' => $request->catatan,
+                'created_by' => Session::get('user_id'),
+            ]);
+        }
+
+        $jumlah_dicairkan_total = ($kegiatan->jumlah_dicairkan ?? 0) + $total_pencairan_baru;
+
+        $status_utama_id = 3;
+        if ($jumlah_dicairkan_total >= $anggaran_disetujui) {
+            $status_utama_id = 5;
+        }
+
+        $kegiatan->update([
+            'jumlah_dicairkan' => $jumlah_dicairkan_total,
+            'status_utama_id' => $status_utama_id,
+            'catatan_bendahara' => $request->catatan,
+            'tanggal_pencairan' => now(),
+        ]);
+
+        return redirect()->route('bendahara.dashboard')->with('success', 'Dana berhasil dicairkan.');
     }
 }

@@ -402,15 +402,17 @@
             borderRadius: '24px'
         }).then((result) => {
             if (result.isConfirmed) {
-                Swal.fire({
-                    title: 'Berhasil!',
-                    text: 'Status usulan telah diperbarui (Mock).',
-                    icon: 'success',
-                    timer: 2000,
-                    showConfirmButton: false
-                }).then(() => {
-                    window.location.href = "{{ route('wadir.kegiatan.index') }}";
-                });
+                const form = document.getElementById('form-review');
+                form.action = "{{ route('wadir.kegiatan.store', $id) }}";
+                
+                // Add hidden input for action
+                const actionInput = document.createElement('input');
+                actionInput.type = 'hidden';
+                actionInput.name = 'action';
+                actionInput.value = type;
+                form.appendChild(actionInput);
+                
+                form.submit();
             }
         });
     }

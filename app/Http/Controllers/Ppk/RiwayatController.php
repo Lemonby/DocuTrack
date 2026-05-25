@@ -9,35 +9,21 @@ class RiwayatController extends Controller
 {
     public function index()
     {
-        $riwayat_list = [
-            [
-                'id' => 801,
-                'nama' => 'Peralatan Robotika Semester Genap',
-                'pengusul' => 'Randi Kurnia',
-                'nim' => '2407411059',
-                'tanggal_proses' => '2026-05-10',
-                'status' => 'Disetujui',
-                'catatan' => 'Usulan sesuai dengan kebutuhan laboratorium.'
-            ],
-            [
-                'id' => 802,
-                'nama' => 'Studi Ekskursi Industri IT',
-                'pengusul' => 'Maya Sari',
-                'nim' => '2407411052',
-                'tanggal_proses' => '2026-05-12',
-                'status' => 'Disetujui',
-                'catatan' => 'Lanjutkan ke tahap verifikasi Wadir.'
-            ],
-            [
-                'id' => 803,
-                'nama' => 'Lomba Inovasi Mahasiswa',
-                'pengusul' => 'Dedy Pratama',
-                'nim' => '2407411003',
-                'tanggal_proses' => '2026-05-13',
-                'status' => 'Disetujui',
-                'catatan' => 'Sesuai dengan pagu anggaran yang tersedia.'
-            ],
-        ];
+        $riwayat_list = \App\Models\Kegiatan::where('posisi_id', '>=', 4)
+            ->with('statusUtama')
+            ->orderBy('updated_at', 'desc')
+            ->get()
+            ->map(function ($k) {
+                return [
+                    'id' => $k->kegiatan_id,
+                    'nama' => $k->nama_kegiatan,
+                    'pengusul' => $k->pemilik_kegiatan ?? $k->nama_pj ?? '-',
+                    'nim' => $k->nim_pelaksana ?? $k->nip ?? '-',
+                    'tanggal_proses' => $k->updated_at ? $k->updated_at->format('Y-m-d') : '-',
+                    'status' => $k->statusUtama ? $k->statusUtama->nama_status_usulan : 'Disetujui',
+                    'catatan' => $k->umpan_balik_verifikator ?? '-'
+                ];
+            })->toArray();
         return view('ppk.riwayat.index', compact('riwayat_list'));
     }
 }

@@ -84,7 +84,7 @@ class WadirModel
                     s.namaStatusUsulan as status
                 FROM tbl_kegiatan k
                 LEFT JOIN tbl_status_utama s ON k.statusUtamaId = s.statusId
-                WHERE k.posisiId = 3
+                WHERE k.posisiId = 4
                 ORDER BY k.createdAt DESC";
 
         $result = mysqli_query($this->db, $query);
@@ -175,7 +175,7 @@ class WadirModel
     public function approveUsulan($kegiatanId, $rekomendasi = '')
     {
         $nextPosisi = 5;  // BENDAHARA (untuk proses pencairan dana)
-        $currentPosisi = 3; // Wadir
+        $currentPosisi = 4; // Wadir
         $statusProses = 1; // Disetujui (oleh Wadir) dan diteruskan ke Bendahara sebagai status menunggu
         $userId = $_SESSION['user_id'] ?? null;
 
@@ -246,7 +246,7 @@ class WadirModel
                     k.createdAt as tanggal_pengajuan,
                     CASE 
                         WHEN k.statusUtamaId = 4 THEN 'Ditolak'
-                        WHEN k.posisiId >= 4 OR k.statusUtamaId IN (5, 6) THEN 'Disetujui'
+                        WHEN k.posisiId >= 5 OR k.statusUtamaId IN (5, 6) THEN 'Disetujui'
                         ELSE 'Diproses'
                     END as status
                   FROM tbl_kegiatan k
@@ -352,8 +352,8 @@ class WadirModel
                         WHEN k.statusUtamaId = 4 THEN 'Ditolak' 
                         WHEN k.posisiId = 1 AND k.statusUtamaId NOT IN (4, 5, 6) THEN 'Pengajuan'
                         WHEN k.posisiId = 2 AND k.statusUtamaId != 4 THEN 'Verifikasi'
-                        WHEN k.posisiId = 4 THEN 'ACC PPK'
-                        WHEN k.posisiId = 3 THEN 'ACC WD'
+                        WHEN k.posisiId = 3 THEN 'ACC PPK'
+                        WHEN k.posisiId = 4 THEN 'ACC WD'
                         WHEN k.posisiId IN (1) AND k.statusUtamaId IN (5, 6) AND k.jumlahDicairkan IS NOT NULL AND l.statusId = 1 THEN 'LPJ'
                         WHEN k.posisiId = 5 OR (k.posisiId = 1 AND k.statusUtamaId IN (5, 6) AND k.jumlahDicairkan IS NULL) THEN 'Dana Cair'
                         ELSE 'Unknown'

@@ -46,7 +46,7 @@ class PpkModel
        $query = "SELECT
                     COUNT(*) as total,
                     SUM(CASE
-                        WHEN posisiId IN (3, 5) AND statusUtamaId != 4 OR statusUtamaId IN (5, 6) AND posisiId IN (1) THEN 1
+                        WHEN posisiId IN (4, 5) AND statusUtamaId != 4 OR statusUtamaId IN (5, 6) AND posisiId IN (1) THEN 1
                         ELSE 0
                     END) as disetujui,
                     SUM(CASE
@@ -54,7 +54,7 @@ class PpkModel
                         ELSE 0
                     END) as ditolak,
                     SUM(CASE
-                        WHEN posisiId = 4 THEN 1
+                        WHEN posisiId = 3 THEN 1
                         ELSE 0
                     END) as pending
                 FROM tbl_kegiatan";
@@ -88,7 +88,7 @@ class PpkModel
                     s.namaStatusUsulan as status
                 FROM tbl_kegiatan k
                 LEFT JOIN tbl_status_utama s ON k.statusUtamaId = s.statusId
-                WHERE k.posisiId = 4
+                WHERE k.posisiId = 3
                 ORDER BY k.createdAt DESC";
 
         $result = mysqli_query($this->db, $query);
@@ -207,8 +207,8 @@ class PpkModel
      */
     public function approveUsulan(int $kegiatanId, string $rekomendasi = ''): bool
     {
-        $nextPosisi = 3;  // WADIR (setelah PPK, harus ke Wadir dulu sebelum Bendahara)
-        $currentPosisi = 4; // PPK
+        $nextPosisi = 4;  // WADIR (setelah PPK, harus ke Wadir dulu sebelum Bendahara)
+        $currentPosisi = 3; // PPK
         $statusProses = 1; // Disetujui (oleh PPK) dan lanjut ke Wadir sebagai status menunggu
         $userId = $_SESSION['user_id'] ?? null;
 
@@ -275,7 +275,7 @@ class PpkModel
                     END as status
                   FROM tbl_kegiatan k
                   WHERE 
-                    k.posisiId >= 3 OR k.statusUtamaId = 4 OR k.statusUtamaId IN (5, 6)
+                    k.posisiId >= 4 OR k.statusUtamaId = 4 OR k.statusUtamaId IN (5, 6)
                   ORDER BY k.createdAt DESC";
 
         $result = mysqli_query($this->db, $query);
@@ -328,12 +328,12 @@ class PpkModel
             if ($statusFilter === 'ditolak') {
                 $whereClause .= " AND k.statusUtamaId = 4";
             } elseif ($statusFilter === 'approved') {
-                $whereClause .= " AND k.posisiId >= 5 AND k.statusUtamaId != 4";
+                $whereClause .= " AND k.posisiId >= 4 AND k.statusUtamaId != 4";
             } elseif ($statusFilter === 'menunggu') {
-                // FIXED: Menunggu = posisi di PPK (4) DAN statusUtama = 1 (menunggu approval)
-                $whereClause .= " AND k.posisiId = 4 AND k.statusUtamaId = 1";
+                // FIXED: Menunggu = posisi di PPK (3) DAN statusUtama = 1 (menunggu approval)
+                $whereClause .= " AND k.posisiId = 3 AND k.statusUtamaId = 1";
             } elseif ($statusFilter === 'in process') {
-                $whereClause .= " AND k.statusUtamaId != 4 AND k.posisiId < 5";
+                $whereClause .= " AND k.statusUtamaId != 4 AND k.posisiId < 4";
             } elseif ($statusFilter === 'lpj') {
                 // Filter untuk LPJ: posisi di 1 atau 6, status 5 atau 6, dan dana sudah cair
                 $whereClause .= " AND k.posisiId IN (1, 6) AND k.statusUtamaId IN (5, 6) AND k.jumlahDicairkan IS NOT NULL";
@@ -377,16 +377,16 @@ class PpkModel
                         WHEN k.statusUtamaId = 4 THEN 'Ditolak' 
                         WHEN k.posisiId = 1 AND k.statusUtamaId NOT IN (4, 5, 6) THEN 'Pengajuan'
                         WHEN k.posisiId = 2 AND k.statusUtamaId != 4 THEN 'Verifikasi'
-                        WHEN k.posisiId = 4 THEN 'ACC PPK'
-                        WHEN k.posisiId = 3 THEN 'ACC WD'
+                        WHEN k.posisiId = 3 THEN 'ACC PPK'
+                        WHEN k.posisiId = 4 THEN 'ACC WD'
                         WHEN k.posisiId IN (1) AND k.statusUtamaId IN (5, 6) AND k.jumlahDicairkan IS NOT NULL AND l.statusId = 1 THEN 'LPJ'
                         WHEN k.posisiId = 5 OR (k.posisiId = 1 AND k.statusUtamaId IN (5, 6) AND k.jumlahDicairkan IS NULL) THEN 'Dana Cair'
                         ELSE 'Unknown'
                     END as tahap_sekarang,
                     CASE 
                         WHEN k.statusUtamaId = 4 THEN 'Ditolak'
-                        WHEN (k.posisiId >= 5 OR (k.posisiId = 1 AND k.statusUtamaId IN (5, 6) AND k.jumlahDicairkan IS NOT NULL)) AND l.statusId = 3 THEN 'Approved'
-                        WHEN k.posisiId = 4 AND k.statusUtamaId = 1 OR l.statusId = 1 THEN 'Menunggu'
+                        WHEN (k.posisiId >= 4 OR (k.posisiId = 1 AND k.statusUtamaId IN (5, 6) AND k.jumlahDicairkan IS NOT NULL)) AND l.statusId = 3 THEN 'Approved'
+                        WHEN k.posisiId = 3 AND k.statusUtamaId = 1 OR l.statusId = 1 THEN 'Menunggu'
                         ELSE 'In Process'
                     END as status
                   FROM tbl_kegiatan k

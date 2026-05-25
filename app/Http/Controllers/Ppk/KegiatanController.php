@@ -4,106 +4,131 @@ namespace App\Http\Controllers\Ppk;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\Kegiatan;
+use App\Models\Jurusan;
 
 class KegiatanController extends Controller
 {
     public function index()
     {
-        $list_kegiatan = [
-            [
-                'id' => 1,
-                'nama' => 'Pengadaan Laptop Laboratorium TI',
-                'pengusul' => 'Yovana Ibnu Sina',
-                'nim' => '2407411059',
-                'prodi' => 'Teknik Informatika',
-                'jurusan' => 'Teknik Informatika dan Komputer',
-                'tanggal_pengajuan' => '2026-05-15',
-                'status' => 'Menunggu',
-            ],
-            [
-                'id' => 2,
-                'nama' => 'Workshop UI/UX Design Modern',
-                'pengusul' => 'Muhammad Syafri',
-                'nim' => '2407411085',
-                'prodi' => 'Teknik Informatika',
-                'jurusan' => 'Teknik Informatika dan Komputer',
-                'tanggal_pengajuan' => '2026-05-14',
-                'status' => 'Disetujui',
-            ],
-            [
-                'id' => 3,
-                'nama' => 'Seminar Nasional Teknologi 2026',
-                'pengusul' => 'Budi Santoso',
-                'nim' => '2407411001',
-                'prodi' => 'Teknik Komputer',
-                'jurusan' => 'Teknik Informatika dan Komputer',
-                'tanggal_pengajuan' => '2026-05-13',
-                'status' => 'Menunggu',
-            ],
-        ];
+        $list_kegiatan = Kegiatan::where('posisi_id', 3)
+            ->where('status_utama_id', 1)
+            ->with('statusUtama')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($k) {
+                return [
+                    'id' => $k->kegiatan_id,
+                    'nama' => $k->nama_kegiatan,
+                    'pengusul' => $k->pemilik_kegiatan ?? $k->nama_pj ?? '-',
+                    'nim' => $k->nim_pelaksana ?? $k->nip ?? '-',
+                    'prodi' => $k->prodi_penyelenggara ?? '-',
+                    'jurusan' => $k->jurusan_penyelenggara ?? '-',
+                    'tanggal_pengajuan' => $k->created_at ? $k->created_at->format('Y-m-d') : '-',
+                    'status' => $k->statusUtama ? $k->statusUtama->nama_status_usulan : 'Menunggu'
+                ];
+            })->toArray();
 
-        $jurusan_list = [
-            'Teknik Informatika dan Komputer',
-            'Teknik Elektro',
-            'Administrasi Niaga',
-            'Akuntansi',
-            'Teknik Mesin',
-            'Teknik Grafika dan Penerbitan'
-        ];
+        $jurusan_list = Jurusan::pluck('nama_jurusan')->toArray();
+        if (empty($jurusan_list)) {
+            $jurusan_list = [
+                'Teknik Informatika dan Komputer',
+                'Teknik Elektro',
+                'Administrasi Niaga',
+                'Akuntansi',
+                'Teknik Mesin',
+                'Teknik Grafika dan Penerbitan'
+            ];
+        }
 
         return view('ppk.kegiatan.index', compact('list_kegiatan', 'jurusan_list'));
     }
 
     public function show($id)
     {
-        // Dummy data detail
-        $status = ($id % 2 == 0) ? 'Disetujui' : 'Menunggu';
+        $kegiatan = Kegiatan::with([
+            'kak.rabs.kategori', 
+            'kak.indikators', 
+            'kak.tahapans', 
+            'wadir', 
+            'statusUtama'
+        ])->findOrFail($id);
+
+        $status = $kegiatan->statusUtama ? $kegiatan->statusUtama->nama_status_usulan : 'Menunggu';
         
         $kegiatan_data = [
-            'nama_pengusul' => 'Yovana Ibnu Sina',
-            'nim_nip' => '2407411059',
-            'jurusan' => 'Teknik Informatika dan Komputer',
-            'prodi' => 'Teknik Informatika',
-            'nama_penanggung_jawab' => 'Dr. Heri Herwanto',
-            'nip_penanggung_jawab' => '198001012005011001',
-            'nama_kegiatan' => 'Pengadaan Laptop Laboratorium TI Terpadu',
-            'mak_code' => '521211.001.052.A.524111',
-            'gambaran_umum' => 'Kegiatan ini bertujuan untuk meremajakan perangkat komputer di Lab TI guna mendukung pembelajaran mata kuliah Pemrograman Web dan AI.',
-            'penerima_manfaat' => 'Seluruh mahasiswa tingkat 2 dan 3 prodi Teknik Informatika.',
-            'metode_pelaksanaan' => 'Pembelian melalui vendor resmi dengan spesifikasi minimal i7 Gen 13, 16GB RAM.',
-            'tahapan_kegiatan' => "1. Survei Harga\n2. Pengajuan Vendor\n3. Verifikasi Barang\n4. Instalasi & Inventarisasi",
-            'surat_pengantar' => 'SURAT_PENGANTAR_059.pdf',
-            'tanggal_mulai' => '2026-06-01',
-            'tanggal_selesai' => '2026-06-30',
+            'nama_pengusul' => $kegiatan->pemilik_kegiatan,
+            'nim_nip' => $kegiatan->nim_pelaksana ?? $kegiatan->nip,
+            'jurusan' => $kegiatan->jurusan_penyelenggara,
+            'prodi' => $kegiatan->prodi_penyelenggara,
+            'nama_penanggung_jawab' => $kegiatan->nama_pj ?? $kegiatan->pemilik_kegiatan,
+            'nip_penanggung_jawab' => $kegiatan->nip ?? $kegiatan->nim_pelaksana,
+            'nama_kegiatan' => $kegiatan->nama_kegiatan,
+            'mak_code' => $kegiatan->bukti_mak,
+            'gambaran_umum' => $kegiatan->kak ? $kegiatan->kak->gambaran_umum : '',
+            'penerima_manfaat' => $kegiatan->kak ? $kegiatan->kak->penerima_manfaat : '',
+            'metode_pelaksanaan' => $kegiatan->kak ? $kegiatan->kak->metode_pelaksanaan : '',
+            'tahapan_kegiatan' => $kegiatan->kak ? implode("\n", $kegiatan->kak->tahapans->pluck('nama_tahapan')->toArray()) : '',
+            'surat_pengantar' => $kegiatan->surat_pengantar,
+            'tanggal_mulai' => $kegiatan->tanggal_mulai ? $kegiatan->tanggal_mulai->format('Y-m-d') : '',
+            'tanggal_selesai' => $kegiatan->tanggal_selesai ? $kegiatan->tanggal_selesai->format('Y-m-d') : '',
         ];
 
-        $iku_data = ['IKU 1: Lulusan Mendapat Pekerjaan Layak', 'IKU 7: Kelas yang Kolaboratif dan Partisipatif'];
+        $iku_data = array_filter(explode(',', $kegiatan->kak->iku ?? ''));
         
-        $tahapan_pelaksanaan = [
-            6 => 'Survei dan Pemilihan Vendor',
-            7 => 'Pengiriman dan QC Barang'
-        ];
+        $tahapan_pelaksanaan = [];
+        if ($kegiatan->kak) {
+            foreach ($kegiatan->kak->tahapans as $index => $t) {
+                $tahapan_pelaksanaan[$index + 1] = $t->nama_tahapan;
+            }
+        }
 
-        $indikator_keberhasilan = [
-            6 => ['deskripsi' => 'Tersedianya 3 penawaran vendor', 'target_persen' => 100],
-            7 => ['deskripsi' => 'Barang sampai dan sesuai spek', 'target_persen' => 100]
-        ];
+        $indikator_keberhasilan = [];
+        if ($kegiatan->kak) {
+            foreach ($kegiatan->kak->indikators as $index => $ind) {
+                $indikator_keberhasilan[$index + 1] = [
+                    'target_persen' => $ind->target_persen,
+                    'deskripsi' => $ind->indikator_keberhasilan
+                ];
+            }
+        }
 
-        $rab_data = [
-            'Belanja Barang' => [
-                ['uraian' => 'Laptop ASUS ROG Strix', 'rincian' => 'Spek i7/16GB/512GB', 'vol1' => 10, 'sat1' => 'Unit', 'harga' => 15000000],
-            ],
-            'Honorarium' => [
-                ['uraian' => 'Honor Tim Teknis', 'rincian' => 'Instalasi Software', 'vol1' => 2, 'sat1' => 'Orang', 'vol2' => 1, 'sat2' => 'Kegiatan', 'harga' => 500000],
-            ]
-        ];
+        $rab_data = [];
+        if ($kegiatan->kak) {
+            foreach ($kegiatan->kak->rabs as $rab) {
+                $catName = $rab->kategori ? $rab->kategori->nama_kategori : 'Belanja Barang';
+                $rab_data[$catName][] = [
+                    'uraian' => $rab->uraian,
+                    'rincian' => $rab->rincian,
+                    'vol1' => (float)$rab->vol1,
+                    'sat1' => $rab->sat1,
+                    'vol2' => (float)$rab->vol2,
+                    'sat2' => $rab->sat2,
+                    'harga' => (float)$rab->harga,
+                    'total_harga' => (float)$rab->total_harga,
+                ];
+            }
+        }
 
         return view('ppk.kegiatan.show', compact('id', 'status', 'kegiatan_data', 'iku_data', 'tahapan_pelaksanaan', 'indikator_keberhasilan', 'rab_data'));
     }
 
     public function store(Request $request, $id)
     {
-        // Logika simpan persetujuan
-        return redirect()->route('ppk.dashboard')->with('success', 'Usulan #' . $id . ' berhasil diproses.');
+        $request->validate([
+            'action' => 'required|in:approve',
+        ]);
+
+        $kegiatan = Kegiatan::findOrFail($id);
+
+        // PPK Approves proposal and moves it to Wadir
+        $kegiatan->update([
+            'posisi_id' => 4, // Wadir
+            'status_utama_id' => 1, // Menunggu (waiting for Wadir approval)
+            'umpan_balik_verifikator' => $request->catatan,
+        ]);
+
+        return redirect()->route('ppk.dashboard')->with('success', 'Usulan #' . $id . ' berhasil disetujui.');
     }
 }
+

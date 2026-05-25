@@ -12,8 +12,8 @@ class WorkflowService
     // Workflow positions (maps to role ordering)
     const POSITION_ADMIN = 1;
     const POSITION_VERIFIKATOR = 2;
-    const POSITION_WADIR = 3;
-    const POSITION_PPK = 4;
+    const POSITION_WADIR = 4;
+    const POSITION_PPK = 3;
     const POSITION_BENDAHARA = 5;
 
     // Status constants

@@ -635,22 +635,9 @@
             borderRadius: '24px'
         }).then((result) => {
             if (result.isConfirmed) {
-                Swal.fire({
-                    title: 'Memproses...',
-                    allowOutsideClick: false,
-                    didOpen: () => { Swal.showLoading(); }
-                });
-                setTimeout(() => {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Berhasil!',
-                        text: 'Instruksi pencairan dana telah berhasil dibuat.',
-                        confirmButtonColor: '#10b981',
-                        borderRadius: '24px'
-                    }).then(() => {
-                        window.location.href = "{{ route('bendahara.pencairan.index') }}";
-                    });
-                }, 1500);
+                const form = document.getElementById('formPencairan');
+                form.action = "{{ route('bendahara.pencairan.proses', $id) }}";
+                form.submit();
             }
         });
     }

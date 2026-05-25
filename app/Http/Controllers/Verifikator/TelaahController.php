@@ -4,138 +4,162 @@ namespace App\Http\Controllers\Verifikator;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\Kegiatan;
+use App\Models\Jurusan;
 
 class TelaahController extends Controller
 {
     public function index()
     {
-        $list_usulan = [
-            [
-                'id' => 1001,
-                'nama' => 'Peningkatan Kompetensi AI Mahasiswa TI',
-                'pengusul' => 'Yovana Ibnu Sina',
-                'nim' => '2407411059',
-                'prodi' => 'Teknik Informatika',
-                'jurusan' => 'Teknik Informatika dan Komputer',
-                'tanggal_pengajuan' => '2026-05-14',
-                'status' => 'Menunggu Verifikasi'
-            ],
-            [
-                'id' => 1002,
-                'nama' => 'Workshop UI/UX Design Modern',
-                'pengusul' => 'Ahmad Fauzi',
-                'nim' => '2407411050',
-                'prodi' => 'Teknik Informatika',
-                'jurusan' => 'Teknik Informatika dan Komputer',
-                'tanggal_pengajuan' => '2026-05-15',
-                'status' => 'Review'
-            ],
-            [
-                'id' => 1003,
-                'nama' => 'Seminar Internasional Digital Transformation',
-                'pengusul' => 'Budi Santoso',
-                'nim' => '2407411003',
-                'prodi' => 'Teknik Elektro',
-                'jurusan' => 'Teknik Elektro',
-                'tanggal_pengajuan' => '2026-05-15',
-                'status' => 'Menunggu Verifikasi'
-            ],
-            [
-                'id' => 1004,
-                'nama' => 'Lomba Karya Tulis Ilmiah 2026',
-                'pengusul' => 'Siti Aminah',
-                'nim' => '2407411080',
-                'prodi' => 'Teknik Grafika',
-                'jurusan' => 'Teknik Grafika dan Penerbitan',
-                'tanggal_pengajuan' => '2026-05-16',
-                'status' => 'Menunggu Verifikasi'
-            ],
-        ];
-        $jurusan_list = [
-            'Teknik Informatika dan Komputer',
-            'Teknik Grafika dan Penerbitan',
-            'Teknik Elektro',
-            'Teknik Mesin',
-            'Teknik Sipil',
-            'Administrasi Niaga',
-            'Akuntansi',
-        ];
+        $list_usulan = Kegiatan::where('posisi_id', 2)
+            ->where('status_utama_id', 1)
+            ->with('statusUtama')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($k) {
+                return [
+                    'id' => $k->kegiatan_id,
+                    'nama' => $k->nama_kegiatan,
+                    'pengusul' => $k->pemilik_kegiatan ?? $k->nama_pj ?? '-',
+                    'nim' => $k->nim_pelaksana ?? $k->nip ?? '-',
+                    'prodi' => $k->prodi_penyelenggara ?? '-',
+                    'jurusan' => $k->jurusan_penyelenggara ?? '-',
+                    'tanggal_pengajuan' => $k->created_at ? $k->created_at->format('Y-m-d') : '-',
+                    'status' => $k->statusUtama ? $k->statusUtama->nama_status_usulan : 'Menunggu'
+                ];
+            })->toArray();
+
+        $jurusan_list = Jurusan::pluck('nama_jurusan')->toArray();
+        if (empty($jurusan_list)) {
+            $jurusan_list = [
+                'Teknik Informatika dan Komputer',
+                'Teknik Grafika dan Penerbitan',
+                'Teknik Elektro',
+                'Teknik Mesin',
+                'Teknik Sipil',
+                'Administrasi Niaga',
+                'Akuntansi',
+            ];
+        }
+
         return view('verifikator.telaah.index', compact('list_usulan', 'jurusan_list'));
     }
 
     public function show($id)
     {
-        // Status map based on dummy IDs from Dashboard and Riwayat
-        $status_map = [
-            // From Dashboard (Pending/Process)
-            1001 => 'Menunggu Verifikasi',
-            1002 => 'Review',
-            1003 => 'Menunggu Verifikasi',
-            1004 => 'Menunggu Verifikasi',
-            
-            // Sync exactly with RiwayatController
-            601 => 'Disetujui',
-            602 => 'Disetujui',
-            603 => 'Revisi',
-            604 => 'Disetujui',
-            605 => 'Ditolak',
-            606 => 'Revisi',
-            607 => 'Disetujui',
-            608 => 'Disetujui',
-            609 => 'Ditolak',
-            610 => 'Revisi',
-        ];
-        $status = $status_map[$id] ?? 'Menunggu';
+        $kegiatan = Kegiatan::with([
+            'kak.rabs.kategori', 
+            'kak.indikators', 
+            'kak.tahapans', 
+            'wadir', 
+            'statusUtama'
+        ])->findOrFail($id);
 
-        $iku_data = [
-            'Mendapat Pekerjaan', 
-            'Kegiatan luar prodi'
-        ];
+        $status = $kegiatan->statusUtama ? $kegiatan->statusUtama->nama_status_usulan : 'Menunggu';
 
-        $rab_data = [
-            'Belanja Barang' => [
-                ['uraian' => 'Konsumsi', 'rincian' => 'Snack & Lunch Box', 'vol1' => 50, 'sat1' => 'Paket', 'vol2' => 1, 'sat2' => 'Kali', 'harga' => 35000],
-                ['uraian' => 'ATK', 'rincian' => 'Kertas & Tinta Print', 'vol1' => 2, 'sat1' => 'Rim', 'vol2' => 1, 'sat2' => 'Kali', 'harga' => 55000]
-            ],
-            'Belanja Jasa' => [
-                ['uraian' => 'Honor Pemateri', 'rincian' => 'Narasumber Ahli', 'vol1' => 1, 'sat1' => 'Orang', 'vol2' => 4, 'sat2' => 'Jam', 'harga' => 500000]
-            ]
-        ];
+        $iku_data = array_filter(explode(',', $kegiatan->kak->iku ?? ''));
+
+        $rab_data = [];
+        if ($kegiatan->kak) {
+            foreach ($kegiatan->kak->rabs as $rab) {
+                $catName = $rab->kategori ? $rab->kategori->nama_kategori : 'Belanja Barang';
+                $rab_data[$catName][] = [
+                    'uraian' => $rab->uraian,
+                    'rincian' => $rab->rincian,
+                    'vol1' => (float)$rab->vol1,
+                    'sat1' => $rab->sat1,
+                    'vol2' => (float)$rab->vol2,
+                    'sat2' => $rab->sat2,
+                    'harga' => (float)$rab->harga,
+                    'total_harga' => (float)$rab->total_harga,
+                ];
+            }
+        }
 
         $kegiatan_data = [
-            'nama_pengusul' => 'Yovana Ibnu Sina',
-            'nim_nip' => '2407411059',
-            'jurusan' => 'Teknik Informatika dan Komputer',
-            'prodi' => 'D4 Teknik Informatika',
-            'nama_kegiatan' => 'Peningkatan Kompetensi AI Mahasiswa TI',
-            'wadir_tujuan' => 'Wakil Direktur Bidang Kemahasiswaan',
-            'penerima_manfaat' => 'Mahasiswa TIK Semester 4 & 6',
-            'gambaran_umum' => 'Workshop ini dirancang untuk memberikan pemahaman mendalam tentang prinsip desain UI/UX kepada mahasiswa. Fokus pada User Research, Wireframing, dan Prototyping menggunakan Figma.',
-            'metode_pelaksanaan' => 'Sesi teori di pagi hari diikuti dengan workshop praktik di siang hari. Peserta akan bekerja dalam kelompok kecil untuk menyelesaikan proyek mini.'
+            'nama_pengusul' => $kegiatan->pemilik_kegiatan,
+            'nim_nip' => $kegiatan->nim_pelaksana ?? $kegiatan->nip,
+            'jurusan' => $kegiatan->jurusan_penyelenggara,
+            'prodi' => $kegiatan->prodi_penyelenggara,
+            'nama_kegiatan' => $kegiatan->nama_kegiatan,
+            'wadir_tujuan' => $kegiatan->wadir ? ('Wakil Direktur Bidang ' . $kegiatan->wadir->nama_wadir) : 'Wakil Direktur',
+            'penerima_manfaat' => $kegiatan->kak ? $kegiatan->kak->penerima_manfaat : '',
+            'gambaran_umum' => $kegiatan->kak ? $kegiatan->kak->gambaran_umum : '',
+            'metode_pelaksanaan' => $kegiatan->kak ? $kegiatan->kak->metode_pelaksanaan : '',
+            'kode_mak' => $kegiatan->bukti_mak
         ];
 
-        $tahapan_pelaksanaan = [
-            '1' => 'Persiapan materi dan koordinasi pemateri.',
-            '2' => 'Publikasi acara dan pendaftaran peserta.',
-            '3' => 'Pelaksanaan workshop dan evaluasi awal.',
-            '4' => 'Penyusunan laporan pertanggungjawaban.'
-        ];
+        $tahapan_pelaksanaan = [];
+        if ($kegiatan->kak) {
+            foreach ($kegiatan->kak->tahapans as $index => $t) {
+                $tahapan_pelaksanaan[$index + 1] = $t->nama_tahapan;
+            }
+        }
 
-        $indikator_keberhasilan = [
-            '1' => ['target_persen' => 100, 'deskripsi' => 'Materi telah disetujui dan pemateri konfirmasi kehadiran.'],
-            '2' => ['target_persen' => 100, 'deskripsi' => 'Target 50 peserta terdaftar terpenuhi.'],
-            '3' => ['target_persen' => 80, 'deskripsi' => 'Acara berjalan lancar dengan tingkat kepuasan peserta minimal 80%.'],
-            '4' => ['target_persen' => 100, 'deskripsi' => 'LPJ diserahkan tepat waktu dan disetujui tanpa revisi major.']
-        ];
+        $indikator_keberhasilan = [];
+        if ($kegiatan->kak) {
+            foreach ($kegiatan->kak->indikators as $index => $ind) {
+                $indikator_keberhasilan[$index + 1] = [
+                    'target_persen' => $ind->target_persen,
+                    'deskripsi' => $ind->indikator_keberhasilan
+                ];
+            }
+        }
 
-        $catatan_revisi = null;
+        $catatan_revisi = $kegiatan->umpan_balik_verifikator;
 
-        return view('verifikator.telaah.show', compact('id', 'status', 'iku_data', 'rab_data', 'kegiatan_data', 'tahapan_pelaksanaan', 'indikator_keberhasilan', 'catatan_revisi'));
+        return view('verifikator.telaah.show', compact(
+            'id', 
+            'status', 
+            'iku_data', 
+            'rab_data', 
+            'kegiatan_data', 
+            'tahapan_pelaksanaan', 
+            'indikator_keberhasilan', 
+            'catatan_revisi'
+        ));
     }
 
     public function store(Request $request, $id)
     {
-        // Handle review submission
-        return redirect()->route('verifikator.telaah.index')->with('success', 'Telaah berhasil disimpan.');
+        $request->validate([
+            'action' => 'required|in:approve,revise,reject',
+        ]);
+
+        $kegiatan = Kegiatan::findOrFail($id);
+
+        if ($request->action === 'approve') {
+            $kegiatan->update([
+                'posisi_id' => 1, // Move back to Admin to fill details
+                'status_utama_id' => 1, // Keep status as Menunggu for next step
+                'bukti_mak' => $request->kode_mak,
+                'umpan_balik_verifikator' => $request->notes,
+            ]);
+            $message = 'Usulan berhasil disetujui dan diteruskan ke Admin.';
+        } elseif ($request->action === 'revise') {
+            $kegiatan->update([
+                'posisi_id' => 1, // Back to Admin
+                'status_utama_id' => 2, // Revisi
+                'umpan_balik_verifikator' => $request->notes,
+            ]);
+            $message = 'Catatan revisi berhasil dikirim ke Admin.';
+        } else {
+            $kegiatan->update([
+                'posisi_id' => 1, // Back to Admin
+                'status_utama_id' => 4, // Ditolak
+                'umpan_balik_verifikator' => $request->reason,
+            ]);
+            $message = 'Usulan berhasil ditolak.';
+        }
+
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => $message
+            ]);
+        }
+
+        return redirect()->route('verifikator.telaah.index')->with('success', $message);
     }
 }
+

@@ -9,98 +9,55 @@ class DashboardController extends Controller
 {
     public function index()
     {
+        $total_kak = \App\Models\Kegiatan::where('posisi_id', '>=', 5)->count();
+        $dana_diberikan = \App\Models\Kegiatan::where('status_utama_id', 5)->count();
+        $ditolak = \App\Models\Kegiatan::where('status_utama_id', 4)->count();
+        $menunggu = \App\Models\Kegiatan::where('posisi_id', 5)->where('status_utama_id', 3)->count();
+
         $stats = [
-            'total'         => 12,
-            'danaDiberikan' => 8,
-            'ditolak'       => 1,
-            'menunggu'      => 3,
+            'total'         => $total_kak,
+            'danaDiberikan' => $dana_diberikan,
+            'ditolak'       => $ditolak,
+            'menunggu'      => $menunggu,
         ];
         
-        $list_kak = [
-            [
-                'id' => 1101,
-                'nama' => 'Workshop UI/UX Design Modern',
-                'pengusul' => 'Rizki Pratama',
-                'nim' => '2407411050',
-                'prodi' => 'Teknik Informatika',
-                'jurusan' => 'Teknik Informatika dan Komputer',
-                'tanggal_pengajuan' => '2026-05-12',
-                'status' => 'Belum Dicairkan'
-            ],
-            [
-                'id' => 1102,
-                'nama' => 'Seminar Internasional Blockchain',
-                'pengusul' => 'Ahmad Fauzi',
-                'nim' => '2407411052',
-                'prodi' => 'Teknik Informatika',
-                'jurusan' => 'Teknik Informatika dan Komputer',
-                'tanggal_pengajuan' => '2026-05-13',
-                'status' => 'Sudah Dicairkan'
-            ],
-            [
-                'id' => 1103,
-                'nama' => 'Pengadaan Alat Praktikum Elektro',
-                'pengusul' => 'Bambang Sudarsono',
-                'nim' => '2407411055',
-                'prodi' => 'Teknik Elektro',
-                'jurusan' => 'Teknik Elektro',
-                'tanggal_pengajuan' => '2026-05-15',
-                'status' => 'Belum Dicairkan'
-            ],
-            [
-                'id' => 1104,
-                'nama' => 'Lomba Karya Tulis Ilmiah Nasional',
-                'pengusul' => 'Dewi Lestari',
-                'nim' => '2407411051',
-                'prodi' => 'Akuntansi',
-                'jurusan' => 'Akuntansi',
-                'tanggal_pengajuan' => '2026-05-16',
-                'status' => 'Belum Dicairkan'
-            ],
-        ];
+        $list_kak = \App\Models\Kegiatan::where('posisi_id', '>=', 5)
+            ->with('statusUtama')
+            ->orderBy('updated_at', 'desc')
+            ->get()
+            ->map(function ($k) {
+                $status = ($k->status_utama_id == 5) ? 'Sudah Dicairkan' : 'Belum Dicairkan';
+                return [
+                    'id' => $k->kegiatan_id,
+                    'nama' => $k->nama_kegiatan,
+                    'pengusul' => $k->pemilik_kegiatan ?? $k->nama_pj ?? '-',
+                    'nim' => $k->nim_pelaksana ?? $k->nip ?? '-',
+                    'prodi' => $k->prodi_penyelenggara ?? '-',
+                    'jurusan' => $k->jurusan_penyelenggara ?? '-',
+                    'tanggal_pengajuan' => $k->created_at ? $k->created_at->format('Y-m-d') : '-',
+                    'status' => $status
+                ];
+            })->toArray();
 
-        $list_lpj = [
-            [
-                'id' => 1301,
-                'nama' => 'LPJ - Bakti Sosial Mahasiswa 2026',
-                'pengusul' => 'Andi Wijaya',
-                'nim' => '2407411060',
-                'prodi' => 'Teknik Elektro',
-                'jurusan' => 'Teknik Elektro',
-                'tanggal_pengajuan' => '2026-05-11',
-                'status' => 'Menunggu Verifikasi'
-            ],
-            [
-                'id' => 1302,
-                'nama' => 'LPJ - Kunjungan Industri PT. Digital Jaya',
-                'pengusul' => 'Santi Kurnia',
-                'nim' => '2407411061',
-                'prodi' => 'Administrasi Niaga',
-                'jurusan' => 'Administrasi Niaga',
-                'tanggal_pengajuan' => '2026-05-13',
-                'status' => 'Revisi'
-            ],
-            [
-                'id' => 1303,
-                'nama' => 'LPJ - Workshop Mobile Development',
-                'pengusul' => 'Rizky Pratama',
-                'nim' => '2407411062',
-                'prodi' => 'Teknik Informatika',
-                'jurusan' => 'Teknik Informatika dan Komputer',
-                'tanggal_pengajuan' => '2026-05-15',
-                'status' => 'Telah Direvisi'
-            ],
-            [
-                'id' => 1305,
-                'nama' => 'LPJ - Seminar Nasional Teknologi 4.0',
-                'pengusul' => 'Dewi Lestari',
-                'nim' => '2407411064',
-                'prodi' => 'Teknik Informatika',
-                'jurusan' => 'Teknik Informatika dan Komputer',
-                'tanggal_pengajuan' => '2026-05-10',
-                'status' => 'Telah Direvisi'
-            ],
-        ];
+        $list_lpj = \App\Models\Lpj::with(['kegiatan.statusUtama', 'status'])
+            ->orderBy('submitted_at', 'desc')
+            ->get()
+            ->map(function ($l) {
+                $status = 'Menunggu Verifikasi';
+                if ($l->status_id == 2) $status = 'Revisi';
+                elseif ($l->status_id == 3) $status = 'Disetujui';
+
+                return [
+                    'id' => $l->lpj_id,
+                    'nama' => 'LPJ - ' . ($l->kegiatan ? $l->kegiatan->nama_kegiatan : 'Kegiatan'),
+                    'pengusul' => $l->kegiatan ? ($l->kegiatan->pemilik_kegiatan ?? $l->kegiatan->nama_pj ?? '-') : '-',
+                    'nim' => $l->kegiatan ? ($l->kegiatan->nim_pelaksana ?? $l->kegiatan->nip ?? '-') : '-',
+                    'prodi' => $l->kegiatan ? ($l->kegiatan->prodi_penyelenggara ?? '-') : '-',
+                    'jurusan' => $l->kegiatan ? ($l->kegiatan->jurusan_penyelenggara ?? '-') : '-',
+                    'tanggal_pengajuan' => $l->submitted_at ? $l->submitted_at->format('Y-m-d') : '-',
+                    'status' => $status
+                ];
+            })->toArray();
 
         return view('bendahara.dashboard', compact('stats', 'list_kak', 'list_lpj'));
     }

@@ -383,22 +383,17 @@
             }
         }).then((result) => {
             if (result.isConfirmed) {
-                Swal.fire({
-                    title: 'Memproses...',
-                    allowOutsideClick: false,
-                    didOpen: () => { Swal.showLoading(); }
-                });
-                setTimeout(() => {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Berhasil!',
-                        text: 'Tindakan verifikasi Anda telah tersimpan (Mock).',
-                        confirmButtonColor: '#3b82f6',
-                        borderRadius: '24px'
-                    }).then(() => {
-                        window.location.href = "{{ route('bendahara.lpj.index') }}";
-                    });
-                }, 1500);
+                const form = document.getElementById('form-lpj-verify');
+                form.action = "{{ route('bendahara.lpj.proses', $id) }}";
+                
+                // Add a hidden input for action
+                const actionInput = document.createElement('input');
+                actionInput.type = 'hidden';
+                actionInput.name = 'action';
+                actionInput.value = type;
+                form.appendChild(actionInput);
+                
+                form.submit();
             }
         });
     }

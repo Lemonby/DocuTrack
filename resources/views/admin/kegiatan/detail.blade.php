@@ -4,7 +4,7 @@
 
 @section('content')
 @php
-    $isEditable = (strtolower($status) === 'disetujui' || strtolower($status) === 'revisi');
+    $isEditable = (empty($detail_data['surat_pengantar']) || strtolower($status) === 'revisi' || strtolower($status) === 'disetujui');
     $statusColor = match(strtolower($status)) {
         'disetujui', 'selesai' => 'emerald',
         'revisi' => 'amber',
@@ -153,10 +153,10 @@
                         <i class="fas fa-file-pdf text-3xl"></i>
                     </div>
                     <h4 class="text-sm font-black text-slate-800 mb-1">Surat Pengantar</h4>
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">DOKUMEN_PENDUKUNG.PDF</p>
-                    <button class="px-6 py-2 bg-white border border-slate-200 text-slate-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-colors shadow-sm">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">{{ basename($detail_data['surat_pengantar'] ?? 'DOKUMEN_PENDUKUNG.PDF') }}</p>
+                    <a href="{{ asset('storage/' . $detail_data['surat_pengantar']) }}" target="_blank" class="px-6 py-2 bg-white border border-slate-200 text-slate-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-colors shadow-sm inline-block">
                         <i class="fas fa-eye mr-1"></i> LIHAT BERKAS
-                    </button>
+                    </a>
                 </div>
             </div>
 

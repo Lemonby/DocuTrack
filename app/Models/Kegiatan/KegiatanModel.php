@@ -198,8 +198,8 @@ class KegiatanModel
         }
     }
 
-    // Update position to Wadir (posisiId=3)
-    public function updateStatusWadir($kegiatan_id, $posisi_id = 3)
+    // Update position to Wadir (posisiId=4)
+    public function updateStatusWadir($kegiatan_id, $posisi_id = 4)
     {
         $query = "UPDATE tbl_kegiatan SET posisiId = ? WHERE kegiatanId = ?";
         $stmt = mysqli_prepare($this->db, $query);
@@ -218,8 +218,8 @@ class KegiatanModel
         }
     }
 
-    // Update position to PPK (posisiId=4)
-    public function updateStatusPpk($kegiatan_id, $posisi_id = 4)
+    // Update position to PPK (posisiId=3)
+    public function updateStatusPpk($kegiatan_id, $posisi_id = 3)
     {
         $query = "UPDATE tbl_kegiatan SET posisiId = ? WHERE kegiatanId = ?";
         $stmt = mysqli_prepare($this->db, $query);
@@ -376,8 +376,8 @@ class KegiatanModel
                         WHEN k.posisiId = 1 AND k.statusUtamaId = 3 THEN 'Usulan Disetujui'
                         WHEN k.posisiId = 1 AND k.statusUtamaId = 1 THEN 'Menunggu'
                         WHEN k.posisiId = 2 THEN 'DiVerifikator'
-                        WHEN k.posisiId = 4 THEN 'Di PPK'
-                        WHEN k.posisiId = 3 THEN 'Di Wadir'
+                        WHEN k.posisiId = 3 THEN 'Di PPK'
+                        WHEN k.posisiId = 4 THEN 'Di Wadir'
                         WHEN k.posisiId = 5 AND k.tanggalPencairan IS NULL THEN 'Di Bendahara'
                         WHEN k.posisiId = 5 AND k.tanggalPencairan IS NOT NULL THEN 'Dana Diberikan'
                         ELSE 'Menunggu'

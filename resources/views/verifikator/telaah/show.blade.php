@@ -549,18 +549,25 @@
             didOpen: () => { Swal.showLoading(); }
         });
         
-        // Mock success redirect
-        setTimeout(() => {
-            Swal.fire({
-                title: 'Berhasil!',
-                text: 'Status usulan telah diperbarui.',
-                icon: 'success',
-                timer: 1500,
-                showConfirmButton: false
-            }).then(() => {
-                window.location.href = "{{ route('verifikator.telaah.index') }}";
-            });
-        }, 1000);
+        const form = document.getElementById('form-review');
+        form.action = "{{ route('verifikator.telaah.store', $id) }}";
+        
+        // Add a hidden input for action
+        const actionInput = document.createElement('input');
+        actionInput.type = 'hidden';
+        actionInput.name = 'action';
+        actionInput.value = action;
+        form.appendChild(actionInput);
+
+        if (extra) {
+            const extraInput = document.createElement('input');
+            extraInput.type = 'hidden';
+            extraInput.name = action === 'reject' ? 'reason' : 'extra';
+            extraInput.value = extra;
+            form.appendChild(extraInput);
+        }
+
+        form.submit();
     }
 </script>
 @endpush
