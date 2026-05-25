@@ -9,48 +9,24 @@ class TelaahController extends Controller
 {
     public function index()
     {
-        $list_usulan = [
-            [
-                'id' => 1001,
-                'nama' => 'Peningkatan Kompetensi AI Mahasiswa TI',
-                'pengusul' => 'Yovana Ibnu Sina',
-                'nim' => '2407411059',
-                'prodi' => 'Teknik Informatika',
-                'jurusan' => 'Teknik Informatika dan Komputer',
-                'tanggal_pengajuan' => '2026-05-14',
-                'status' => 'Menunggu Verifikasi'
-            ],
-            [
-                'id' => 1002,
-                'nama' => 'Workshop UI/UX Design Modern',
-                'pengusul' => 'Ahmad Fauzi',
-                'nim' => '2407411050',
-                'prodi' => 'Teknik Informatika',
-                'jurusan' => 'Teknik Informatika dan Komputer',
-                'tanggal_pengajuan' => '2026-05-15',
-                'status' => 'Review'
-            ],
-            [
-                'id' => 1003,
-                'nama' => 'Seminar Internasional Digital Transformation',
-                'pengusul' => 'Budi Santoso',
-                'nim' => '2407411003',
-                'prodi' => 'Teknik Elektro',
-                'jurusan' => 'Teknik Elektro',
-                'tanggal_pengajuan' => '2026-05-15',
-                'status' => 'Menunggu Verifikasi'
-            ],
-            [
-                'id' => 1004,
-                'nama' => 'Lomba Karya Tulis Ilmiah 2026',
-                'pengusul' => 'Siti Aminah',
-                'nim' => '2407411080',
-                'prodi' => 'Teknik Grafika',
-                'jurusan' => 'Teknik Grafika dan Penerbitan',
-                'tanggal_pengajuan' => '2026-05-16',
-                'status' => 'Menunggu Verifikasi'
-            ],
-        ];
+        $kegiatanList = \App\Models\Kegiatan::with(['statusUtama', 'user'])
+            ->atPosition(\App\Services\WorkflowService::POSITION_VERIFIKATOR)
+            ->latest()
+            ->get();
+
+        $list_usulan = $kegiatanList->map(function ($kegiatan) {
+            return [
+                'id' => $kegiatan->kegiatan_id,
+                'nama' => $kegiatan->nama_kegiatan,
+                'pengusul' => $kegiatan->user->nama ?? $kegiatan->pemilik_kegiatan,
+                'nim' => $kegiatan->nim_pelaksana,
+                'prodi' => $kegiatan->prodi_penyelenggara,
+                'jurusan' => $kegiatan->jurusan_penyelenggara,
+                'tanggal_pengajuan' => $kegiatan->created_at ? $kegiatan->created_at->format('Y-m-d') : null,
+                'status' => $kegiatan->statusUtama->nama_status_usulan ?? 'Menunggu'
+            ];
+        })->toArray();
+
         $jurusan_list = [
             'Teknik Informatika dan Komputer',
             'Teknik Grafika dan Penerbitan',
@@ -65,67 +41,56 @@ class TelaahController extends Controller
 
     public function show($id)
     {
-        // Status map based on dummy IDs from Dashboard and Riwayat
-        $status_map = [
-            // From Dashboard (Pending/Process)
-            1001 => 'Menunggu Verifikasi',
-            1002 => 'Review',
-            1003 => 'Menunggu Verifikasi',
-            1004 => 'Menunggu Verifikasi',
-            
-            // Sync exactly with RiwayatController
-            601 => 'Disetujui',
-            602 => 'Disetujui',
-            603 => 'Revisi',
-            604 => 'Disetujui',
-            605 => 'Ditolak',
-            606 => 'Revisi',
-            607 => 'Disetujui',
-            608 => 'Disetujui',
-            609 => 'Ditolak',
-            610 => 'Revisi',
-        ];
-        $status = $status_map[$id] ?? 'Menunggu';
+        $kegiatan = (new \App\Services\KegiatanService())->getDetailLengkap($id);
+        $status = $kegiatan->statusUtama->nama_status_usulan ?? 'Menunggu';
 
-        $iku_data = [
-            'Mendapat Pekerjaan', 
-            'Kegiatan luar prodi'
-        ];
+        $iku_data = $kegiatan->kak ? explode(',', $kegiatan->kak->iku ?? '') : [];
 
-        $rab_data = [
-            'Belanja Barang' => [
-                ['uraian' => 'Konsumsi', 'rincian' => 'Snack & Lunch Box', 'vol1' => 50, 'sat1' => 'Paket', 'vol2' => 1, 'sat2' => 'Kali', 'harga' => 35000],
-                ['uraian' => 'ATK', 'rincian' => 'Kertas & Tinta Print', 'vol1' => 2, 'sat1' => 'Rim', 'vol2' => 1, 'sat2' => 'Kali', 'harga' => 55000]
-            ],
-            'Belanja Jasa' => [
-                ['uraian' => 'Honor Pemateri', 'rincian' => 'Narasumber Ahli', 'vol1' => 1, 'sat1' => 'Orang', 'vol2' => 4, 'sat2' => 'Jam', 'harga' => 500000]
-            ]
-        ];
+        $tahapan_pelaksanaan = [];
+        $indikator_keberhasilan = [];
+        if ($kegiatan->kak) {
+            foreach ($kegiatan->kak->indikators as $ind) {
+                if ($ind->bulan) {
+                    $indikator_keberhasilan[$ind->bulan] = [
+                        'deskripsi' => $ind->indikator_keberhasilan,
+                        'target_persen' => $ind->target_persen
+                    ];
+                }
+            }
+            foreach ($kegiatan->kak->tahapans as $key => $tahap) {
+                $tahapan_pelaksanaan[$key] = $tahap->nama_tahapan;
+            }
+        }
+
+        $rab_data = [];
+        if ($kegiatan->kak) {
+            foreach ($kegiatan->kak->rabs as $rab) {
+                $cat = $rab->kategori->nama_kategori ?? 'Lainnya';
+                $rab_data[$cat][] = [
+                    'uraian' => $rab->uraian,
+                    'rincian' => $rab->rincian,
+                    'vol1' => $rab->vol1,
+                    'sat1' => $rab->sat1,
+                    'vol2' => $rab->vol2,
+                    'sat2' => $rab->sat2,
+                    'harga' => $rab->harga
+                ];
+            }
+        }
 
         $kegiatan_data = [
-            'nama_pengusul' => 'Yovana Ibnu Sina',
-            'nim_nip' => '2407411059',
-            'jurusan' => 'Teknik Informatika dan Komputer',
-            'prodi' => 'D4 Teknik Informatika',
-            'nama_kegiatan' => 'Peningkatan Kompetensi AI Mahasiswa TI',
-            'wadir_tujuan' => 'Wakil Direktur Bidang Kemahasiswaan',
-            'penerima_manfaat' => 'Mahasiswa TIK Semester 4 & 6',
-            'gambaran_umum' => 'Workshop ini dirancang untuk memberikan pemahaman mendalam tentang prinsip desain UI/UX kepada mahasiswa. Fokus pada User Research, Wireframing, dan Prototyping menggunakan Figma.',
-            'metode_pelaksanaan' => 'Sesi teori di pagi hari diikuti dengan workshop praktik di siang hari. Peserta akan bekerja dalam kelompok kecil untuk menyelesaikan proyek mini.'
-        ];
-
-        $tahapan_pelaksanaan = [
-            '1' => 'Persiapan materi dan koordinasi pemateri.',
-            '2' => 'Publikasi acara dan pendaftaran peserta.',
-            '3' => 'Pelaksanaan workshop dan evaluasi awal.',
-            '4' => 'Penyusunan laporan pertanggungjawaban.'
-        ];
-
-        $indikator_keberhasilan = [
-            '1' => ['target_persen' => 100, 'deskripsi' => 'Materi telah disetujui dan pemateri konfirmasi kehadiran.'],
-            '2' => ['target_persen' => 100, 'deskripsi' => 'Target 50 peserta terdaftar terpenuhi.'],
-            '3' => ['target_persen' => 80, 'deskripsi' => 'Acara berjalan lancar dengan tingkat kepuasan peserta minimal 80%.'],
-            '4' => ['target_persen' => 100, 'deskripsi' => 'LPJ diserahkan tepat waktu dan disetujui tanpa revisi major.']
+            'nama_pengusul' => $kegiatan->user->nama ?? $kegiatan->pemilik_kegiatan,
+            'nim_nip' => $kegiatan->nim_pelaksana,
+            'jurusan' => $kegiatan->jurusan_penyelenggara,
+            'prodi' => $kegiatan->prodi_penyelenggara,
+            'nama_kegiatan' => $kegiatan->nama_kegiatan,
+            'penanggung_jawab' => $kegiatan->nama_pj ?? '-',
+            'nip_pj' => $kegiatan->nip ?? '-',
+            'wadir_tujuan' => $kegiatan->wadir->nama_wadir ?? 'Wadir',
+            'penerima_manfaat' => $kegiatan->kak->penerima_manfaat ?? '-',
+            'gambaran_umum' => $kegiatan->kak->gambaran_umum ?? '-',
+            'metode_pelaksanaan' => $kegiatan->kak->metode_pelaksanaan ?? '-',
+            'kode_mak' => $kegiatan->bukti_mak ?? null
         ];
 
         $catatan_revisi = null;
@@ -135,7 +100,21 @@ class TelaahController extends Controller
 
     public function store(Request $request, $id)
     {
-        // Handle review submission
+        $workflowService = new \App\Services\WorkflowService();
+        $action = $request->input('action');
+        
+        if ($action == 'approve') {
+            $workflowService->moveToNextPosition($id, \App\Services\WorkflowService::POSITION_VERIFIKATOR, \App\Services\WorkflowService::STATUS_DISETUJUI, [
+                'kode_mak' => $request->input('kode_mak'),
+                'dana_disetujui' => $request->input('dana_disetujui'),
+                'umpan_balik' => $request->input('umpan_balik_verifikator')
+            ]);
+        } elseif ($action == 'reject') {
+            $workflowService->reject($id, \App\Services\WorkflowService::POSITION_VERIFIKATOR, $request->input('alasan_penolakan') ?? 'Ditolak Verifikator');
+        } elseif ($action == 'revise') {
+            $workflowService->requestRevision($id, \App\Services\WorkflowService::POSITION_VERIFIKATOR, $request->input('catatan_revisi') ?? 'Perlu Revisi');
+        }
+
         return redirect()->route('verifikator.telaah.index')->with('success', 'Telaah berhasil disimpan.');
     }
 }

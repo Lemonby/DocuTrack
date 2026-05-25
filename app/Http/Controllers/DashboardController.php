@@ -37,47 +37,20 @@ class DashboardController extends Controller
 
     public function adminDashboard()
     {
-        // Mock data for Phase 1 verification
-        $stats = [
-            'total' => 142,
-            'disetujui' => 95,
-            'ditolak' => 12,
-            'menunggu' => 35
-        ];
+        // DB Integration for Admin Dashboard
+        $kegiatanService = new \App\Services\KegiatanService();
+        $stats = $kegiatanService->getDashboardStats();
 
+        // Notifications (Mock for now since notifications service isn't specified in requirements)
         $notifications = [
             [
                 'id' => 1,
-                'title' => 'LPJ Disetujui',
-                'message' => 'Laporan Akhir Workshop AI telah disetujui oleh Bendahara.',
-                'time' => '5 menit yang lalu',
+                'title' => 'Sistem Terhubung',
+                'message' => 'Integrasi database berhasil.',
+                'time' => 'Baru saja',
                 'type' => 'success',
                 'icon' => 'fa-check-circle'
-            ],
-            [
-                'id' => 2,
-                'title' => 'Revisi Diperlukan',
-                'message' => 'KAK Pengadaan Server Lab Komputer memerlukan revisi pada bagian RAB.',
-                'time' => '1 jam yang lalu',
-                'type' => 'warning',
-                'icon' => 'fa-exclamation-triangle'
-            ],
-            [
-                'id' => 3,
-                'title' => 'Tenggat LPJ Mendekati',
-                'message' => 'LPJ Pelatihan Cloud Computing akan berakhir dalam 2 hari.',
-                'time' => '3 jam yang lalu',
-                'type' => 'danger',
-                'icon' => 'fa-clock'
-            ],
-            [
-                'id' => 4,
-                'title' => 'Dana Cair',
-                'message' => 'Dana untuk Workshop UI/UX Design telah dicairkan oleh Bendahara.',
-                'time' => '5 jam yang lalu',
-                'type' => 'info',
-                'icon' => 'fa-wallet'
-            ],
+            ]
         ];
 
         $tahapan_kak = ['Draft', 'Review', 'Revisi', 'Disetujui'];
@@ -98,105 +71,44 @@ class DashboardController extends Controller
             'Disetujui' => 'fa-check'
         ];
 
-        $list_kak = [
-            [
-                'id' => 1,
-                'nama' => 'Peningkatan Kompetensi AI Mahasiswa TI',
-                'nama_mahasiswa' => 'Yovana Ibnu Sina',
-                'jurusan' => 'Teknik Informatika dan Komputer',
-                'tanggal_pengajuan' => now()->subDays(2),
-                'status' => 'Review'
-            ],
-            [
-                'id' => 2,
-                'nama' => 'Workshop UI/UX Design Modern',
-                'nama_mahasiswa' => 'Ahmad Fauzi',
-                'jurusan' => 'Teknik Informatika dan Komputer',
-                'tanggal_pengajuan' => now()->subDays(5),
-                'status' => 'Disetujui'
-            ],
-            [
-                'id' => 3,
-                'nama' => 'Lomba Karya Tulis Ilmiah 2026',
-                'nama_mahasiswa' => 'Siti Aminah',
-                'jurusan' => 'Teknik Informatika dan Komputer',
-                'tanggal_pengajuan' => now()->subDays(1),
-                'status' => 'Menunggu'
-            ],
-            [
-                'id' => 4,
-                'nama' => 'Pengadaan Server Lab Komputer',
-                'nama_mahasiswa' => 'Rizky Pratama',
-                'jurusan' => 'Teknik Informatika dan Komputer',
-                'tanggal_pengajuan' => now()->subDays(7),
-                'status' => 'Revisi'
-            ],
-            [
-                'id' => 5,
-                'nama' => 'Seminar Nasional Cybersecurity',
-                'nama_mahasiswa' => 'Dewi Lestari',
-                'jurusan' => 'Teknik Informatika dan Komputer',
-                'tanggal_pengajuan' => now()->subDays(3),
-                'status' => 'Ditolak'
-            ],
-        ];
+        // Ambil Kegiatan milik Admin (user_id saat ini, fallback ke 1 jika null)
+        $userId = \Illuminate\Support\Facades\Auth::id() ?? 1;
+        
+        $list_kak_db = \App\Models\Kegiatan::with(['statusUtama', 'user'])
+            ->where('user_id', $userId)
+            ->latest()
+            ->take(5)
+            ->get();
 
-        $list_lpj = [
-            [
-                'id' => 1,
-                'nama' => 'Laporan Akhir Workshop AI',
-                'nama_mahasiswa' => 'Rizky Pratama',
-                'jurusan' => 'Teknik Informatika dan Komputer',
-                'tanggal_pengajuan' => now()->subDays(10),
-                'tenggatLpj' => now()->addDays(5),
-                'status' => 'Menunggu_Upload'
-            ],
-            [
-                'id' => 2,
-                'nama' => 'LPJ Pelatihan Cloud Computing Dasar',
-                'nama_mahasiswa' => 'Dewi Lestari',
-                'jurusan' => 'Teknik Informatika dan Komputer',
-                'tanggal_pengajuan' => now()->subDays(15),
-                'tenggatLpj' => now()->subDays(1),
-                'status' => 'Menunggu'
-            ],
-            [
-                'id' => 3,
-                'nama' => 'Laporan Kegiatan Lomba Coding',
-                'nama_mahasiswa' => 'Ahmad Fauzi',
-                'jurusan' => 'Teknik Informatika dan Komputer',
-                'tanggal_pengajuan' => now()->subDays(20),
-                'tenggatLpj' => now()->addDays(10),
-                'status' => 'Disetujui'
-            ],
-            [
-                'id' => 4,
-                'nama' => 'LPJ Kunjungan Industri 2026',
-                'nama_mahasiswa' => 'Siti Aminah',
-                'jurusan' => 'Teknik Informatika dan Komputer',
-                'tanggal_pengajuan' => now()->subDays(25),
-                'tenggatLpj' => now()->addDays(2),
-                'status' => 'Revisi'
-            ],
-            [
-                'id' => 5,
-                'nama' => 'LPJ Pameran Teknologi Tepat Guna',
-                'nama_mahasiswa' => 'Budi Santoso',
-                'jurusan' => 'Teknik Elektro',
-                'tanggal_pengajuan' => now()->subDays(5),
-                'tenggatLpj' => now()->addDays(7),
-                'status' => 'Telah Direvisi'
-            ],
-            [
-                'id' => 6,
-                'nama' => 'LPJ Seminar Nasional Cybersecurity',
-                'nama_mahasiswa' => 'Andi Wijaya',
-                'jurusan' => 'Teknik Informatika dan Komputer',
-                'tanggal_pengajuan' => now()->subDays(3),
-                'tenggatLpj' => now()->addDays(12),
-                'status' => 'Siap_Submit'
-            ],
-        ];
+        $list_kak = $list_kak_db->map(function($k) {
+            return [
+                'id' => $k->kegiatan_id,
+                'nama' => $k->nama_kegiatan,
+                'nama_mahasiswa' => $k->user->nama ?? $k->pemilik_kegiatan,
+                'jurusan' => $k->jurusan_penyelenggara,
+                'tanggal_pengajuan' => $k->created_at,
+                'status' => $k->statusUtama->nama_status_usulan ?? 'Menunggu'
+            ];
+        })->toArray();
+
+        $list_lpj_db = \App\Models\Kegiatan::with(['statusUtama', 'user', 'lpj'])
+            ->where('user_id', $userId)
+            ->whereNotNull('tanggal_selesai')
+            ->latest()
+            ->take(5)
+            ->get();
+
+        $list_lpj = $list_lpj_db->map(function($k) {
+            return [
+                'id' => $k->kegiatan_id,
+                'nama' => 'LPJ ' . $k->nama_kegiatan,
+                'nama_mahasiswa' => $k->user->nama ?? $k->pemilik_kegiatan,
+                'jurusan' => $k->jurusan_penyelenggara,
+                'tanggal_pengajuan' => $k->lpj->created_at ?? $k->created_at,
+                'tenggatLpj' => $k->tanggal_selesai ? $k->tanggal_selesai->copy()->addDays(14) : now()->addDays(14),
+                'status' => $k->lpj ? 'Disetujui' : 'Menunggu_Upload'
+            ];
+        })->toArray();
 
         return view('admin.dashboard', compact(
             'stats',

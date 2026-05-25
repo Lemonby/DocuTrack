@@ -3,52 +3,115 @@
 namespace App\Http\Controllers\Wadir;
 
 use App\Http\Controllers\Controller;
+use App\Models\Jurusan;
+use App\Models\Kegiatan;
+use App\Services\KegiatanService;
+use App\Services\WorkflowService;
 use Illuminate\Http\Request;
 
 class KegiatanController extends Controller
 {
     public function index()
     {
-        $list_kegiatan = [
-            ['id' => 101, 'nama' => 'Sertifikasi IT Internasional', 'pengusul' => 'Ahmad Fauzi', 'nim' => '2407411001', 'prodi' => 'TI', 'jurusan' => 'Teknik Informatika dan Komputer', 'tanggal_pengajuan' => '2026-05-10', 'status' => 'Menunggu'],
-            ['id' => 102, 'nama' => 'Seminar Digital Transformation', 'pengusul' => 'Budi Santoso', 'nim' => '2407411003', 'prodi' => 'Elektro', 'jurusan' => 'Teknik Elektro', 'tanggal_pengajuan' => '2026-05-14', 'status' => 'Menunggu'],
-        ];
-        $jurusan_list = ['Teknik Informatika dan Komputer', 'Teknik Grafika dan Penerbitan', 'Teknik Elektro', 'Teknik Mesin', 'Teknik Sipil', 'Administrasi Niaga', 'Akuntansi'];
+        $kegiatanList = Kegiatan::with(['statusUtama', 'user'])
+            ->atPosition(WorkflowService::POSITION_WADIR)
+            ->latest()
+            ->get();
+
+        $list_kegiatan = $kegiatanList->map(function ($kegiatan) {
+            return [
+                'id' => $kegiatan->kegiatan_id,
+                'nama' => $kegiatan->nama_kegiatan,
+                'pengusul' => $kegiatan->user->nama ?? $kegiatan->pemilik_kegiatan,
+                'nim' => $kegiatan->nim_pelaksana,
+                'prodi' => $kegiatan->prodi_penyelenggara,
+                'jurusan' => $kegiatan->jurusan_penyelenggara,
+                'tanggal_pengajuan' => $kegiatan->created_at ? $kegiatan->created_at->format('Y-m-d') : null,
+                'status' => $kegiatan->statusUtama->nama_status_usulan ?? 'Menunggu',
+            ];
+        })->toArray();
+
+        $jurusan_list = Jurusan::orderBy('nama_jurusan')->pluck('nama_jurusan')->toArray();
         return view('wadir.kegiatan.index', compact('list_kegiatan', 'jurusan_list'));
     }
 
     public function show($id)
     {
-        $status = 'Menunggu';
-        $iku_data = ['Mendapat Pekerjaan', 'Kegiatan luar prodi'];
-        $rab_data = [
-            'Belanja Barang' => [
-                ['uraian' => 'Konsumsi', 'rincian' => 'Snack & Lunch Box', 'vol1' => 50, 'sat1' => 'Paket', 'vol2' => 1, 'sat2' => 'Kali', 'harga' => 35000],
-            ],
-        ];
+        $kegiatan = (new KegiatanService())->getDetailLengkap($id);
+        $status = $kegiatan->statusUtama->nama_status_usulan ?? 'Menunggu';
 
         $kegiatan_data = [
-            'nama_pengusul' => 'Yovana Ibnu Sina',
-            'nim_nip' => '2407411059',
-            'jurusan' => 'Teknik Informatika dan Komputer',
-            'prodi' => 'D4 Teknik Informatika',
-            'nama_kegiatan' => 'Peningkatan Kompetensi AI Mahasiswa TI',
-            'mak_code' => '521211.001.052.A.524111',
-            'wadir_tujuan' => 'Wakil Direktur Bidang Kemahasiswaan',
-            'penerima_manfaat' => 'Mahasiswa TIK Semester 4 & 6',
-            'gambaran_umum' => 'Workshop ini dirancang untuk memberikan pemahaman mendalam tentang prinsip desain UI/UX kepada mahasiswa.',
-            'metode_pelaksanaan' => 'Sesi teori di pagi hari diikuti dengan workshop praktik di siang hari.'
+            'nama_pengusul' => $kegiatan->user->nama ?? $kegiatan->pemilik_kegiatan,
+            'nim_nip' => $kegiatan->nim_pelaksana,
+            'jurusan' => $kegiatan->jurusan_penyelenggara,
+            'prodi' => $kegiatan->prodi_penyelenggara,
+            'nama_kegiatan' => $kegiatan->nama_kegiatan,
+            'mak_code' => $kegiatan->bukti_mak ?? '-',
+            'wadir_tujuan' => $kegiatan->wadir->nama_wadir ?? $kegiatan->wadir_tujuan,
+            'penerima_manfaat' => $kegiatan->kak->penerima_manfaat ?? '-',
+            'gambaran_umum' => $kegiatan->kak->gambaran_umum ?? '-',
+            'metode_pelaksanaan' => $kegiatan->kak->metode_pelaksanaan ?? '-',
         ];
 
-        $tahapan_pelaksanaan = ['1' => 'Persiapan materi dan koordinasi pemateri.'];
-        $indikator_keberhasilan = ['1' => ['target_persen' => 100, 'deskripsi' => 'Materi telah disetujui.']];
+        $iku_data = $kegiatan->kak ? array_filter(array_map('trim', explode(',', $kegiatan->kak->iku ?? ''))) : [];
+
+        $tahapan_pelaksanaan = [];
+        $indikator_keberhasilan = [];
+        if ($kegiatan->kak) {
+            foreach ($kegiatan->kak->tahapans as $index => $tahap) {
+                $tahapan_pelaksanaan[$index + 1] = $tahap->nama_tahapan;
+            }
+            foreach ($kegiatan->kak->indikators as $ind) {
+                $key = $ind->bulan ?: (count($indikator_keberhasilan) + 1);
+                $indikator_keberhasilan[$key] = [
+                    'target_persen' => $ind->target_persen,
+                    'deskripsi' => $ind->indikator_keberhasilan,
+                ];
+            }
+        }
+
+        $rab_data = [];
+        if ($kegiatan->kak) {
+            foreach ($kegiatan->kak->rabs as $rab) {
+                $cat = $rab->kategori->nama_kategori ?? 'Lainnya';
+                $rab_data[$cat][] = [
+                    'uraian' => $rab->uraian,
+                    'rincian' => $rab->rincian,
+                    'vol1' => $rab->vol1,
+                    'sat1' => $rab->sat1,
+                    'vol2' => $rab->vol2,
+                    'sat2' => $rab->sat2,
+                    'harga' => $rab->harga,
+                ];
+            }
+        }
+
         $catatan_revisi = null;
+        $revisiHistory = $kegiatan->progressHistories
+            ->where('status_id', WorkflowService::STATUS_REVISI)
+            ->sortByDesc('created_at')
+            ->first();
+        if ($revisiHistory && $revisiHistory->revisiComments->isNotEmpty()) {
+            $catatan_revisi = $revisiHistory->revisiComments->first()->komentar_revisi ?? null;
+        }
 
         return view('wadir.kegiatan.show', compact('id', 'status', 'iku_data', 'rab_data', 'kegiatan_data', 'tahapan_pelaksanaan', 'indikator_keberhasilan', 'catatan_revisi'));
     }
 
     public function store(Request $request, $id)
     {
+        $action = $request->input('action', $request->input('decision', 'approve'));
+        $notes = $request->input('notes', '');
+
+        $workflowService = new WorkflowService();
+        if ($action === 'reject') {
+            $workflowService->reject($id, WorkflowService::POSITION_WADIR, $notes ?: 'Usulan ditolak oleh Wadir.');
+        } elseif ($action === 'revisi') {
+            $workflowService->requestRevision($id, WorkflowService::POSITION_WADIR, $notes ?: 'Mohon revisi usulan.');
+        } else {
+            $workflowService->moveToNextPosition($id, WorkflowService::POSITION_WADIR);
+        }
+
         return redirect()->route('wadir.dashboard')->with('success', 'Persetujuan Wadir berhasil disimpan.');
     }
 }

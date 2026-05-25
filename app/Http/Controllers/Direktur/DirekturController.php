@@ -3,47 +3,83 @@
 namespace App\Http\Controllers\Direktur;
 
 use App\Http\Controllers\Controller;
+use App\Models\Iku;
+use App\Models\Jurusan;
+use App\Models\Kegiatan;
+use App\Services\WorkflowService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 
 class DirekturController extends Controller
 {
     public function dashboard()
     {
         $stats = [
-            'total'     => 45,
-            'disetujui' => 28,
-            'revisi'    => 5,
-            'ditolak'   => 2,
-            'menunggu'  => 10,
+            'total' => Kegiatan::count(),
+            'disetujui' => Kegiatan::whereIn('status_utama_id', [
+                WorkflowService::STATUS_DISETUJUI,
+                WorkflowService::STATUS_DANA_DIBERIKAN,
+            ])->count(),
+            'revisi' => Kegiatan::withStatus(WorkflowService::STATUS_REVISI)->count(),
+            'ditolak' => Kegiatan::withStatus(WorkflowService::STATUS_DITOLAK)->count(),
+            'menunggu' => Kegiatan::whereNotIn('status_utama_id', [
+                WorkflowService::STATUS_DISETUJUI,
+                WorkflowService::STATUS_DANA_DIBERIKAN,
+                WorkflowService::STATUS_DITOLAK,
+            ])->count(),
         ];
+
+        $totalAllocated = (float) Kegiatan::sum('dana_di_setujui');
+        $totalRealized = (float) Kegiatan::sum('jumlah_dicairkan');
+        $remaining = max(0, $totalAllocated - $totalRealized);
+        $percentage = $totalAllocated > 0 ? round(($totalRealized / $totalAllocated) * 100, 1) : 0;
 
         $budget = [
-            'total_allocated' => 1500000000,
-            'total_realized'  => 850000000,
-            'remaining'       => 650000000,
-            'percentage'      => 56.6,
+            'total_allocated' => $totalAllocated,
+            'total_realized' => $totalRealized,
+            'remaining' => $remaining,
+            'percentage' => $percentage,
         ];
 
-        $iku_achievements = [
-            ['nama' => 'Lulusan Bekerja Layak', 'target' => 80, 'capaian' => 72, 'status' => 'On Track'],
-            ['nama' => 'Mahasiswa MBKM', 'target' => 20, 'capaian' => 18, 'status' => 'Warning'],
-            ['nama' => 'Dosen Praktisi', 'target' => 15, 'capaian' => 16, 'status' => 'Exceeded'],
-            ['nama' => 'Akreditasi Internasional', 'target' => 5, 'capaian' => 3, 'status' => 'On Track'],
-        ];
+        $iku_achievements = Iku::orderBy('tahun', 'desc')->take(4)->get()->map(function ($iku) {
+            $target = (float) ($iku->target ?? 0);
+            $capaian = (float) ($iku->realisasi ?? 0);
+            $status = $capaian >= $target ? 'Exceeded' : ($target > 0 && $capaian >= $target * 0.9 ? 'On Track' : 'Warning');
+            return [
+                'nama' => $iku->indikator_kinerja,
+                'target' => $target,
+                'capaian' => $capaian,
+                'status' => $status,
+            ];
+        })->toArray();
 
-        $approval_queue = [
-            ['id' => 101, 'nama' => 'Pelatihan Cloud Computing', 'pengusul' => 'TIK', 'dana' => 45000000, 'prioritas' => 'High'],
-            ['id' => 102, 'nama' => 'Seminar Literasi Digital', 'pengusul' => 'TGP', 'dana' => 15000000, 'prioritas' => 'Medium'],
-            ['id' => 103, 'nama' => 'Lomba Inovasi Mahasiswa', 'pengusul' => 'Elektro', 'dana' => 25000000, 'prioritas' => 'Low'],
-        ];
+        $approval_queue = Kegiatan::with('user')->latest()->take(5)->get()->map(function ($kegiatan) {
+            $dana = (float) ($kegiatan->dana_di_setujui ?? 0);
+            $prioritas = $dana >= 50000000 ? 'High' : ($dana >= 20000000 ? 'Medium' : 'Low');
+            return [
+                'id' => $kegiatan->kegiatan_id,
+                'nama' => $kegiatan->nama_kegiatan,
+                'pengusul' => $kegiatan->prodi_penyelenggara,
+                'dana' => $dana,
+                'prioritas' => $prioritas,
+            ];
+        })->toArray();
 
-        $list_jurusan = [
-            'TIK', 'TGP', 'Elektro', 'Mesin', 'Sipil', 'AN', 'Akuntansi',
-        ];
+        $list_jurusan = Jurusan::orderBy('nama_jurusan')->pluck('nama_jurusan')->toArray();
+
+        $labels = [];
+        $data = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $month = Carbon::now()->subMonths($i);
+            $labels[] = $month->format('M');
+            $data[] = Kegiatan::whereYear('created_at', $month->year)
+                ->whereMonth('created_at', $month->month)
+                ->count();
+        }
 
         $monthly_trend = [
-            'labels' => ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-            'data' => [5, 12, 8, 15, 20, 18]
+            'labels' => $labels,
+            'data' => $data,
         ];
 
         return view('direktur.dashboard', compact(
@@ -58,11 +94,19 @@ class DirekturController extends Controller
 
     public function getDanaPerJurusan()
     {
+        $labels = Jurusan::orderBy('nama_jurusan')->pluck('nama_jurusan')->toArray();
+        $totals = Kegiatan::selectRaw('jurusan_penyelenggara, SUM(jumlah_dicairkan) as total_dicairkan')
+            ->whereNotNull('jumlah_dicairkan')
+            ->groupBy('jurusan_penyelenggara')
+            ->pluck('total_dicairkan', 'jurusan_penyelenggara');
+
         return response()->json([
             'success' => true,
             'data' => [
-                'labels' => ['TIK', 'TGP', 'Elektro', 'Mesin', 'Sipil', 'AN', 'Akuntansi'],
-                'data' => [175000000, 145000000, 160000000, 130000000, 140000000, 155000000, 150000000]
+                'labels' => $labels,
+                'data' => array_map(function ($jurusan) use ($totals) {
+                    return (float) ($totals[$jurusan] ?? 0);
+                }, $labels),
             ]
         ]);
     }

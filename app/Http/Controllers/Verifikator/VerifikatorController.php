@@ -9,84 +9,35 @@ class VerifikatorController extends Controller
 {
     public function dashboard()
     {
+        $kegiatanService = new \App\Services\KegiatanService();
+        $statsData = $kegiatanService->getDashboardStats();
         $stats = [
-            'total' => 45,
-            'disetujui' => 20,
-            'ditolak' => 5,
-            'pending' => 20,
+            'total' => $statsData['total'] ?? 0,
+            'disetujui' => $statsData['disetujui'] ?? 0,
+            'ditolak' => $statsData['ditolak'] ?? 0,
+            'pending' => $statsData['menunggu'] ?? 0,
         ];
-        $list_usulan = [
-            [
-                'id' => 601,
-                'nama' => 'Peningkatan Kompetensi AI Mahasiswa TI',
-                'pengusul' => 'Yovana Ibnu Sina',
-                'nim' => '2407411059',
-                'prodi' => 'Teknik Informatika',
-                'jurusan' => 'Teknik Informatika dan Komputer',
-                'tanggal_pengajuan' => '2026-05-14',
-                'status' => 'Menunggu'
-            ],
-            [
-                'id' => 602,
-                'nama' => 'Workshop UI/UX Design Modern',
-                'pengusul' => 'Ahmad Fauzi',
-                'nim' => '2407411050',
-                'prodi' => 'Teknik Informatika',
-                'jurusan' => 'Teknik Informatika dan Komputer',
-                'tanggal_pengajuan' => '2026-05-15',
-                'status' => 'Menunggu'
-            ],
-            [
-                'id' => 603,
-                'nama' => 'Seminar Internasional Digital Transformation',
-                'pengusul' => 'Budi Santoso',
-                'nim' => '2407411003',
-                'prodi' => 'Teknik Elektro',
-                'jurusan' => 'Teknik Elektro',
-                'tanggal_pengajuan' => '2026-05-15',
-                'status' => 'Review'
-            ],
-            [
-                'id' => 604,
-                'nama' => 'Lomba Karya Tulis Ilmiah Nasional',
-                'pengusul' => 'Dewi Lestari',
-                'nim' => '2407411051',
-                'prodi' => 'Akuntansi',
-                'jurusan' => 'Akuntansi',
-                'tanggal_pengajuan' => '2026-05-16',
-                'status' => 'Disetujui'
-            ],
-            [
-                'id' => 605,
-                'nama' => 'Pengadaan Alat Praktikum Jaringan',
-                'pengusul' => 'Rizky Pratama',
-                'nim' => '2407411088',
-                'prodi' => 'Teknik Komputer',
-                'jurusan' => 'Teknik Informatika dan Komputer',
-                'tanggal_pengajuan' => '2026-05-16',
-                'status' => 'Ditolak'
-            ],
-            [
-                'id' => 606,
-                'nama' => 'Pelatihan Sertifikasi Mikrotik MTCNA',
-                'pengusul' => 'Siti Aminah',
-                'nim' => '2407411099',
-                'prodi' => 'Telekomunikasi',
-                'jurusan' => 'Teknik Elektro',
-                'tanggal_pengajuan' => '2026-05-17',
-                'status' => 'Revisi'
-            ],
-            [
-                'id' => 607,
-                'nama' => 'Kunjungan Industri ke Silicon Valley',
-                'pengusul' => 'Kevin Sanjaya',
-                'nim' => '2407411012',
-                'prodi' => 'Teknik Informatika',
-                'jurusan' => 'Teknik Informatika dan Komputer',
-                'tanggal_pengajuan' => '2026-05-17',
-                'status' => 'Menunggu'
-            ],
-        ];
+
+        $kegiatanList = \App\Models\Kegiatan::with(['statusUtama', 'user'])
+            ->atPosition(\App\Services\WorkflowService::POSITION_VERIFIKATOR)
+            ->withStatus(\App\Services\WorkflowService::STATUS_MENUNGGU)
+            ->latest()
+            ->take(5)
+            ->get();
+
+        $list_usulan = $kegiatanList->map(function ($kegiatan) {
+            return [
+                'id' => $kegiatan->kegiatan_id,
+                'nama' => $kegiatan->nama_kegiatan,
+                'pengusul' => $kegiatan->user->nama ?? $kegiatan->pemilik_kegiatan,
+                'nim' => $kegiatan->nim_pelaksana,
+                'prodi' => $kegiatan->prodi_penyelenggara,
+                'jurusan' => $kegiatan->jurusan_penyelenggara,
+                'tanggal_pengajuan' => $kegiatan->created_at ? $kegiatan->created_at->format('Y-m-d') : null,
+                'status' => $kegiatan->statusUtama->nama_status_usulan ?? 'Menunggu'
+            ];
+        })->toArray();
+
         $jurusan_list = [
             'Teknik Informatika dan Komputer',
             'Teknik Grafika dan Penerbitan',

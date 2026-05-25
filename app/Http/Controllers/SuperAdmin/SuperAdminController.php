@@ -3,6 +3,11 @@
 namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
+use App\Models\Kegiatan;
+use App\Models\Lpj;
+use App\Models\User;
+use App\Services\WorkflowService;
 use Illuminate\Http\Request;
 
 class SuperAdminController extends Controller
@@ -10,11 +15,14 @@ class SuperAdminController extends Controller
     public function dashboard()
     {
         $stats = [
-            'total' => 125,
-            'disetujui' => 80,
-            'revisi' => 15,
-            'ditolak' => 5,
-            'menunggu' => 25,
+            'total' => Kegiatan::count(),
+            'disetujui' => Kegiatan::whereIn('status_utama_id', [
+                WorkflowService::STATUS_DISETUJUI,
+                WorkflowService::STATUS_DANA_DIBERIKAN,
+            ])->count(),
+            'revisi' => Kegiatan::withStatus(WorkflowService::STATUS_REVISI)->count(),
+            'ditolak' => Kegiatan::withStatus(WorkflowService::STATUS_DITOLAK)->count(),
+            'menunggu' => Kegiatan::withStatus(WorkflowService::STATUS_MENUNGGU)->count(),
         ];
 
         $system_health = [
@@ -23,57 +31,32 @@ class SuperAdminController extends Controller
             'php_version' => PHP_VERSION,
         ];
 
-        $monitoring_kegiatan = [
-            [
-                'pengusul' => 'Jane Smith',
-                'prodi' => 'Teknik Informatika',
-                'nama' => 'Lomba Karya Tulis Ilmiah',
-                'status' => 'Menunggu',
-                'created_at' => now()->subDays(2),
-            ],
-            [
-                'pengusul' => 'John Doe',
-                'prodi' => 'Teknik Elektro',
-                'nama' => 'Seminar Robotika 2026',
-                'status' => 'Disetujui',
-                'created_at' => now()->subDays(5),
-            ],
-            [
-                'pengusul' => 'Dewi Lestari',
-                'prodi' => 'Akuntansi',
-                'nama' => 'Olimpiade Akuntansi',
-                'status' => 'Review',
-                'created_at' => now()->subDays(3),
-            ],
-            [
-                'pengusul' => 'Ahmad Fauzi',
-                'prodi' => 'Teknik Informatika',
-                'nama' => 'Pelatihan Dasar Coding',
-                'status' => 'Ditolak',
-                'created_at' => now()->subDays(1),
-            ],
-        ];
+        $monitoring_kegiatan = Kegiatan::with(['statusUtama', 'user'])
+            ->latest()
+            ->take(6)
+            ->get()
+            ->map(function ($kegiatan) {
+                return [
+                    'pengusul' => $kegiatan->user->nama ?? $kegiatan->pemilik_kegiatan,
+                    'prodi' => $kegiatan->prodi_penyelenggara,
+                    'nama' => $kegiatan->nama_kegiatan,
+                    'status' => $kegiatan->statusUtama->nama_status_usulan ?? 'Menunggu',
+                    'created_at' => $kegiatan->created_at,
+                ];
+            })->toArray();
 
-        $monitoring_lpj = [
-            [
-                'nama_kegiatan' => 'Workshop UI/UX',
-                'pengusul' => 'Alice Wong',
-                'total_realisasi' => 5000000,
-                'status_lpj' => 'Menunggu Verifikasi',
-            ],
-            [
-                'nama_kegiatan' => 'Seminar Cyber Security',
-                'pengusul' => 'Rizky Pratama',
-                'total_realisasi' => 7500000,
-                'status_lpj' => 'Disetujui',
-            ],
-            [
-                'nama_kegiatan' => 'Kunjungan Industri 2026',
-                'pengusul' => 'Siti Aminah',
-                'total_realisasi' => 12000000,
-                'status_lpj' => 'Revisi',
-            ],
-        ];
+        $monitoring_lpj = Lpj::with(['kegiatan.user', 'status'])
+            ->latest('submitted_at')
+            ->take(6)
+            ->get()
+            ->map(function ($lpj) {
+                return [
+                    'nama_kegiatan' => $lpj->kegiatan->nama_kegiatan ?? 'Kegiatan',
+                    'pengusul' => $lpj->kegiatan->user->nama ?? $lpj->kegiatan->pemilik_kegiatan,
+                    'total_realisasi' => (float) ($lpj->grand_total_realisasi ?? 0),
+                    'status_lpj' => $lpj->status->nama_status_usulan ?? 'Menunggu Verifikasi',
+                ];
+            })->toArray();
 
         $server_load = [
             'cpu' => 24,
@@ -82,19 +65,30 @@ class SuperAdminController extends Controller
             'traffic' => '1.2 GB/s'
         ];
 
-        $recent_logs = [
-            ['time' => '10:45', 'event' => 'New Proposal Uploaded', 'user' => 'John Doe', 'status' => 'info'],
-            ['time' => '10:42', 'event' => 'Database Sync Complete', 'user' => 'System', 'status' => 'success'],
-            ['time' => '10:38', 'event' => 'Failed Login Attempt', 'user' => 'Admin_PPK', 'status' => 'warning'],
-            ['time' => '10:35', 'event' => 'LPJ Verified by Verifikator', 'user' => 'Yovana', 'status' => 'success'],
-            ['time' => '10:30', 'event' => 'Cache Purged', 'user' => 'SuperAdmin', 'status' => 'info'],
-        ];
+        $recent_logs = ActivityLog::with('user')
+            ->latest('created_at')
+            ->take(10)
+            ->get()
+            ->map(function ($log) {
+                return [
+                    'time' => $log->created_at ? $log->created_at->format('H:i') : '-',
+                    'event' => $log->description ?? $log->action ?? 'System Event',
+                    'user' => $log->user->nama ?? 'System',
+                    'status' => $log->category ? strtolower($log->category) : 'info',
+                ];
+            })->toArray();
 
-        $active_users = [
-            ['name' => 'Yovana Ibnu Sina', 'role' => 'Super Admin', 'last_seen' => 'Just now'],
-            ['name' => 'Muhammad Syafri', 'role' => 'Verifikator', 'last_seen' => '2m ago'],
-            ['name' => 'Jane Smith', 'role' => 'Admin TI', 'last_seen' => '5m ago'],
-        ];
+        $active_users = User::active()
+            ->latest('updated_at')
+            ->take(5)
+            ->get()
+            ->map(function ($user) {
+                return [
+                    'name' => $user->nama,
+                    'role' => $user->getRoleNames()->first() ?? 'Pengusul',
+                    'last_seen' => $user->updated_at ? $user->updated_at->diffForHumans() : '-',
+                ];
+            })->toArray();
 
         $security_threats = [
             ['type' => 'SQL Injection Attempt', 'ip' => '192.168.1.105', 'status' => 'Blocked', 'risk' => 'High'],

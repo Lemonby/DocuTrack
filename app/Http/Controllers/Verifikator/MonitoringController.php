@@ -11,54 +11,27 @@ class MonitoringController extends Controller
     {
         $tahapan_all = ['Pengajuan', 'Verifikasi', 'ACC WD', 'ACC PPK', 'Dana Cair', 'LPJ'];
         
-        // Mock data for now
-        $list_proposal = [
-            [
-                'id' => 1401,
-                'nama' => 'Seminar Nasional Teknologi Informasi 2026',
-                'pengusul' => 'John Doe',
-                'nim' => '2407411001',
-                'jurusan' => 'Teknik Informatika dan Komputer',
-                'tahap_sekarang' => 'Verifikasi',
-                'status' => 'In Process'
-            ],
-            [
-                'id' => 1402,
-                'nama' => 'Lomba Karya Tulis Ilmiah Mahasiswa',
-                'pengusul' => 'Jane Smith',
-                'nim' => '2407411002',
-                'jurusan' => 'Teknik Elektro',
-                'tahap_sekarang' => 'Dana Cair',
-                'status' => 'Approved'
-            ],
-            [
-                'id' => 1403,
-                'nama' => 'Workshop Desain Grafis Dasar',
-                'pengusul' => 'Bob Wilson',
-                'nim' => '2407411003',
-                'jurusan' => 'Teknik Grafika dan Penerbitan',
-                'tahap_sekarang' => 'Pengajuan',
-                'status' => 'Ditolak'
-            ],
-            [
-                'id' => 1404,
-                'nama' => 'Pelatihan Kepemimpinan Mahasiswa',
-                'pengusul' => 'Siti Aminah',
-                'nim' => '2407411004',
-                'jurusan' => 'Akuntansi',
-                'tahap_sekarang' => 'ACC WD',
-                'status' => 'In Process'
-            ],
-            [
-                'id' => 1405,
-                'nama' => 'Pekan Olahraga Mahasiswa',
-                'pengusul' => 'Rizky Pratama',
-                'nim' => '2407411005',
-                'jurusan' => 'Administrasi Niaga',
-                'tahap_sekarang' => 'LPJ',
-                'status' => 'Approved'
-            ]
-        ];
+        $kegiatanList = \App\Models\Kegiatan::with(['statusUtama', 'user'])
+            ->latest()
+            ->get();
+
+        $list_proposal = $kegiatanList->map(function ($kegiatan) {
+            $tahap = 'Pengajuan';
+            if ($kegiatan->posisi_aktif == \App\Services\WorkflowService::POSITION_VERIFIKATOR) $tahap = 'Verifikasi';
+            elseif ($kegiatan->posisi_aktif == \App\Services\WorkflowService::POSITION_WADIR) $tahap = 'ACC WD';
+            elseif ($kegiatan->posisi_aktif == \App\Services\WorkflowService::POSITION_PPK) $tahap = 'ACC PPK';
+            elseif ($kegiatan->posisi_aktif == \App\Services\WorkflowService::POSITION_BENDAHARA) $tahap = 'Dana Cair';
+
+            return [
+                'id' => $kegiatan->kegiatan_id,
+                'nama' => $kegiatan->nama_kegiatan,
+                'pengusul' => $kegiatan->user->nama ?? $kegiatan->pemilik_kegiatan,
+                'nim' => $kegiatan->nim_pelaksana,
+                'jurusan' => $kegiatan->jurusan_penyelenggara,
+                'tahap_sekarang' => $tahap,
+                'status' => $kegiatan->statusUtama->nama_status_usulan ?? 'In Process'
+            ];
+        })->toArray();
 
         $jurusan_list = [
             'Teknik Informatika dan Komputer',

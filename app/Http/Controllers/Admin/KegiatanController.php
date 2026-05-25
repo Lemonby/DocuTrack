@@ -9,76 +9,37 @@ class KegiatanController extends Controller
 {
     public function index()
     {
-        $list_kegiatan = [
-            [
-                'id' => 1,
-                'nama' => 'Peningkatan Kompetensi AI Mahasiswa TI',
-                'nama_mahasiswa' => 'Yovana Ibnu Sina',
-                'jurusan' => 'Teknik Informatika dan Komputer',
-                'tanggal_pengajuan' => now()->subDays(2),
-                'status' => 'Review'
-            ],
-            [
-                'id' => 2,
-                'nama' => 'Workshop UI/UX Design Modern',
-                'nama_mahasiswa' => 'Ahmad Fauzi',
-                'jurusan' => 'Teknik Informatika dan Komputer',
-                'tanggal_pengajuan' => now()->subDays(5),
-                'status' => 'Disetujui'
-            ],
-            [
-                'id' => 3,
-                'nama' => 'Lomba Karya Tulis Ilmiah 2026',
-                'nama_mahasiswa' => 'Siti Aminah',
-                'jurusan' => 'Teknik Informatika dan Komputer',
-                'tanggal_pengajuan' => now()->subDays(1),
-                'status' => 'Menunggu'
-            ],
-            [
-                'id' => 4,
-                'nama' => 'Pengadaan Server Lab Komputer',
-                'nama_mahasiswa' => 'Rizky Pratama',
-                'jurusan' => 'Teknik Informatika dan Komputer',
-                'tanggal_pengajuan' => now()->subDays(7),
-                'status' => 'Revisi'
-            ],
-            [
-                'id' => 5,
-                'nama' => 'Seminar Nasional Cybersecurity',
-                'nama_mahasiswa' => 'Dewi Lestari',
-                'jurusan' => 'Teknik Informatika dan Komputer',
-                'tanggal_pengajuan' => now()->subDays(3),
-                'status' => 'Ditolak'
-            ],
-        ];
+        $userId = \Illuminate\Support\Facades\Auth::id() ?? 1;
+        $kegiatanList = \App\Models\Kegiatan::with(['statusUtama', 'user'])
+            ->where('user_id', $userId)
+            ->latest()
+            ->get();
+
+        $list_kegiatan = $kegiatanList->map(function ($kegiatan) {
+            return [
+                'id' => $kegiatan->kegiatan_id,
+                'nama' => $kegiatan->nama_kegiatan,
+                'nama_mahasiswa' => $kegiatan->user->nama ?? $kegiatan->pemilik_kegiatan,
+                'jurusan' => $kegiatan->jurusan_penyelenggara,
+                'tanggal_pengajuan' => $kegiatan->created_at,
+                'status' => $kegiatan->statusUtama->nama_status_usulan ?? 'Menunggu'
+            ];
+        })->toArray();
+
         return view('admin.kegiatan.index', compact('list_kegiatan'));
     }
 
     public function detail($id)
     {
-        // Simulate finding the item
-        // Sync with DashboardController KAK IDs
-        $status_map = [
-            1 => 'Review',
-            2 => 'Disetujui',
-            3 => 'Menunggu',
-            4 => 'Revisi',
-            5 => 'Ditolak',
-            201 => 'Review',
-            202 => 'Disetujui',
-            203 => 'Menunggu',
-            204 => 'Selesai',
-        ];
+        $kegiatan = \App\Models\Kegiatan::with(['statusUtama'])->findOrFail($id);
+        $status = $kegiatan->statusUtama->nama_status_usulan ?? 'Menunggu';
 
-        $status = $status_map[$id] ?? 'Review';
-
-        // Mock data for activity details if already completed
         $detail_data = [
-            'penanggung_jawab' => 'Andi Wijaya',
-            'nim_nip_pj' => '2407411060',
-            'tanggal_mulai' => '2026-06-01',
-            'tanggal_selesai' => '2026-06-03',
-            'surat_pengantar' => 'surat_pengantar_seminar.pdf'
+            'penanggung_jawab' => $kegiatan->nama_pj ?? '-',
+            'nim_nip_pj' => $kegiatan->nip ?? '-',
+            'tanggal_mulai' => $kegiatan->tanggal_mulai ? $kegiatan->tanggal_mulai->format('Y-m-d') : null,
+            'tanggal_selesai' => $kegiatan->tanggal_selesai ? $kegiatan->tanggal_selesai->format('Y-m-d') : null,
+            'surat_pengantar' => $kegiatan->surat_pengantar ?? null
         ];
 
         return view('admin.kegiatan.detail', compact('id', 'status', 'detail_data'));
@@ -86,7 +47,14 @@ class KegiatanController extends Controller
 
     public function storeRincian(Request $request)
     {
-        // Placeholder for store rincian logic
+        if ($request->has('kegiatan_id')) {
+            $file = $request->file('surat_pengantar');
+            (new \App\Services\KegiatanService())->submitRincian(
+                $request->kegiatan_id,
+                $request->all(),
+                $file
+            );
+        }
         return redirect()->route('admin.kegiatan.index')->with('success', 'Rincian kegiatan berhasil disimpan.');
     }
 }

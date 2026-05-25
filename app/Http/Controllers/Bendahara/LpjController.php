@@ -3,80 +3,32 @@
 namespace App\Http\Controllers\Bendahara;
 
 use App\Http\Controllers\Controller;
+use App\Models\Kegiatan;
+use App\Models\Lpj;
+use App\Services\KegiatanService;
 use Illuminate\Http\Request;
 
 class LpjController extends Controller
 {
     public function index()
     {
-        $list_lpj = [
-            [
-                'id' => 1301,
-                'nama' => 'LPJ - Bakti Sosial Mahasiswa 2026',
-                'pengusul' => 'Andi Wijaya',
-                'nim' => '2407411060',
-                'prodi' => 'Teknik Elektro',
-                'jurusan' => 'Teknik Elektro',
-                'tanggal_pengajuan' => '2026-05-11',
-                'deadline' => '2026-05-25',
-                'status' => 'Menunggu Verifikasi'
-            ],
-            [
-                'id' => 1302,
-                'nama' => 'LPJ - Kunjungan Industri PT. Digital Jaya',
-                'pengusul' => 'Santi Kurnia',
-                'nim' => '2407411061',
-                'prodi' => 'Administrasi Niaga',
-                'jurusan' => 'Administrasi Niaga',
-                'tanggal_pengajuan' => '2026-05-13',
-                'deadline' => '2026-05-27',
-                'status' => 'Revisi'
-            ],
-            [
-                'id' => 1303,
-                'nama' => 'LPJ - Workshop Mobile Development',
-                'pengusul' => 'Rizky Pratama',
-                'nim' => '2407411062',
-                'prodi' => 'Teknik Informatika',
-                'jurusan' => 'Teknik Informatika dan Komputer',
-                'tanggal_pengajuan' => '2026-05-15',
-                'deadline' => '2026-05-29',
-                'status' => 'Telah Direvisi'
-            ],
-            [
-                'id' => 1304,
-                'nama' => 'LPJ - Pengadaan Alat Lab Komputer',
-                'pengusul' => 'Budi Santoso',
-                'nim' => '2407411063',
-                'prodi' => 'Teknik Informatika',
-                'jurusan' => 'Teknik Informatika dan Komputer',
-                'tanggal_pengajuan' => '2026-05-16',
-                'deadline' => '2026-05-30',
-                'status' => 'Disetujui'
-            ],
-            [
-                'id' => 1305,
-                'nama' => 'LPJ - Seminar Nasional Teknologi 4.0',
-                'pengusul' => 'Dewi Lestari',
-                'nim' => '2407411064',
-                'prodi' => 'Teknik Informatika',
-                'jurusan' => 'Teknik Informatika dan Komputer',
-                'tanggal_pengajuan' => '2026-05-10',
-                'deadline' => '2026-05-24',
-                'status' => 'Telah Direvisi'
-            ],
-            [
-                'id' => 1306,
-                'nama' => 'LPJ - Lomba Inovasi Mahasiswa',
-                'pengusul' => 'Fajar Ramadhan',
-                'nim' => '2407411065',
-                'prodi' => 'Teknik Mesin',
-                'jurusan' => 'Teknik Mesin',
-                'tanggal_pengajuan' => '2026-05-14',
-                'deadline' => '2026-05-28',
-                'status' => 'Revisi'
-            ],
-        ];
+        $lpjList = Lpj::with(['kegiatan.user'])
+            ->latest('submitted_at')
+            ->get();
+
+        $list_lpj = $lpjList->map(function ($lpj) {
+            return [
+                'id' => $lpj->kegiatan_id,
+                'nama' => 'LPJ - ' . ($lpj->kegiatan->nama_kegiatan ?? 'Kegiatan'),
+                'pengusul' => $lpj->kegiatan->user->nama ?? $lpj->kegiatan->pemilik_kegiatan,
+                'nim' => $lpj->kegiatan->nim_pelaksana,
+                'prodi' => $lpj->kegiatan->prodi_penyelenggara,
+                'jurusan' => $lpj->kegiatan->jurusan_penyelenggara,
+                'tanggal_pengajuan' => $lpj->submitted_at ? $lpj->submitted_at->format('Y-m-d') : null,
+                'deadline' => $lpj->tenggat_lpj ? $lpj->tenggat_lpj->format('Y-m-d') : null,
+                'status' => $this->mapLpjStatusLabel($lpj),
+            ];
+        })->toArray();
         return view('bendahara.lpj.index', compact('list_lpj'));
     }
 
@@ -84,97 +36,85 @@ class LpjController extends Controller
     {
         $id = (int) $id;
         $from = $request->query('from', 'index');
-        
-        $status_map = [
-            1301 => 'Menunggu Verifikasi',
-            1302 => 'Revisi',
-            1303 => 'Telah Direvisi',
-            1304 => 'Disetujui',
-            1305 => 'Telah Direvisi',
-            1306 => 'Revisi',
-        ];
-        $status = $status_map[$id] ?? 'Menunggu Verifikasi';
+        $kegiatan = (new KegiatanService())->getDetailLengkap($id);
+        $status = $kegiatan->lpj ? $this->mapLpjStatusLabel($kegiatan->lpj) : 'Menunggu Verifikasi';
 
         $kegiatan_data = [
-            'id'                    => $id,
-            'nama_pengusul'         => 'Andi Wijaya',
-            'nim_pengusul'          => '2407411060',
-            'nama_pelaksana'        => 'Himpunan Mahasiswa Elektro',
-            'nama_penanggung_jawab' => 'Ir. Heru Susanto, M.T.',
-            'nip_penanggung_jawab'  => '197005151998031002',
-            'jurusan'               => 'Teknik Elektro',
-            'prodi'                 => 'D3 Teknik Elektro',
-            'nama_kegiatan'         => 'Bakti Sosial Mahasiswa 2026',
-            'wadir_tujuan'          => 'Wakil Direktur Bidang Kemahasiswaan',
-            'penerima_manfaat'      => 'Warga Desa Sukamaju',
-            'tanggal_mulai'         => '2026-05-20',
-            'tanggal_selesai'       => '2026-05-22',
+            'id' => $id,
+            'nama_pengusul' => $kegiatan->user->nama ?? $kegiatan->pemilik_kegiatan,
+            'nim_pengusul' => $kegiatan->nim_pelaksana,
+            'nama_pelaksana' => $kegiatan->pemilik_kegiatan ?? '-',
+            'nama_penanggung_jawab' => $kegiatan->nama_pj ?? '-',
+            'nip_penanggung_jawab' => $kegiatan->nip ?? '-',
+            'jurusan' => $kegiatan->jurusan_penyelenggara,
+            'prodi' => $kegiatan->prodi_penyelenggara,
+            'nama_kegiatan' => $kegiatan->nama_kegiatan,
+            'wadir_tujuan' => $kegiatan->wadir->nama_wadir ?? $kegiatan->wadir_tujuan,
+            'penerima_manfaat' => $kegiatan->kak->penerima_manfaat ?? '-',
+            'tanggal_mulai' => $kegiatan->tanggal_mulai ? $kegiatan->tanggal_mulai->format('Y-m-d') : null,
+            'tanggal_selesai' => $kegiatan->tanggal_selesai ? $kegiatan->tanggal_selesai->format('Y-m-d') : null,
         ];
 
-        $kode_mak = 'MAK/2026/1301/ELK';
-        
-        $rab_items = [
-            'Belanja Barang' => [
-                [
-                    'id' => 1,
-                    'uraian' => 'Paket Sembako',
-                    'rincian' => 'Beras, Minyak, Gula',
-                    'vol1' => 100,
-                    'sat1' => 'Paket',
-                    'vol2' => 1,
-                    'sat2' => 'Kali',
-                    'harga' => 150000,
-                    'realisasi' => 15000000,
-                    'keterangan' => 'Sesuai nota Toko Berkah',
-                    'catatan_item' => ''
-                ],
-                [
-                    'id' => 2,
-                    'uraian' => 'Konsumsi Panitia',
-                    'rincian' => 'Nasi Kotak 3 Hari',
-                    'vol1' => 20,
-                    'sat1' => 'Orang',
-                    'vol2' => 3,
-                    'sat2' => 'Hari',
-                    'harga' => 25000,
-                    'realisasi' => 1450000, // Ada sedikit selisih hemat
-                    'keterangan' => 'Nota RM Sederhana',
-                    'catatan_item' => 'Lampirkan daftar hadir panitia'
-                ]
-            ],
-            'Belanja Jasa' => [
-                [
-                    'id' => 3,
-                    'uraian' => 'Sewa Tenda',
-                    'rincian' => 'Tenda uk 4x6 1 set',
-                    'vol1' => 1,
-                    'sat1' => 'Set',
-                    'vol2' => 3,
-                    'sat2' => 'Hari',
-                    'harga' => 500000,
-                    'realisasi' => 1500000,
-                    'keterangan' => 'Kwitansi Sewa Jaya',
-                    'catatan_item' => ''
-                ]
-            ]
-        ];
+        $kode_mak = $kegiatan->bukti_mak ?? '-';
 
-        // Hitung total
+        $rab_items = [];
         $anggaran_disetujui = 0;
         $anggaran_realisasi = 0;
-        foreach ($rab_items as $cat => $items) {
-            foreach ($items as $item) {
-                $anggaran_disetujui += $item['vol1'] * ($item['vol2'] ?? 1) * $item['harga'];
-                $anggaran_realisasi += $item['realisasi'];
+
+        $lpjItemMap = collect();
+        if ($kegiatan->lpj && $kegiatan->lpj->items) {
+            $lpjItemMap = $kegiatan->lpj->items->keyBy(function ($item) {
+                return $this->makeItemKey($item->uraian, $item->rincian, $item->vol1, $item->vol2, $item->harga);
+            });
+        }
+
+        if ($kegiatan->kak) {
+            foreach ($kegiatan->kak->rabs as $rab) {
+                $cat = $rab->kategori->nama_kategori ?? 'Lainnya';
+                $key = $this->makeItemKey($rab->uraian, $rab->rincian, $rab->vol1, $rab->vol2, $rab->harga);
+                $lpjItem = $lpjItemMap->get($key);
+                $realisasi = $lpjItem ? (float) $lpjItem->realisasi : 0;
+
+                $rab_items[$cat][] = [
+                    'id' => $rab->rab_item_id,
+                    'uraian' => $rab->uraian,
+                    'rincian' => $rab->rincian,
+                    'vol1' => $rab->vol1,
+                    'sat1' => $rab->sat1,
+                    'vol2' => $rab->vol2,
+                    'sat2' => $rab->sat2,
+                    'harga' => $rab->harga,
+                    'realisasi' => $realisasi,
+                    'keterangan' => $lpjItem->komentar ?? '',
+                    'catatan_item' => $lpjItem->komentar ?? '',
+                ];
+
+                $anggaran_disetujui += $rab->vol1 * ($rab->vol2 ?? 1) * $rab->harga;
+                $anggaran_realisasi += $realisasi;
             }
         }
 
-        $iku_data = ['IKU 2 - Mahasiswa berkegiatan di luar kampus'];
-        $catatan_revisi = ($status == 'Revisi') ? 'Nota pembelian sembako belum dilampirkan.' : null;
+        $iku_data = $kegiatan->kak ? array_filter(array_map('trim', explode(',', $kegiatan->kak->iku ?? ''))) : [];
+        $catatan_revisi = $kegiatan->lpj ? $kegiatan->lpj->komentar_revisi : null;
 
         return view('bendahara.lpj.detail', compact(
             'id', 'status', 'rab_items', 'kegiatan_data', 'catatan_revisi', 
             'from', 'kode_mak', 'anggaran_disetujui', 'anggaran_realisasi', 'iku_data'
         ));
+    }
+
+    private function mapLpjStatusLabel(Lpj $lpj): string
+    {
+        return match ((int) $lpj->status_id) {
+            2 => 'Revisi',
+            3 => 'Disetujui',
+            4 => 'Ditolak',
+            default => $lpj->komentar_revisi ? 'Telah Direvisi' : 'Menunggu Verifikasi',
+        };
+    }
+
+    private function makeItemKey($uraian, $rincian, $vol1, $vol2, $harga): string
+    {
+        return implode('|', [trim((string) $uraian), trim((string) $rincian), $vol1, $vol2, $harga]);
     }
 }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\SuperAdmin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class UserManagementController extends Controller
 {
@@ -17,7 +18,7 @@ class UserManagementController extends Controller
                 'email' => $user->email,
                 'jurusan' => $user->nama_jurusan ?? '-',
                 'role' => $user->getRoleNames()->first() ?? 'Pengusul',
-                'status' => 'Aktif', // Default mock status
+                'status' => $user->status ?? 'Aktif',
             ];
         });
 
@@ -57,7 +58,26 @@ class UserManagementController extends Controller
 
     public function store(Request $request)
     {
-        // Placeholder for user creation
-        return redirect()->route('superadmin.users.index')->with('success', 'User berhasil ditambahkan.');
+        $validated = $request->validate([
+            'nama' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'jurusan' => ['required', 'string', 'max:255'],
+            'role' => ['required', 'string', 'max:50'],
+        ]);
+
+        $password = Str::random(12);
+
+        $user = User::create([
+            'nama' => $validated['nama'],
+            'email' => $validated['email'],
+            'nama_jurusan' => $validated['jurusan'],
+            'password' => $password,
+            'status' => 'Aktif',
+        ]);
+
+        $user->assignRole($validated['role']);
+
+        return redirect()->route('superadmin.users.index')
+            ->with('success', 'User berhasil ditambahkan. Password sementara: ' . $password);
     }
 }

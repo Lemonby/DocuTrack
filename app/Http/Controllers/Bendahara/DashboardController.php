@@ -3,105 +3,78 @@
 namespace App\Http\Controllers\Bendahara;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Session;
+use App\Models\Kegiatan;
+use App\Models\Lpj;
+use App\Services\WorkflowService;
 
 class DashboardController extends Controller
 {
     public function index()
     {
+        $statsQuery = Kegiatan::query();
         $stats = [
-            'total'         => 12,
-            'danaDiberikan' => 8,
-            'ditolak'       => 1,
-            'menunggu'      => 3,
-        ];
-        
-        $list_kak = [
-            [
-                'id' => 1101,
-                'nama' => 'Workshop UI/UX Design Modern',
-                'pengusul' => 'Rizki Pratama',
-                'nim' => '2407411050',
-                'prodi' => 'Teknik Informatika',
-                'jurusan' => 'Teknik Informatika dan Komputer',
-                'tanggal_pengajuan' => '2026-05-12',
-                'status' => 'Belum Dicairkan'
-            ],
-            [
-                'id' => 1102,
-                'nama' => 'Seminar Internasional Blockchain',
-                'pengusul' => 'Ahmad Fauzi',
-                'nim' => '2407411052',
-                'prodi' => 'Teknik Informatika',
-                'jurusan' => 'Teknik Informatika dan Komputer',
-                'tanggal_pengajuan' => '2026-05-13',
-                'status' => 'Sudah Dicairkan'
-            ],
-            [
-                'id' => 1103,
-                'nama' => 'Pengadaan Alat Praktikum Elektro',
-                'pengusul' => 'Bambang Sudarsono',
-                'nim' => '2407411055',
-                'prodi' => 'Teknik Elektro',
-                'jurusan' => 'Teknik Elektro',
-                'tanggal_pengajuan' => '2026-05-15',
-                'status' => 'Belum Dicairkan'
-            ],
-            [
-                'id' => 1104,
-                'nama' => 'Lomba Karya Tulis Ilmiah Nasional',
-                'pengusul' => 'Dewi Lestari',
-                'nim' => '2407411051',
-                'prodi' => 'Akuntansi',
-                'jurusan' => 'Akuntansi',
-                'tanggal_pengajuan' => '2026-05-16',
-                'status' => 'Belum Dicairkan'
-            ],
+            'total' => (clone $statsQuery)->count(),
+            'danaDiberikan' => (clone $statsQuery)->withStatus(WorkflowService::STATUS_DANA_DIBERIKAN)->count(),
+            'ditolak' => (clone $statsQuery)->withStatus(WorkflowService::STATUS_DITOLAK)->count(),
+            'menunggu' => (clone $statsQuery)
+                ->atPosition(WorkflowService::POSITION_BENDAHARA)
+                ->withStatus(WorkflowService::STATUS_DISETUJUI)
+                ->count(),
         ];
 
-        $list_lpj = [
-            [
-                'id' => 1301,
-                'nama' => 'LPJ - Bakti Sosial Mahasiswa 2026',
-                'pengusul' => 'Andi Wijaya',
-                'nim' => '2407411060',
-                'prodi' => 'Teknik Elektro',
-                'jurusan' => 'Teknik Elektro',
-                'tanggal_pengajuan' => '2026-05-11',
-                'status' => 'Menunggu Verifikasi'
-            ],
-            [
-                'id' => 1302,
-                'nama' => 'LPJ - Kunjungan Industri PT. Digital Jaya',
-                'pengusul' => 'Santi Kurnia',
-                'nim' => '2407411061',
-                'prodi' => 'Administrasi Niaga',
-                'jurusan' => 'Administrasi Niaga',
-                'tanggal_pengajuan' => '2026-05-13',
-                'status' => 'Revisi'
-            ],
-            [
-                'id' => 1303,
-                'nama' => 'LPJ - Workshop Mobile Development',
-                'pengusul' => 'Rizky Pratama',
-                'nim' => '2407411062',
-                'prodi' => 'Teknik Informatika',
-                'jurusan' => 'Teknik Informatika dan Komputer',
-                'tanggal_pengajuan' => '2026-05-15',
-                'status' => 'Telah Direvisi'
-            ],
-            [
-                'id' => 1305,
-                'nama' => 'LPJ - Seminar Nasional Teknologi 4.0',
-                'pengusul' => 'Dewi Lestari',
-                'nim' => '2407411064',
-                'prodi' => 'Teknik Informatika',
-                'jurusan' => 'Teknik Informatika dan Komputer',
-                'tanggal_pengajuan' => '2026-05-10',
-                'status' => 'Telah Direvisi'
-            ],
-        ];
+        $kegiatanList = Kegiatan::with(['statusUtama', 'user'])
+            ->whereIn('status_utama_id', [
+                WorkflowService::STATUS_DISETUJUI,
+                WorkflowService::STATUS_DANA_DIBERIKAN,
+            ])
+            ->latest()
+            ->get();
+
+        $list_kak = $kegiatanList->map(function ($kegiatan) {
+            $statusLabel = $kegiatan->status_utama_id === WorkflowService::STATUS_DANA_DIBERIKAN
+                ? 'Sudah Dicairkan'
+                : 'Belum Dicairkan';
+
+            return [
+                'id' => $kegiatan->kegiatan_id,
+                'nama' => $kegiatan->nama_kegiatan,
+                'pengusul' => $kegiatan->user->nama ?? $kegiatan->pemilik_kegiatan,
+                'nim' => $kegiatan->nim_pelaksana,
+                'prodi' => $kegiatan->prodi_penyelenggara,
+                'jurusan' => $kegiatan->jurusan_penyelenggara,
+                'tanggal_pengajuan' => $kegiatan->created_at ? $kegiatan->created_at->format('Y-m-d') : null,
+                'status' => $statusLabel,
+            ];
+        })->toArray();
+
+        $lpjList = Lpj::with(['kegiatan.user'])
+            ->latest('submitted_at')
+            ->get();
+
+        $list_lpj = $lpjList->map(function ($lpj) {
+            $statusLabel = $this->mapLpjStatusLabel($lpj);
+            return [
+                'id' => $lpj->kegiatan_id,
+                'nama' => 'LPJ - ' . ($lpj->kegiatan->nama_kegiatan ?? 'Kegiatan'),
+                'pengusul' => $lpj->kegiatan->user->nama ?? $lpj->kegiatan->pemilik_kegiatan,
+                'nim' => $lpj->kegiatan->nim_pelaksana,
+                'prodi' => $lpj->kegiatan->prodi_penyelenggara,
+                'jurusan' => $lpj->kegiatan->jurusan_penyelenggara,
+                'tanggal_pengajuan' => $lpj->submitted_at ? $lpj->submitted_at->format('Y-m-d') : null,
+                'status' => $statusLabel,
+            ];
+        })->toArray();
 
         return view('bendahara.dashboard', compact('stats', 'list_kak', 'list_lpj'));
+    }
+
+    private function mapLpjStatusLabel(Lpj $lpj): string
+    {
+        return match ((int) $lpj->status_id) {
+            2 => 'Revisi',
+            3 => 'Disetujui',
+            4 => 'Ditolak',
+            default => $lpj->komentar_revisi ? 'Telah Direvisi' : 'Menunggu Verifikasi',
+        };
     }
 }
