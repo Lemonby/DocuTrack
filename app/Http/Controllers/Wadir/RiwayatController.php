@@ -12,7 +12,7 @@ class RiwayatController extends Controller
 {
     public function index()
     {
-        $userId = auth()->id();
+        $userId = \Illuminate\Support\Facades\Session::get('user_id') ?? auth()->id();
 
         $historyQuery = ProgressHistory::with(['kegiatan.user', 'status'])
             ->when($userId, fn ($q) => $q->where('changed_by_user_id', $userId))

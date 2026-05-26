@@ -72,7 +72,7 @@ class DashboardController extends Controller
         ];
 
         // Ambil Kegiatan milik Admin (user_id saat ini, fallback ke 1 jika null)
-        $userId = \Illuminate\Support\Facades\Auth::id() ?? 1;
+        $userId = \Illuminate\Support\Facades\Session::get('user_id') ?? 1;
         
         $list_kak_db = \App\Models\Kegiatan::with(['statusUtama', 'user'])
             ->where('user_id', $userId)

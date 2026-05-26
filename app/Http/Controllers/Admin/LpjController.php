@@ -9,7 +9,7 @@ class LpjController extends Controller
 {
     public function index()
     {
-        $userId = \Illuminate\Support\Facades\Auth::id() ?? 1;
+        $userId = \Illuminate\Support\Facades\Session::get('user_id') ?? 1;
         $kegiatanList = \App\Models\Kegiatan::with(['statusUtama', 'user', 'lpj'])
             ->where('user_id', $userId)
             ->whereNotNull('tanggal_selesai')

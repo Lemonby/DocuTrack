@@ -9,7 +9,7 @@ class UsulanController extends Controller
 {
     public function index()
     {
-        $userId = \Illuminate\Support\Facades\Auth::id() ?? 1;
+        $userId = \Illuminate\Support\Facades\Session::get('user_id') ?? 1;
         $kegiatanList = \App\Models\Kegiatan::with(['statusUtama', 'user'])
             ->where('user_id', $userId)
             ->latest()
@@ -173,7 +173,7 @@ class UsulanController extends Controller
 
     public function store(Request $request)
     {
-        $userId = \Illuminate\Support\Facades\Auth::id() ?? 1;
+        $userId = \Illuminate\Support\Facades\Session::get('user_id') ?? 1;
         try {
             (new \App\Services\KegiatanService())->createKegiatan($request->all(), $userId);
             return redirect()->route('admin.usulan.index')->with('success_message', 'Usulan berhasil diajukan!');

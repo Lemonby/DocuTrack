@@ -68,7 +68,7 @@
                             <input 
                                 type="email" 
                                 id="login-email" 
-                                name="email" 
+                                name="login_email" 
                                 required 
                                 class="w-full px-4 py-2.5 md:py-3 pr-12 text-base md:text-lg text-[#0A2540] bg-white border-2 border-[#E2E8F0] rounded-lg outline-none transition-all duration-300 focus:border-[#4299E1] focus:ring-4 focus:ring-blue-100" 
                                 placeholder="Email"
@@ -87,7 +87,7 @@
                             <input 
                                 type="password" 
                                 id="login-password" 
-                                name="password" 
+                                name="login_password" 
                                 required 
                                 class="w-full px-4 py-2.5 md:py-3 pr-12 text-base md:text-lg text-[#0A2540] bg-white border-2 border-[#E2E8F0] rounded-lg outline-none transition-all duration-300 focus:border-[#4299E1] focus:ring-4 focus:ring-blue-100" 
                                 placeholder="Password"

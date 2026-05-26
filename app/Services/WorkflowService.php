@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Kegiatan;
+use App\Models\LogStatus;
 use App\Models\ProgressHistory;
 use App\Models\RevisiComment;
 use Illuminate\Support\Facades\DB;
@@ -86,6 +87,20 @@ class WorkflowService
 
             $this->recordHistory($kegiatanId, $newStatus, auth()->id());
 
+            // Create notification log in log_statuses for the owner
+            $roleName = $this->getPositionName($currentPosition);
+            LogStatus::create([
+                'user_id' => $kegiatan->user_id,
+                'tipe_log' => 'APPROVAL',
+                'id_referensi' => $kegiatanId,
+                'status' => 'BELUM_DIBACA',
+                'konten_json' => [
+                    'judul' => 'Usulan Disetujui',
+                    'pesan' => "Usulan \"{$kegiatan->nama_kegiatan}\" telah disetujui oleh {$roleName}.",
+                    'link' => "/admin/pengajuan-kegiatan"
+                ]
+            ]);
+
             return true;
         });
     }
@@ -110,6 +125,20 @@ class WorkflowService
                 'komentar_revisi' => $reason,
                 'target_tabel' => 'tbl_kegiatan',
                 'target_kolom' => 'statusUtamaId',
+            ]);
+
+            // Create notification log in log_statuses for the owner
+            $roleName = $this->getPositionName($currentPosition);
+            LogStatus::create([
+                'user_id' => $kegiatan->user_id,
+                'tipe_log' => 'REJECTION',
+                'id_referensi' => $kegiatanId,
+                'status' => 'BELUM_DIBACA',
+                'konten_json' => [
+                    'judul' => 'Usulan Ditolak',
+                    'pesan' => "Usulan \"{$kegiatan->nama_kegiatan}\" telah ditolak oleh {$roleName}. Alasan: {$reason}",
+                    'link' => "/admin/pengajuan-kegiatan"
+                ]
             ]);
 
             return true;
@@ -148,16 +177,31 @@ class WorkflowService
                 ]);
             }
 
+            // Create notification log in log_statuses for the owner
+            $roleName = $this->getPositionName($currentPosition);
+            LogStatus::create([
+                'user_id' => $kegiatan->user_id,
+                'tipe_log' => 'REVISION',
+                'id_referensi' => $kegiatanId,
+                'status' => 'BELUM_DIBACA',
+                'konten_json' => [
+                    'judul' => 'Revisi Diperlukan',
+                    'pesan' => "Usulan \"{$kegiatan->nama_kegiatan}\" memerlukan revisi dari {$roleName}. Catatan: {$comments}",
+                    'link' => "/admin/pengajuan-kegiatan"
+                ]
+            ]);
+
             return true;
         });
     }
 
     private function recordHistory(int $kegiatanId, int $statusId, ?int $userId): ProgressHistory
     {
+        $realUserId = \Illuminate\Support\Facades\Session::get('user_id') ?? $userId ?? 1;
         return ProgressHistory::create([
             'kegiatan_id' => $kegiatanId,
             'status_id' => $statusId,
-            'changed_by_user_id' => $userId,
+            'changed_by_user_id' => $realUserId,
             'created_at' => now(),
         ]);
     }

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Kegiatan;
+use App\Models\LogStatus;
 use App\Models\Kak;
 use App\Models\IndikatorKak;
 use App\Models\KategoriRab;
@@ -18,6 +19,25 @@ class KegiatanService
      */
     public function createKegiatan(array $data, int $userId): Kegiatan
     {
+        // Decode rab_data if sent as JSON string
+        if (isset($data['rab_data']) && is_string($data['rab_data'])) {
+            $data['rab_data'] = json_decode($data['rab_data'], true);
+        }
+
+        // Map flat array indicator inputs to nested indicator array
+        if (!empty($data['indikator_nama']) && is_array($data['indikator_nama'])) {
+            $data['indikator'] = [];
+            foreach ($data['indikator_nama'] as $idx => $nama) {
+                if (!empty($nama)) {
+                    $data['indikator'][] = [
+                        'nama' => $nama,
+                        'bulan' => $data['indikator_bulan'][$idx] ?? null,
+                        'target' => $data['indikator_target'][$idx] ?? 0,
+                    ];
+                }
+            }
+        }
+
         return DB::transaction(function () use ($data, $userId) {
             $kegiatan = Kegiatan::create([
                 'nama_kegiatan' => $data['nama_kegiatan'],
@@ -77,6 +97,19 @@ class KegiatanService
                     ]);
                 }
             }
+
+            // Create submission notification log in log_statuses
+            LogStatus::create([
+                'user_id' => $userId,
+                'tipe_log' => 'SUBMISSION',
+                'id_referensi' => $kegiatan->kegiatan_id,
+                'status' => 'BELUM_DIBACA',
+                'konten_json' => [
+                    'judul' => 'Usulan Baru Diajukan',
+                    'pesan' => "Usulan baru \"{$kegiatan->nama_kegiatan}\" berhasil diajukan dan sedang menunggu verifikasi.",
+                    'link' => "/admin/pengajuan-kegiatan"
+                ]
+            ]);
 
             return $kegiatan->load(['kak.rabs', 'kak.indikators', 'kak.tahapans']);
         });

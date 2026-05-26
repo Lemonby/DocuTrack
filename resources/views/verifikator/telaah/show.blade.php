@@ -303,8 +303,13 @@
                         <i class="fas fa-tasks text-blue-600"></i> Panel Telaah
                     </h3>
 
-                    <form id="form-review" action="#" method="POST" class="space-y-6">
+                    <form id="form-review" action="{{ route('verifikator.telaah.store', $id) }}" method="POST" class="space-y-6">
                         @csrf
+                        <input type="hidden" name="action" id="action-field" value="">
+                        <input type="hidden" name="alasan_penolakan" id="alasan-penolakan-field" value="">
+                        <input type="hidden" name="catatan_revisi" id="catatan-revisi-field" value="">
+                        <input type="hidden" name="umpan_balik_verifikator" id="umpan-balik-field" value="">
+                        <input type="hidden" name="dana_disetujui" value="{{ $grand_total }}">
                         
                         {{-- Mode Selection JS handled --}}
                         <div id="mak-input-wrapper" class="hidden animate-slide-up">
@@ -544,23 +549,22 @@
     }
 
     function performSubmit(action, extra = null) {
+        document.getElementById('action-field').value = action;
+        
+        if (action === 'approve') {
+            document.getElementById('umpan-balik-field').value = document.getElementById('general_notes').value;
+        } else if (action === 'revise') {
+            document.getElementById('catatan-revisi-field').value = document.getElementById('general_notes').value;
+        } else if (action === 'reject') {
+            document.getElementById('alasan-penolakan-field').value = extra;
+        }
+
         Swal.fire({
             title: 'Memproses...',
             didOpen: () => { Swal.showLoading(); }
         });
         
-        // Mock success redirect
-        setTimeout(() => {
-            Swal.fire({
-                title: 'Berhasil!',
-                text: 'Status usulan telah diperbarui.',
-                icon: 'success',
-                timer: 1500,
-                showConfirmButton: false
-            }).then(() => {
-                window.location.href = "{{ route('verifikator.telaah.index') }}";
-            });
-        }, 1000);
+        document.getElementById('form-review').submit();
     }
 </script>
 @endpush

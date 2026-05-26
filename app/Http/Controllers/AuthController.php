@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\LogStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
@@ -53,6 +54,18 @@ class AuthController extends Controller
         Session::put('role',       $sessionRole);
         Session::put('spatie_role', $role);
         Session::put('jurusan',    $user->nama_jurusan ?? '');
+
+        // Store login log in log_statuses
+        LogStatus::create([
+            'user_id' => $user->user_id,
+            'tipe_log' => 'LOGIN',
+            'status' => 'DIBACA',
+            'konten_json' => [
+                'judul' => 'Login Berhasil',
+                'pesan' => "User {$user->nama} ({$role}) berhasil masuk ke sistem.",
+                'link' => '#'
+            ]
+        ]);
 
         // Redirect based on role
         return match($sessionRole) {

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
+use App\Models\LogStatus;
 use App\Services\ActivityLogService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -72,6 +73,18 @@ class AuthController extends Controller
             'User', $user->user_id, 'Login berhasil',
             request: $request
         );
+
+        // Store login log in log_statuses
+        LogStatus::create([
+            'user_id' => $user->user_id,
+            'tipe_log' => 'LOGIN',
+            'status' => 'DIBACA',
+            'konten_json' => [
+                'judul' => 'Login Berhasil',
+                'pesan' => "User {$user->nama} ({$role}) berhasil masuk ke sistem via API.",
+                'link' => '#'
+            ]
+        ]);
 
         return response()->json([
             'success' => true,

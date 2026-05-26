@@ -1010,7 +1010,7 @@
     }
 }
 </style><!-- popup_login.php - RESPONSIVE VERSION FIXED -->
-<div id="popup-login" class="popup-container fixed inset-0 z-[1000] hidden items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+<div id="popup-login" class="popup-container fixed inset-0 z-[1000] {{ session()->has('login_error') || $errors->any() ? 'flex' : 'hidden' }} items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
     
     <!-- Main Container dengan Background SVG -->
     <div class="relative w-full max-w-[893px] rounded-[20px] md:rounded-[30px] overflow-hidden shadow-2xl bg-white" style="min-height: 400px; max-height: 90vh;">
@@ -1057,15 +1057,22 @@
             <div class="relative z-10">
                 <h2 class="mb-6 md:mb-8 text-center text-3xl md:text-4xl font-bold text-[#0A2540]">Log In</h2>
                 
+                @if(session('login_error'))
+                    <div class="mb-4 rounded bg-red-100 p-3 text-center text-sm text-red-700 font-semibold shadow-sm">
+                        {{ session('login_error') }}
+                    </div>
+                @endif
                 
-
+                @if($errors->any())
+                    <div class="mb-4 rounded bg-red-100 p-3 text-center text-sm text-red-700 font-semibold shadow-sm">
+                        @foreach ($errors->all() as $error)
+                            <div>{{ $error }}</div>
+                        @endforeach
+                    </div>
+                @endif
                 
-                
-                
-
-                
-                
-                <form action="<?= url('login') ?>" method="POST" class="space-y-4 md:space-y-6">
+                <form action="{{ url('login') }}" method="POST" class="space-y-4 md:space-y-6">
+                    @csrf
                     
                     <!-- Email Input -->
                     <div class="input-group">

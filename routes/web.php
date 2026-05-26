@@ -50,6 +50,11 @@ Route::middleware([CheckRole::class])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/dashboard', [DashboardController::class, 'index']);
 
+    // Web Notification API routes
+    Route::get('/api/notifikasi', [\App\Http\Controllers\WebNotifikasiController::class, 'index']);
+    Route::post('/api/notifikasi/baca/{id}', [\App\Http\Controllers\WebNotifikasiController::class, 'markAsRead']);
+    Route::post('/api/notifikasi/baca-semua', [\App\Http\Controllers\WebNotifikasiController::class, 'markAllAsRead']);
+
     // Admin routes
     Route::prefix('admin')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'adminDashboard'])->name('admin.dashboard');
