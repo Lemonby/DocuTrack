@@ -23,7 +23,7 @@ class PencairanDanaController extends Controller
     {
         $kegiatans = Kegiatan::with(['statusUtama', 'user', 'kak'])
             ->atPosition(WorkflowService::POSITION_BENDAHARA)
-            ->withStatus(WorkflowService::STATUS_DISETUJUI)
+            ->withStatus(WorkflowService::STATUS_MENUNGGU)
             ->latest()->paginate(15);
 
         return response()->json([

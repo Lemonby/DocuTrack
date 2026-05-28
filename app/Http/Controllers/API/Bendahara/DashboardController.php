@@ -17,7 +17,7 @@ class DashboardController extends Controller
 
         $antrian = Kegiatan::with(['statusUtama', 'user'])
             ->atPosition(WorkflowService::POSITION_BENDAHARA)
-            ->withStatus(WorkflowService::STATUS_DISETUJUI)
+            ->withStatus(WorkflowService::STATUS_MENUNGGU)
             ->latest()->take(5)->get();
 
         return response()->json([

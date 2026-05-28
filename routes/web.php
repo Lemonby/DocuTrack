@@ -89,6 +89,7 @@ Route::middleware([CheckRole::class])->group(function () {
         // Pencairan Dana
         Route::get('/pencairan-dana', [PencairanDanaController::class, 'index'])->name('bendahara.pencairan.index');
         Route::get('/pencairan-dana/show/{id}', [PencairanDanaController::class, 'detail'])->name('bendahara.pencairan.detail');
+        Route::post('/pencairan-dana/proses', [PencairanDanaController::class, 'proses'])->name('bendahara.pencairan.proses');
 
         // LPJ
         Route::get('/lpj', [BendaharaLpjController::class, 'index'])->name('bendahara.lpj.index');

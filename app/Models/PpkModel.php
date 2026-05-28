@@ -65,7 +65,7 @@ class PpkModel
             return [
                 'total' => $row['total'] ?? 0,
                 'disetujui' => $row['disetujui'] ?? 0,
-                'menunggu' => $row['menunggu'] ?? 0
+                'menunggu' => $row['pending'] ?? 0
             ];
         }
         return ['total' => 0, 'disetujui' => 0, 'menunggu' => 0];

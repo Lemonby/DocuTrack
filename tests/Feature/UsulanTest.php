@@ -260,4 +260,81 @@ class UsulanTest extends TestCase
             'id_referensi' => $kegiatan->kegiatan_id
         ]);
     }
+
+    /**
+     * Test PPK and Wadir approval resets active status to STATUS_MENUNGGU (1) under Opsi 2.
+     */
+    #[Test]
+    #[TestDox('Memastikan persetujuan PPK dan Wadir mereset status usulan ke Menunggu (1) pada meja berikutnya')]
+    public function test_ppk_and_wadir_approval_resets_status_to_menunggu(): void
+    {
+        // 1. Create users
+        $admin = User::create([
+            'nama'         => 'Pengusul TI',
+            'email'        => 'pengusul2@example.com',
+            'password'     => Hash::make('password123'),
+            'nama_jurusan' => 'Teknik Informatika dan Komputer',
+            'status'       => 'Aktif',
+        ]);
+        $admin->assignRole('Admin');
+
+        $ppk = User::create([
+            'nama'         => 'PPK TI',
+            'email'        => 'ppk@example.com',
+            'password'     => Hash::make('password123'),
+            'nama_jurusan' => 'Teknik Informatika dan Komputer',
+            'status'       => 'Aktif',
+        ]);
+        $ppk->assignRole('PPK');
+
+        $wadir = User::create([
+            'nama'         => 'Wadir TI',
+            'email'        => 'wadir@example.com',
+            'password'     => Hash::make('password123'),
+            'nama_jurusan' => 'Teknik Informatika dan Komputer',
+            'status'       => 'Aktif',
+        ]);
+        $wadir->assignRole('Wadir');
+
+        // 2. Create a mock Kegiatan at PPK position
+        $kegiatan = Kegiatan::create([
+            'nama_kegiatan' => 'Pencairan Seminar 2026',
+            'prodi_penyelenggara' => 'D4 Teknik Informatika',
+            'pemilik_kegiatan' => 'Pengusul TI',
+            'nim_pelaksana' => '19200388273',
+            'user_id' => $admin->user_id,
+            'jurusan_penyelenggara' => 'Teknik Informatika dan Komputer',
+            'status_utama_id' => \App\Services\WorkflowService::STATUS_MENUNGGU,
+            'wadir_tujuan' => 1,
+            'posisi_id' => \App\Services\WorkflowService::POSITION_PPK,
+        ]);
+
+        // 3. Post as PPK to store simulating PPK approval
+        $response = $this->withSession([
+            'user_id' => $ppk->user_id,
+            'role' => 'ppk'
+        ])->post("/ppk/kegiatan/store/{$kegiatan->kegiatan_id}", ['action' => 'approve']);
+
+        $response->assertRedirect(route('ppk.dashboard'));
+        $kegiatan->refresh();
+
+        // Position advances to WADIR (4)
+        $this->assertEquals(\App\Services\WorkflowService::POSITION_WADIR, $kegiatan->posisi_id);
+        // Active status is reset to STATUS_MENUNGGU (1)
+        $this->assertEquals(\App\Services\WorkflowService::STATUS_MENUNGGU, $kegiatan->status_utama_id);
+
+        // 4. Post as Wadir to store simulating Wadir approval
+        $response = $this->withSession([
+            'user_id' => $wadir->user_id,
+            'role' => 'wadir'
+        ])->post("/wadir/kegiatan/store/{$kegiatan->kegiatan_id}", ['action' => 'approve']);
+
+        $response->assertRedirect(route('wadir.dashboard'));
+        $kegiatan->refresh();
+
+        // Position advances to BENDAHARA (5)
+        $this->assertEquals(\App\Services\WorkflowService::POSITION_BENDAHARA, $kegiatan->posisi_id);
+        // Active status is reset to STATUS_MENUNGGU (1)
+        $this->assertEquals(\App\Services\WorkflowService::STATUS_MENUNGGU, $kegiatan->status_utama_id);
+    }
 }

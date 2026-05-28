@@ -18,15 +18,15 @@ class DashboardController extends Controller
             'ditolak' => (clone $statsQuery)->withStatus(WorkflowService::STATUS_DITOLAK)->count(),
             'menunggu' => (clone $statsQuery)
                 ->atPosition(WorkflowService::POSITION_BENDAHARA)
-                ->withStatus(WorkflowService::STATUS_DISETUJUI)
+                ->withStatus(WorkflowService::STATUS_MENUNGGU)
                 ->count(),
         ];
 
         $kegiatanList = Kegiatan::with(['statusUtama', 'user'])
-            ->whereIn('status_utama_id', [
-                WorkflowService::STATUS_DISETUJUI,
-                WorkflowService::STATUS_DANA_DIBERIKAN,
-            ])
+            ->where(function ($query) {
+                $query->where('posisi_id', '>=', WorkflowService::POSITION_BENDAHARA)
+                      ->orWhere('status_utama_id', WorkflowService::STATUS_DANA_DIBERIKAN);
+            })
             ->latest()
             ->get();
 

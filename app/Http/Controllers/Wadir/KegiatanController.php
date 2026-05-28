@@ -95,7 +95,7 @@ class KegiatanController extends Controller
             $catatan_revisi = $revisiHistory->revisiComments->first()->komentar_revisi ?? null;
         }
 
-        return view('wadir.kegiatan.show', compact('id', 'status', 'iku_data', 'rab_data', 'kegiatan_data', 'tahapan_pelaksanaan', 'indikator_keberhasilan', 'catatan_revisi'));
+        return view('wadir.kegiatan.show', compact('id', 'status', 'iku_data', 'rab_data', 'kegiatan_data', 'tahapan_pelaksanaan', 'indikator_keberhasilan', 'catatan_revisi', 'kegiatan'));
     }
 
     public function store(Request $request, $id)

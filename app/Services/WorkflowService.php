@@ -13,8 +13,8 @@ class WorkflowService
     // Workflow positions (maps to role ordering)
     const POSITION_ADMIN = 1;
     const POSITION_VERIFIKATOR = 2;
-    const POSITION_WADIR = 3;
-    const POSITION_PPK = 4;
+    const POSITION_PPK = 3;
+    const POSITION_WADIR = 4;
     const POSITION_BENDAHARA = 5;
 
     // Status constants
@@ -61,6 +61,12 @@ class WorkflowService
         array $additionalData = []
     ): bool {
         $nextPosition = $this->getNextPosition($currentPosition);
+
+        // Under Opsi 2: When moving along PPK, Wadir, or Bendahara desks,
+        // reset status to STATUS_MENUNGGU (1) so it shows as pending for the next user.
+        if (in_array($currentPosition, [self::POSITION_PPK, self::POSITION_WADIR, self::POSITION_BENDAHARA])) {
+            $newStatus = self::STATUS_MENUNGGU;
+        }
 
         return DB::transaction(function () use ($kegiatanId, $nextPosition, $newStatus, $currentPosition, $additionalData) {
             $kegiatan = Kegiatan::lockForUpdate()->findOrFail($kegiatanId);

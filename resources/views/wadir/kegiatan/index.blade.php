@@ -275,6 +275,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.tbody.innerHTML = pageData.map((item, i) => {
                     const no = start + i + 1;
                     const tgl = item.tanggal_pengajuan ? new Date(item.tanggal_pengajuan).toLocaleDateString('id-ID', {day:'2-digit', month:'short', year:'numeric'}) : '-';
+                    const isApproved = item.status === 'Disetujui' || item.status === 'Selesai' || item.status === 'Telah diverifikasi';
+                    const statusClass = isApproved 
+                        ? 'text-emerald-700 bg-emerald-50 border border-emerald-200' 
+                        : 'text-blue-700 bg-blue-50 border border-blue-200';
+                    const statusIcon = isApproved ? 'fa-check-circle text-emerald-600' : 'fa-hourglass-half text-blue-500';
                     return `
                     <tr class="hover:bg-gray-50 transition-colors">
                         <td class="px-6 py-5 whitespace-nowrap text-sm text-gray-700">${no}.</td>
@@ -287,12 +292,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         </td>
                         <td class="px-6 py-5 whitespace-nowrap text-sm text-gray-600">${tgl}</td>
                         <td class="px-6 py-5 whitespace-nowrap text-xs font-semibold">
-                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-gray-600 bg-gray-100">
-                                <i class="fas fa-hourglass-half"></i> ${item.status || 'Menunggu'}
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full ${statusClass}">
+                                <i class="fas ${statusIcon}"></i> ${item.status || 'Menunggu'}
                             </span>
                         </td>
                         <td class="px-6 py-5 whitespace-nowrap text-sm font-medium">
-                            <a href="{{ url('/wadir/kegiatan') }}/${item.id}" class="bg-blue-600 text-white px-4 py-2 rounded-md text-xs font-medium hover:bg-blue-700 transition-colors inline-flex items-center gap-2">
+                            <a href="{{ url('/wadir/kegiatan/show') }}/${item.id}" class="bg-blue-600 text-white px-4 py-2 rounded-md text-xs font-medium hover:bg-blue-700 transition-colors inline-flex items-center gap-2">
                                 <i class="fas fa-check-circle"></i> Setujui
                             </a>
                         </td>
@@ -304,12 +309,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.mobileList.innerHTML = pageData.map((item, i) => {
                     const no = start + i + 1;
                     const tgl = item.tanggal_pengajuan ? new Date(item.tanggal_pengajuan).toLocaleDateString('id-ID', {day:'2-digit', month:'short', year:'numeric'}) : '-';
+                    const isApproved = item.status === 'Disetujui' || item.status === 'Selesai' || item.status === 'Telah diverifikasi';
+                    const statusClass = isApproved 
+                        ? 'text-emerald-700 bg-emerald-50 border border-emerald-200' 
+                        : 'text-blue-700 bg-blue-50 border border-blue-200';
+                    const statusIcon = isApproved ? 'fa-check-circle text-emerald-600' : 'fa-hourglass-half text-blue-500';
                     return `
                     <div class="mobile-card">
                         <div class="mobile-card-header">
                             <span class="mobile-card-number">#${no}</span>
-                            <span class="status-badge status-menunggu">
-                                <i class="fas fa-hourglass-half"></i> ${item.status || 'Menunggu'}
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${statusClass}">
+                                <i class="fas ${statusIcon}"></i> ${item.status || 'Menunggu'}
                             </span>
                         </div>
                         <div class="mobile-card-row">
@@ -321,7 +331,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <div class="mobile-card-pengusul">${item.pengusul}</div>
                         </div>
                         <div class="mobile-card-actions">
-                            <a href="{{ url('/wadir/kegiatan') }}/${item.id}" class="mobile-card-btn">
+                            <a href="{{ url('/wadir/kegiatan/show') }}/${item.id}" class="mobile-card-btn">
                                 <i class="fas fa-check-circle"></i> Setujui
                             </a>
                         </div>

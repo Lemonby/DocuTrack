@@ -12,11 +12,19 @@ class WadirController extends Controller
     public function dashboard()
     {
         $kegiatanList = Kegiatan::with(['statusUtama', 'user'])
-            ->atPosition(WorkflowService::POSITION_WADIR)
+            ->where(function ($q) {
+                $q->where('posisi_id', '>=', WorkflowService::POSITION_WADIR)
+                  ->orWhere('status_utama_id', WorkflowService::STATUS_DANA_DIBERIKAN);
+            })
             ->latest()
             ->get();
 
         $list_usulan = $kegiatanList->map(function ($kegiatan) {
+            $statusLabel = $kegiatan->statusUtama->nama_status_usulan ?? 'Menunggu';
+            if ($kegiatan->posisi_id > WorkflowService::POSITION_WADIR || $kegiatan->status_utama_id === WorkflowService::STATUS_DANA_DIBERIKAN) {
+                $statusLabel = 'Disetujui';
+            }
+
             return [
                 'id' => $kegiatan->kegiatan_id,
                 'nama' => $kegiatan->nama_kegiatan,
@@ -25,15 +33,22 @@ class WadirController extends Controller
                 'prodi' => $kegiatan->prodi_penyelenggara,
                 'jurusan' => $kegiatan->jurusan_penyelenggara,
                 'tanggal_pengajuan' => $kegiatan->created_at ? $kegiatan->created_at->format('Y-m-d') : null,
-                'status' => $kegiatan->statusUtama->nama_status_usulan ?? 'Menunggu',
+                'status' => $statusLabel,
             ];
         })->toArray();
 
-        $statsQuery = Kegiatan::query()->atPosition(WorkflowService::POSITION_WADIR);
         $stats = [
-            'total' => (clone $statsQuery)->count(),
-            'disetujui' => (clone $statsQuery)->withStatus(WorkflowService::STATUS_DISETUJUI)->count(),
-            'menunggu' => (clone $statsQuery)->withStatus(WorkflowService::STATUS_MENUNGGU)->count(),
+            'total' => Kegiatan::where(function ($q) {
+                $q->where('posisi_id', '>=', WorkflowService::POSITION_WADIR)
+                  ->orWhere('status_utama_id', WorkflowService::STATUS_DANA_DIBERIKAN);
+            })->count(),
+            'disetujui' => Kegiatan::where(function ($q) {
+                $q->where('posisi_id', '>', WorkflowService::POSITION_WADIR)
+                  ->orWhere('status_utama_id', WorkflowService::STATUS_DANA_DIBERIKAN);
+            })->count(),
+            'menunggu' => Kegiatan::atPosition(WorkflowService::POSITION_WADIR)
+                ->withStatus(WorkflowService::STATUS_MENUNGGU)
+                ->count(),
         ];
 
         $jurusan_list = Jurusan::orderBy('nama_jurusan')->pluck('nama_jurusan')->toArray();

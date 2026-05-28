@@ -6,16 +6,18 @@ use App\Http\Controllers\Controller;
 use App\Models\Kegiatan;
 use App\Services\KegiatanService;
 use App\Services\WorkflowService;
+use App\Services\PencairanService;
+use Illuminate\Http\Request;
 
 class PencairanDanaController extends Controller
 {
     public function index()
     {
         $kegiatanList = Kegiatan::with(['statusUtama', 'user'])
-            ->whereIn('status_utama_id', [
-                WorkflowService::STATUS_DISETUJUI,
-                WorkflowService::STATUS_DANA_DIBERIKAN,
-            ])
+            ->where(function ($query) {
+                $query->where('posisi_id', '>=', WorkflowService::POSITION_BENDAHARA)
+                      ->orWhere('status_utama_id', WorkflowService::STATUS_DANA_DIBERIKAN);
+            })
             ->latest()
             ->get();
 
@@ -138,5 +140,54 @@ class PencairanDanaController extends Controller
             4 => 'Ditolak',
             default => $lpj->komentar_revisi ? 'Telah Direvisi' : 'Menunggu Verifikasi',
         };
+    }
+
+    public function proses(Request $request)
+    {
+        $request->validate([
+            'kegiatanId' => 'required|exists:kegiatans,kegiatan_id',
+            'nominalTahapan' => 'required|array',
+            'nominalTahapan.*' => 'required',
+            'tanggalTahapan' => 'required|array',
+            'tanggalTahapan.*' => 'required|date',
+            'terminTahapan' => 'required|array',
+            'terminTahapan.*' => 'required|string',
+            'catatan' => 'nullable|string',
+        ]);
+
+        $kegiatanId = (int) $request->input('kegiatanId');
+        
+        $tahapan = [];
+        $nominalTahapan = $request->input('nominalTahapan');
+        $tanggalTahapan = $request->input('tanggalTahapan');
+        $terminTahapan = $request->input('terminTahapan');
+
+        foreach ($nominalTahapan as $index => $nominalRaw) {
+            $nominal = (float) str_replace('.', '', $nominalRaw);
+            $tahapan[] = [
+                'nominal' => $nominal,
+                'tanggal' => $tanggalTahapan[$index],
+                'termin' => $terminTahapan[$index],
+            ];
+        }
+
+        $pencairanService = new PencairanService();
+        $userId = \Illuminate\Support\Facades\Session::get('user_id') ?? 1;
+        $metode = count($tahapan) > 1 ? 'bertahap' : 'penuh';
+        
+        $payload = [
+            'metode' => $metode,
+            'catatan' => $request->input('catatan') ?? '',
+            'tahapan' => $tahapan,
+            'jumlah' => $tahapan[0]['nominal'],
+            'tanggal' => $tahapan[0]['tanggal'],
+        ];
+
+        $pencairanService->cairkanDana($kegiatanId, $payload, $userId);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Pencairan dana berhasil diproses.'
+        ]);
     }
 }

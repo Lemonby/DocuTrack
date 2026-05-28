@@ -640,17 +640,48 @@
                     allowOutsideClick: false,
                     didOpen: () => { Swal.showLoading(); }
                 });
-                setTimeout(() => {
+
+                const form = document.getElementById('formPencairan');
+                const formData = new FormData(form);
+
+                fetch("{{ route('bendahara.pencairan.proses') }}", {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil!',
+                            text: 'Instruksi pencairan dana telah berhasil dibuat.',
+                            confirmButtonColor: '#10b981',
+                            borderRadius: '24px'
+                        }).then(() => {
+                            window.location.href = "{{ route('bendahara.pencairan.index') }}";
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal',
+                            text: data.message || 'Terjadi kesalahan saat memproses pencairan.',
+                            confirmButtonColor: '#ef4444',
+                            borderRadius: '24px'
+                        });
+                    }
+                })
+                .catch(error => {
                     Swal.fire({
-                        icon: 'success',
-                        title: 'Berhasil!',
-                        text: 'Instruksi pencairan dana telah berhasil dibuat.',
-                        confirmButtonColor: '#10b981',
+                        icon: 'error',
+                        title: 'Kesalahan Sistem',
+                        text: 'Gagal menghubungi server.',
+                        confirmButtonColor: '#ef4444',
                         borderRadius: '24px'
-                    }).then(() => {
-                        window.location.href = "{{ route('bendahara.pencairan.index') }}";
                     });
-                }, 1500);
+                });
             }
         });
     }
