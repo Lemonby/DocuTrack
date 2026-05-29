@@ -338,7 +338,7 @@ class KegiatanModel
     {
         $query = "SELECT 
                     COUNT(*) as total,
-                    SUM(CASE WHEN posisiId = 5 AND tanggalPencairan IS NOT NULL THEN 1 ELSE 0 END) as disetujui,
+                    SUM(CASE WHEN posisiId = 1 AND statusUtamaId = 8 THEN 1 ELSE 0 END) as disetujui,
                     SUM(CASE WHEN statusUtamaId = 4 THEN 1 ELSE 0 END) as ditolak,
                     SUM(CASE WHEN statusUtamaId != 4 AND (posisiId != 5 OR tanggalPencairan IS NULL) THEN 1 ELSE 0 END) as menunggu
                 FROM tbl_kegiatan";

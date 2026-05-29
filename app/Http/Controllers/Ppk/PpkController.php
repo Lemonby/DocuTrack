@@ -12,19 +12,7 @@ class PpkController extends Controller
 {
     public function dashboard()
     {
-        $stats = [
-            'total' => Kegiatan::where(function ($q) {
-                $q->where('posisi_id', '>=', WorkflowService::POSITION_PPK)
-                  ->orWhere('status_utama_id', WorkflowService::STATUS_DANA_DIBERIKAN);
-            })->count(),
-            'disetujui' => Kegiatan::where(function ($q) {
-                $q->where('posisi_id', '>', WorkflowService::POSITION_PPK)
-                  ->orWhere('status_utama_id', WorkflowService::STATUS_DANA_DIBERIKAN);
-            })->count(),
-            'menunggu' => Kegiatan::atPosition(WorkflowService::POSITION_PPK)
-                ->withStatus(WorkflowService::STATUS_MENUNGGU)
-                ->count(),
-        ];
+        $stats = (new \App\Services\KegiatanService())->getDashboardStats();
 
         $kegiatanList = Kegiatan::with(['statusUtama', 'user'])
             ->where(function ($q) {

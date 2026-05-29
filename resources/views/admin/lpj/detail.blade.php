@@ -362,7 +362,7 @@ document.addEventListener('DOMContentLoaded', () => {
             statusIcon.className = 'fas fa-check text-emerald-500 text-2xl';
             
             if (['setuju', 'disetujui', 'selesai'].includes(currentStatus)) {
-                statusTitle.textContent = 'Disetujui';
+                statusTitle.textContent = 'LPJ Disetujui';
                 statusDesc.textContent = 'Laporan telah disetujui tanpa revisi.';
             } else if (currentStatus === 'menunggu_upload' || currentStatus === 'menunggu upload') {
                 statusTitle.textContent = 'Perlu Unggah Bukti';

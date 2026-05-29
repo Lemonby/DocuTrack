@@ -4,11 +4,11 @@
 
 @section('content')
 @php
-    $isEditable = (strtolower($status) === 'disetujui' || strtolower($status) === 'revisi');
+    $isEditable = (in_array(strtolower($status), ['telah diverifikasi', 'disetujui', 'revisi']));
     $statusColor = match(strtolower($status)) {
-        'disetujui', 'selesai' => 'emerald',
+        'disetujui', 'selesai', 'lpj disetujui' => 'emerald',
         'revisi' => 'amber',
-        'review', 'menunggu' => 'blue',
+        'telah diverifikasi', 'review', 'menunggu' => 'blue',
         default => 'slate'
     };
 @endphp

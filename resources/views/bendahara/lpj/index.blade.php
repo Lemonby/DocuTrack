@@ -16,7 +16,7 @@
                         <option value="">Semua Status</option>
                         <option value="menunggu verifikasi">Menunggu Verifikasi</option>
                         <option value="revisi">Revisi</option>
-                        <option value="disetujui">Disetujui</option>
+                        <option value="lpj disetujui">LPJ Disetujui</option>
                     </select>
                     <i class="fas fa-chevron-down absolute top-1/2 right-3 -translate-y-1/2 text-gray-500 pointer-events-none text-xs"></i>
                 </div>
@@ -98,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function badge(status) {
         const s = (status||'').toLowerCase();
         let cls = 'bg-blue-100 text-blue-700 border-blue-200';
-        if (['disetujui','selesai'].includes(s)) cls = 'bg-emerald-100 text-emerald-700 border-emerald-200';
+        if (['disetujui','selesai','lpj disetujui'].includes(s)) cls = 'bg-emerald-100 text-emerald-700 border-emerald-200';
         else if (s==='revisi') cls = 'bg-amber-100 text-amber-700 border-amber-200';
         else if (s==='ditolak') cls = 'bg-rose-100 text-rose-700 border-rose-200';
         return `<span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${cls}">${esc(status||'-')}</span>`;

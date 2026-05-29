@@ -47,11 +47,11 @@ class VerifikatorModel
         $query = "SELECT
                     COUNT(*) as total,
                     SUM(CASE
-                        WHEN posisiId IN (4, 3, 5) AND statusUtamaId != 4 OR statusUtamaId IN (5, 6)  THEN 1
+                        WHEN status_utama_id IN (3, 7, 8) AND status_utama_id != 4 AND bukti_ak IS NOT NULL THEN 1
                         ELSE 0
                     END) as disetujui,
                     SUM(CASE
-                        WHEN statusUtamaId = 4 THEN 1
+                        WHEN status_utama_id = 4 THEN 1
                         ELSE 0
                     END) as ditolak,
                     SUM(CASE
@@ -89,7 +89,7 @@ class VerifikatorModel
                     k.createdAt as tanggal_pengajuan,
                     s.namaStatusUsulan as status
                 FROM tbl_kegiatan k
-                LEFT JOIN tbl_status_utama s ON k.statusUtamaId = s.statusId
+                LEFT JOIN tbl_status_utamas s ON k.status_utama_id = s.statusId
                 WHERE k.posisiId = 2
                 ORDER BY k.createdAt DESC";
 
@@ -176,7 +176,7 @@ class VerifikatorModel
      */
     public function updateStatus($kegiatanId, $statusId)
     {
-        $query = "UPDATE tbl_kegiatan SET statusUtamaId = ? WHERE kegiatanId = ?";
+        $query = "UPDATE tbl_kegiatan SET status_utama_id = ? WHERE kegiatanId = ?";
         $stmt = mysqli_prepare($this->db, $query);
         mysqli_stmt_bind_param($stmt, "ii", $statusId, $kegiatanId);
         return mysqli_stmt_execute($stmt);
@@ -305,7 +305,7 @@ class VerifikatorModel
                 FROM tbl_kegiatan k
                 JOIN tbl_kak kak ON k.kegiatanId = kak.kegiatanId
                 LEFT JOIN tbl_user u ON u.userId = k.userId
-                LEFT JOIN tbl_status_utama s ON k.statusUtamaId = s.statusId
+                LEFT JOIN tbl_status_utama s ON k.status_utama_id = s.statusId
                 WHERE k.kegiatanId = ?";
 
         $stmt = mysqli_prepare($this->db, $query);
@@ -343,7 +343,7 @@ class VerifikatorModel
 
             // Update status kegiatan
             $query = "UPDATE tbl_kegiatan
-                      SET statusUtamaId = ?, posisiId = ?
+                      SET status_utama_id = ?, posisiId = ?
                       WHERE kegiatanId = ?";
 
             $stmt = $connection->prepare($query);
@@ -512,7 +512,7 @@ class VerifikatorModel
 
             // Prepare Update Query
             $sql = 'UPDATE tbl_kegiatan
-                    SET statusUtamaId = ?,
+                    SET status_utama_id = ?,
                         posisiId = ?,
                         buktiMAK = ?,
                         umpanBalikVerifikator = ?,
@@ -582,7 +582,7 @@ class VerifikatorModel
 
             // Update kegiatan status
             $query = "UPDATE tbl_kegiatan
-                      SET statusUtamaId = ?
+                      SET status_utama_id = ?
                       WHERE kegiatanId = ?";
 
             $stmt = $connection->prepare($query);
@@ -654,7 +654,7 @@ class VerifikatorModel
                     s.namaStatusUsulan as status,
                     r.namaRole as tahap_sekarang
                 FROM tbl_kegiatan k
-                LEFT JOIN tbl_status_utama s ON k.statusUtamaId = s.statusId
+                LEFT JOIN tbl_status_utama s ON k.status_utama_id = s.statusId
                 LEFT JOIN tbl_role r ON k.posisiId = r.roleId
                 ORDER BY k.createdAt DESC";
 

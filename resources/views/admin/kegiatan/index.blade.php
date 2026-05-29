@@ -177,7 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 tableBody.innerHTML = pageData.map((item, idx) => {
                     const no = start + idx + 1;
                     const tgl = item.tanggal_pengajuan ? new Date(item.tanggal_pengajuan).toLocaleDateString('id-ID', {day:'2-digit', month:'short', year:'numeric'}) : '-';
-                    const isReady = (parseInt(item.posisi) === 1 && parseInt(item.statusUtamaId) === 3);
+                    const isReady = (parseInt(item.posisi) === 1 && [3, 7].includes(parseInt(item.statusUtamaId)));
                     const statusHtml = isReady
                         ? `<span class="px-3 py-1.5 rounded-full text-blue-700 bg-blue-100 border border-blue-200 inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider"><i class="fas fa-edit"></i> Siap Dilengkapi</span>`
                         : getStatusHtml(item.status);
@@ -209,7 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 mobileList.innerHTML = pageData.map((item, idx) => {
                     const no = start + idx + 1;
                     const tgl = item.tanggal_pengajuan ? new Date(item.tanggal_pengajuan).toLocaleDateString('id-ID', {day:'2-digit', month:'short', year:'numeric'}) : '-';
-                    const isReady = (parseInt(item.posisi) === 1 && parseInt(item.statusUtamaId) === 3);
+                    const isReady = (parseInt(item.posisi) === 1 && [3, 7].includes(parseInt(item.statusUtamaId)));
                     const statusHtml = isReady
                         ? `<span class="px-3 py-1.5 rounded-full text-blue-700 bg-blue-100 border border-blue-200 inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider"><i class="fas fa-edit"></i> Siap Dilengkapi</span>`
                         : getStatusHtml(item.status);

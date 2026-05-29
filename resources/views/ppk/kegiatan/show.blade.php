@@ -55,11 +55,11 @@
         <div class="mb-14 px-4">
             <div class="relative flex justify-between items-center max-w-4xl mx-auto">
                 <div class="absolute top-1/2 left-0 w-full h-1 bg-slate-100 -translate-y-1/2 z-0"></div>
-                <div class="absolute top-1/2 left-0 {{ strtolower($status) === 'disetujui' ? 'w-full' : (strtolower($status) === 'revisi' ? 'w-1/3' : 'w-2/3') }} h-1 bg-{{ $statusColor }}-500 -translate-y-1/2 z-0 transition-all duration-1000"></div>
+                <div class="absolute top-1/2 left-0 {{ in_array(strtolower($status), ['lpj disetujui', 'selesai']) ? 'w-full' : (strtolower($status) === 'revisi' ? 'w-1/3' : 'w-2/3') }} h-1 bg-{{ $statusColor }}-500 -translate-y-1/2 z-0 transition-all duration-1000"></div>
                 
                 @foreach(['Pengajuan', 'Verifikasi', 'Selesai'] as $index => $step)
                     @php
-                        $isCompleted = (strtolower($status) === 'disetujui') || 
+                        $isCompleted = in_array(strtolower($status), ['lpj disetujui', 'selesai']) || 
                                       ($index === 0) || 
                                       ($index === 1 && strtolower($status) !== 'revisi' && strtolower($status) !== 'menunggu');
                         $isActive = ($index === 1 && (strtolower($status) === 'review' || strtolower($status) === 'menunggu')) ||
@@ -286,7 +286,7 @@
                             <i class="fas fa-stamp text-blue-600"></i> Panel Persetujuan
                         </h3>
 
-                        @if($status === 'Menunggu' || $status === 'Review')
+                        @if($kegiatan->posisi_id == 3)
                             <form action="{{ route('ppk.kegiatan.store', $id) }}" method="POST" class="space-y-6">
                                 @csrf
                                 <div class="space-y-3">
@@ -324,6 +324,9 @@
             </h3>
             
             <div class="space-y-10">
+                @php 
+                    $grand_total = 0;
+                @endphp
                 @if(!empty($rab_data))
                     @foreach($rab_data as $kategori => $items)
                         @php 
@@ -331,6 +334,7 @@
                             foreach($items as $it) {
                                 $subtotal += $it['vol1'] * ($it['vol2'] ?? 1) * $it['harga'];
                             }
+                            $grand_total += $subtotal;
                         @endphp
                         
                         {{-- Category Card --}}

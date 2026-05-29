@@ -37,19 +37,7 @@ class WadirController extends Controller
             ];
         })->toArray();
 
-        $stats = [
-            'total' => Kegiatan::where(function ($q) {
-                $q->where('posisi_id', '>=', WorkflowService::POSITION_WADIR)
-                  ->orWhere('status_utama_id', WorkflowService::STATUS_DANA_DIBERIKAN);
-            })->count(),
-            'disetujui' => Kegiatan::where(function ($q) {
-                $q->where('posisi_id', '>', WorkflowService::POSITION_WADIR)
-                  ->orWhere('status_utama_id', WorkflowService::STATUS_DANA_DIBERIKAN);
-            })->count(),
-            'menunggu' => Kegiatan::atPosition(WorkflowService::POSITION_WADIR)
-                ->withStatus(WorkflowService::STATUS_MENUNGGU)
-                ->count(),
-        ];
+        $stats = (new \App\Services\KegiatanService())->getDashboardStats();
 
         $jurusan_list = Jurusan::orderBy('nama_jurusan')->pluck('nama_jurusan')->toArray();
         

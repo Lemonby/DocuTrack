@@ -155,8 +155,9 @@
                 </div>
             </div>
 
-            <form id="form-lpj-verify" action="#" method="POST" class="space-y-16">
+            <form id="form-lpj-verify" action="{{ route('bendahara.lpj.proses', $id) }}" method="POST" class="space-y-16">
                 @csrf
+                <input type="hidden" name="action" id="action-input" value="">
                 @php $grand_total_anggaran = 0; $grand_total_realisasi = 0; @endphp
                 @foreach($rab_items as $kategori => $items)
                     @php $subtotal_anggaran = 0; $subtotal_realisasi = 0; @endphp
@@ -388,17 +389,8 @@
                     allowOutsideClick: false,
                     didOpen: () => { Swal.showLoading(); }
                 });
-                setTimeout(() => {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Berhasil!',
-                        text: 'Tindakan verifikasi Anda telah tersimpan (Mock).',
-                        confirmButtonColor: '#3b82f6',
-                        borderRadius: '24px'
-                    }).then(() => {
-                        window.location.href = "{{ route('bendahara.lpj.index') }}";
-                    });
-                }, 1500);
+                document.getElementById('action-input').value = type;
+                document.getElementById('form-lpj-verify').submit();
             }
         });
     }

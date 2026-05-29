@@ -82,6 +82,14 @@
                     <i class="fas fa-print"></i> Cetak KAK
                 </button>
                 @endif
+                @if(strtolower($status) === 'lpj disetujui')
+                <form action="{{ route('admin.usulan.selesai', $id) }}" method="POST" class="inline flex-1 sm:flex-none">
+                    @csrf
+                    <button type="submit" class="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition font-bold text-sm shadow-lg shadow-emerald-200">
+                        <i class="fas fa-check-double"></i> Kegiatan Selesai
+                    </button>
+                </form>
+                @endif
             </div>
         </div>
 
@@ -89,11 +97,11 @@
         <div class="mb-14 px-4">
             <div class="relative flex justify-between items-center max-w-4xl mx-auto">
                 <div class="absolute top-1/2 left-0 w-full h-1 bg-slate-100 -translate-y-1/2 z-0"></div>
-                <div class="absolute top-1/2 left-0 {{ strtolower($status) === 'disetujui' ? 'w-full' : (strtolower($status) === 'revisi' ? 'w-1/3' : 'w-2/3') }} h-1 bg-{{ $statusColor }}-500 -translate-y-1/2 z-0 transition-all duration-1000"></div>
+                <div class="absolute top-1/2 left-0 {{ in_array(strtolower($status), ['lpj disetujui', 'selesai']) ? 'w-full' : (strtolower($status) === 'revisi' ? 'w-1/3' : 'w-2/3') }} h-1 bg-{{ $statusColor }}-500 -translate-y-1/2 z-0 transition-all duration-1000"></div>
                 
                 @foreach(['Pengajuan', 'Verifikasi', 'Selesai'] as $index => $step)
                     @php
-                        $isCompleted = (strtolower($status) === 'disetujui') || 
+                        $isCompleted = in_array(strtolower($status), ['lpj disetujui', 'selesai']) || 
                                       ($index === 0) || 
                                       ($index === 1 && strtolower($status) !== 'revisi' && strtolower($status) !== 'menunggu');
                         $isActive = ($index === 1 && (strtolower($status) === 'review' || strtolower($status) === 'menunggu')) ||

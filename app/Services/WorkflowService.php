@@ -23,6 +23,9 @@ class WorkflowService
     const STATUS_DISETUJUI = 3;
     const STATUS_DITOLAK = 4;
     const STATUS_DANA_DIBERIKAN = 5;
+    const STATUS_LPJ_DISETUJUI = 6;
+    const STATUS_TELAH_DIVERIFIKASI = 7;
+    const STATUS_SELESAI = 8;
 
     private const WORKFLOW_ROUTING = [
         self::POSITION_ADMIN => self::POSITION_VERIFIKATOR,

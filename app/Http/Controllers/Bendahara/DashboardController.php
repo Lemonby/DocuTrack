@@ -11,16 +11,7 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        $statsQuery = Kegiatan::query();
-        $stats = [
-            'total' => (clone $statsQuery)->count(),
-            'danaDiberikan' => (clone $statsQuery)->withStatus(WorkflowService::STATUS_DANA_DIBERIKAN)->count(),
-            'ditolak' => (clone $statsQuery)->withStatus(WorkflowService::STATUS_DITOLAK)->count(),
-            'menunggu' => (clone $statsQuery)
-                ->atPosition(WorkflowService::POSITION_BENDAHARA)
-                ->withStatus(WorkflowService::STATUS_MENUNGGU)
-                ->count(),
-        ];
+        $stats = (new \App\Services\KegiatanService())->getBendaharaDashboardStats();
 
         $kegiatanList = Kegiatan::with(['statusUtama', 'user'])
             ->where(function ($query) {

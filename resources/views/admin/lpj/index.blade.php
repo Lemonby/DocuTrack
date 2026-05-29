@@ -139,8 +139,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function getStatusInfo(s) {
         const m = {
-            'setuju': { text: 'Disetujui', cls: 'status-ok', icon: 'fa-check-circle' },
-            'disetujui': { text: 'Disetujui', cls: 'status-ok', icon: 'fa-check-circle' },
+            'setuju': { text: 'LPJ Disetujui', cls: 'status-ok', icon: 'fa-check-double' },
+            'disetujui': { text: 'LPJ Disetujui', cls: 'status-ok', icon: 'fa-check-double' },
             'selesai': { text: 'Selesai', cls: 'status-ok', icon: 'fa-check-circle' },
             'revisi': { text: 'Revisi', cls: 'status-rev', icon: 'fa-exclamation-triangle' },
             'telah_direvisi': { text: 'Telah Direvisi', cls: 'text-cyan-800 bg-cyan-100 border border-cyan-200', icon: 'fa-history' },
@@ -155,12 +155,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const m = {
             'menunggu_upload': { text: 'Upload Bukti', cls: 'bg-orange-600 hover:bg-orange-700', icon: 'fa-upload' },
             'siap_submit': { text: 'Submit LPJ', cls: 'bg-blue-600 hover:bg-blue-700', icon: 'fa-file-upload' },
-            'menunggu': { text: 'Lihat Status', cls: 'bg-gray-600 hover:bg-gray-700', icon: 'fa-eye' },
+            'menunggu': { text: 'Lihat Status', cls: 'bg-blue-600 hover:bg-blue-700', icon: 'fa-eye' },
             'setuju': { text: 'Lihat Detail', cls: 'bg-green-600 hover:bg-green-700', icon: 'fa-eye' },
             'disetujui': { text: 'Lihat Detail', cls: 'bg-green-600 hover:bg-green-700', icon: 'fa-eye' },
             'selesai': { text: 'Lihat Detail', cls: 'bg-green-600 hover:bg-green-700', icon: 'fa-eye' },
             'revisi': { text: 'Lihat Revisi', cls: 'bg-yellow-600 hover:bg-yellow-700', icon: 'fa-eye' },
-            'telah_direvisi': { text: 'Cek Revisi', cls: 'bg-cyan-600 hover:bg-cyan-700', icon: 'fa-check-double' },
+            'telah_direvisi': { text: 'Cek  Revisi', cls: 'bg-cyan-600 hover:bg-cyan-700', icon: 'fa-check-double' },
         };
         return m[s] || { text: 'Review', cls: 'bg-indigo-600 hover:bg-indigo-700', icon: 'fa-eye' };
     }

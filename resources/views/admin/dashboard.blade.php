@@ -348,7 +348,7 @@ window.dataLPJ = @json($list_lpj ?? []);
         const s = (status || '').toLowerCase().replace(/_/g, ' ');
         let cls = 'bg-slate-100 text-slate-500 border-slate-200';
         
-        if (['disetujui', 'setuju', 'selesai', 'tuntas'].includes(s)) {
+        if (['disetujui', 'setuju', 'selesai', 'tuntas', 'lpj disetujui'].includes(s)) {
             cls = 'bg-emerald-100 text-emerald-700 border-emerald-200';
         } else if (['revisi', 'perlu perbaikan'].includes(s)) {
             cls = 'bg-amber-100 text-amber-700 border-amber-200';

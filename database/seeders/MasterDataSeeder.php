@@ -16,6 +16,9 @@ class MasterDataSeeder extends Seeder
             ['status_id' => 3, 'nama_status_usulan' => 'Disetujui'],
             ['status_id' => 4, 'nama_status_usulan' => 'Ditolak'],
             ['status_id' => 5, 'nama_status_usulan' => 'Dana diberikan'],
+            ['status_id' => 6, 'nama_status_usulan' => 'LPJ Disetujui'],
+            ['status_id' => 7, 'nama_status_usulan' => 'Telah Diverifikasi'],
+            ['status_id' => 8, 'nama_status_usulan' => 'Selesai'],
         ]);
 
         // Wadir

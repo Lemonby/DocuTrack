@@ -488,4 +488,127 @@ class UsulanTest extends TestCase
             'changed_by_user_id' => $admin->user_id
         ]);
     }
+
+    /**
+     * Test successful LPJ approval by Bendahara.
+     */
+    #[Test]
+    #[TestDox('Memastikan bendahara berhasil menyetujui LPJ, memperbarui status LPJ dan kegiatan, serta menyimpan log')]
+    public function test_bendahara_lpj_approval_works(): void
+    {
+        // 1. Create users
+        $admin = User::create([
+            'nama'         => 'Pengusul TI',
+            'email'        => 'pengusullpj@example.com',
+            'password'     => Hash::make('password123'),
+            'nama_jurusan' => 'Teknik Informatika dan Komputer',
+            'status'       => 'Aktif',
+        ]);
+        $admin->assignRole('Admin');
+
+        $bendahara = User::create([
+            'nama'         => 'Bendahara TI',
+            'email'        => 'bendahara@example.com',
+            'password'     => Hash::make('password123'),
+            'nama_jurusan' => 'Teknik Informatika dan Komputer',
+            'status'       => 'Aktif',
+        ]);
+        $bendahara->assignRole('Bendahara');
+
+        // 2. Create a mock Kegiatan in status DANA_DIBERIKAN (5)
+        $kegiatan = Kegiatan::create([
+            'nama_kegiatan' => 'Seminar LPJ 2026',
+            'prodi_penyelenggara' => 'D4 Teknik Informatika',
+            'pemilik_kegiatan' => 'Pengusul TI',
+            'nim_pelaksana' => '19200388273',
+            'user_id' => $admin->user_id,
+            'jurusan_penyelenggara' => 'Teknik Informatika dan Komputer',
+            'status_utama_id' => \App\Services\WorkflowService::STATUS_DANA_DIBERIKAN,
+            'wadir_tujuan' => 1,
+            'posisi_id' => \App\Services\WorkflowService::POSITION_BENDAHARA,
+        ]);
+
+        $kak = Kak::create([
+            'kegiatan_id' => $kegiatan->kegiatan_id,
+            'iku' => 'IKU 1',
+            'gambaran_umum' => 'Deskripsi.',
+            'metode_pelaksanaan' => 'Online',
+        ]);
+
+        $kategori = \App\Models\KategoriRab::firstOrCreate(['nama_kategori' => 'Belanja Barang']);
+        $rab = Rab::create([
+            'kak_id' => $kak->kak_id,
+            'kategori_id' => $kategori->kategori_rab_id,
+            'uraian' => 'Kertas KVS',
+            'rincian' => '1 Rim',
+            'vol1' => 1,
+            'sat1' => 'Rim',
+            'vol2' => 1,
+            'sat2' => 'Rim',
+            'harga' => 40000
+        ]);
+
+        $lpj = \App\Models\Lpj::create([
+            'kegiatan_id' => $kegiatan->kegiatan_id,
+            'status_id' => 1, // Menunggu Verifikasi
+            'submitted_at' => now(),
+            'tenggat_lpj' => now()->addDays(14)
+        ]);
+
+        $lpjItem = \App\Models\LpjItem::create([
+            'lpj_id' => $lpj->lpj_id,
+            'kategori_id' => $kategori->kategori_rab_id,
+            'uraian' => 'Kertas KVS',
+            'rincian' => '1 Rim',
+            'total_harga' => 40000,
+            'realisasi' => 40000,
+            'sat1' => 'Rim',
+            'vol1' => 1,
+            'vol2' => 1,
+            'harga' => 40000
+        ]);
+
+        // 3. Post to processes route simulating bendahara action=approve
+        $payload = [
+            'action' => 'approve',
+            'notes' => 'Laporan lengkap dan valid.',
+            'item_feedback' => [
+                $rab->rab_item_id => 'Bukti kuitansi sudah jelas.'
+            ]
+        ];
+
+        $response = $this->withSession([
+            'user_id' => $bendahara->user_id,
+            'role' => 'bendahara'
+        ])->post("/bendahara/lpj/proses/{$kegiatan->kegiatan_id}", $payload);
+
+        // 4. Assert response redirect to bendahara index
+        $response->assertRedirect(route('bendahara.lpj.index'));
+        $response->assertSessionHas('success', 'LPJ berhasil disetujui lunas.');
+
+        // 5. Assert database updates
+        $lpj->refresh();
+        $this->assertEquals(3, $lpj->status_id); // Disetujui
+        $this->assertNotNull($lpj->approved_at);
+
+        $lpjItem->refresh();
+        $this->assertEquals('Bukti kuitansi sudah jelas.', $lpjItem->komentar);
+
+        $kegiatan->refresh();
+        $this->assertEquals(6, $kegiatan->status_utama_id); // LPJ Disetujui
+
+        // Assert Progress history for status 6
+        $this->assertDatabaseHas('progress_histories', [
+            'kegiatan_id' => $kegiatan->kegiatan_id,
+            'status_id' => 6,
+            'changed_by_user_id' => $bendahara->user_id
+        ]);
+
+        // Assert log_statuses contains approval log
+        $this->assertDatabaseHas('log_statuses', [
+            'user_id' => $admin->user_id,
+            'tipe_log' => 'APPROVAL',
+            'id_referensi' => $kegiatan->kegiatan_id
+        ]);
+    }
 }

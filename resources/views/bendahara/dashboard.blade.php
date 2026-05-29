@@ -192,7 +192,7 @@ window.dataLPJ = @json($list_lpj ?? []);
     function statusBadge(status) {
         const s = (status || '').toLowerCase();
         let cls = 'bg-slate-100 text-slate-600 border-slate-200';
-        if (['sudah dicairkan', 'disetujui', 'selesai'].includes(s)) cls = 'bg-emerald-100 text-emerald-700 border-emerald-200';
+        if (['sudah dicairkan', 'disetujui', 'selesai', 'lpj disetujui'].includes(s)) cls = 'bg-emerald-100 text-emerald-700 border-emerald-200';
         else if (['belum dicairkan', 'menunggu verifikasi', 'menunggu', 'telah direvisi'].includes(s)) cls = 'bg-blue-100 text-blue-700 border-blue-200';
         else if (s === 'revisi') cls = 'bg-amber-100 text-amber-700 border-amber-200';
         else if (s === 'ditolak') cls = 'bg-rose-100 text-rose-700 border-rose-200';

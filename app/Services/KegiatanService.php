@@ -281,21 +281,122 @@ class KegiatanService
     }
 
     /**
-     * Dashboard statistics.
+     * Dashboard statistics router based on role.
      */
-    public function getDashboardStats(?string $jurusan = null): array
+    public function getDashboardStats(?string $jurusan = null, ?string $role = null): array
+    {
+        if (!$role) {
+            if (auth()->check()) {
+                $role = auth()->user()->getRoleNames()->first();
+            } else {
+                $role = \Illuminate\Support\Facades\Session::get('role');
+            }
+        }
+        
+        $role = $role ?? 'admin';
+
+        return match (strtolower($role)) {
+            'admin' => $this->getAdminDashboardStats(),
+            'verifikator' => $this->getVerifikatorDashboardStats(),
+            'ppk' => $this->getPpkDashboardStats(),
+            'wadir' => $this->getWadirDashboardStats(),
+            'bendahara' => $this->getBendaharaDashboardStats(),
+            default => $this->getAdminDashboardStats(),
+        };
+    }
+
+    /**
+     * Admin Dashboard Statistics.
+     */
+    public function getAdminDashboardStats(): array
     {
         $query = Kegiatan::query();
 
-        if ($jurusan) {
-            $query->byJurusan($jurusan);
-        }
+        return [
+            'total' => (clone $query)->count(),
+            'disetujui' => (clone $query)->where('posisi_id', 1)->where('status_utama_id', 8)->count(),
+            'ditolak' => (clone $query)->where('status_utama_id', 4)->count(),
+            'menunggu' => (clone $query)->where('status_utama_id', '!=', 4)
+                ->where(function ($q) {
+                    $q->where('posisi_id', '!=', 1)->orWhere('status_utama_id', '!=', 8);
+                })->count(),
+        ];
+    }
+
+    /**
+     * Verifikator Dashboard Statistics.
+     */
+    public function getVerifikatorDashboardStats(): array
+    {
+        $query = Kegiatan::query();
 
         return [
             'total' => (clone $query)->count(),
-            'disetujui' => (clone $query)->withStatus(5)->count(),
-            'ditolak' => (clone $query)->withStatus(4)->count(),
-            'menunggu' => (clone $query)->whereNotIn('status_utama_id', [3, 4, 5])->count(),
+            'disetujui' => (clone $query)->whereIn('status_utama_id', [3, 7, 8])
+                ->where('status_utama_id', '!=', 4)
+                ->whereNotNull('bukti_mak')
+                ->count(),
+            'ditolak' => (clone $query)->where('status_utama_id', 4)->count(),
+            'menunggu' => (clone $query)->where('posisi_id', 2)->count(),
+        ];
+    }
+
+    /**
+     * PPK Dashboard Statistics.
+     */
+    public function getPpkDashboardStats(): array
+    {
+        $query = Kegiatan::query();
+
+        return [
+            'total' => (clone $query)->count(),
+            'disetujui' => (clone $query)->where(function ($q) {
+                $q->where('posisi_id', '>', 3)
+                  ->orWhere(function ($q2) {
+                      $q2->where('status_utama_id', 8)
+                         ->where('posisi_id', 1);
+                  });
+            })->count(),
+            'ditolak' => (clone $query)->where('status_utama_id', 4)->count(),
+            'menunggu' => (clone $query)->where('posisi_id', 3)->count(),
+        ];
+    }
+
+    /**
+     * Wadir Dashboard Statistics.
+     */
+    public function getWadirDashboardStats(): array
+    {
+        $query = Kegiatan::query();
+
+        return [
+            'total' => (clone $query)->count(),
+            'disetujui' => (clone $query)->where(function ($q) {
+                $q->where('posisi_id', '>', 4)
+                  ->orWhere(function ($q2) {
+                      $q2->where('status_utama_id', 8)
+                         ->where('posisi_id', 1);
+                  });
+            })->count(),
+            'ditolak' => (clone $query)->where('status_utama_id', 4)->count(),
+            'menunggu' => (clone $query)->where('posisi_id', 4)->count(),
+        ];
+    }
+
+    /**
+     * Bendahara Dashboard Statistics.
+     */
+    public function getBendaharaDashboardStats(): array
+    {
+        $query = Kegiatan::query();
+
+        return [
+            'total' => (clone $query)->count(),
+            'danaDiberikan' => (clone $query)->whereIn('status_utama_id', [5, 6, 8])->count(),
+            'ditolak' => (clone $query)->where('status_utama_id', 4)->count(),
+            'menunggu' => (clone $query)->where('posisi_id', 5)
+                ->where('status_utama_id', 1)
+                ->count(),
         ];
     }
 }

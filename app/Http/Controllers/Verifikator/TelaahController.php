@@ -104,7 +104,7 @@ class TelaahController extends Controller
         $action = $request->input('action');
         
         if ($action == 'approve') {
-            $workflowService->moveToNextPosition($id, \App\Services\WorkflowService::POSITION_VERIFIKATOR, \App\Services\WorkflowService::STATUS_DISETUJUI, [
+            $workflowService->moveToNextPosition($id, \App\Services\WorkflowService::POSITION_VERIFIKATOR, \App\Services\WorkflowService::STATUS_TELAH_DIVERIFIKASI, [
                 'kode_mak' => $request->input('kode_mak'),
                 'dana_disetujui' => $request->input('dana_disetujui'),
                 'umpan_balik' => $request->input('umpan_balik_verifikator')

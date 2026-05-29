@@ -22,7 +22,9 @@ class KegiatanController extends Controller
                 'nama_mahasiswa' => $kegiatan->user->nama ?? $kegiatan->pemilik_kegiatan,
                 'jurusan' => $kegiatan->jurusan_penyelenggara,
                 'tanggal_pengajuan' => $kegiatan->created_at,
-                'status' => $kegiatan->statusUtama->nama_status_usulan ?? 'Menunggu'
+                'status' => $kegiatan->statusUtama->nama_status_usulan ?? 'Menunggu',
+                'posisi' => $kegiatan->posisi_id,
+                'statusUtamaId' => $kegiatan->status_utama_id
             ];
         })->toArray();
 

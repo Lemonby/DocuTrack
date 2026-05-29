@@ -12,7 +12,7 @@ class LpjController extends Controller
         $userId = \Illuminate\Support\Facades\Session::get('user_id') ?? 1;
         $kegiatanList = \App\Models\Kegiatan::with(['statusUtama', 'user', 'lpj'])
             ->where('user_id', $userId)
-            ->where('status_utama_id', \App\Services\WorkflowService::STATUS_DANA_DIBERIKAN)
+            ->whereIn('status_utama_id', [\App\Services\WorkflowService::STATUS_DANA_DIBERIKAN, 6])
             ->latest()
             ->get();
 

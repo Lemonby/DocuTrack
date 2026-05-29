@@ -107,7 +107,7 @@ class LpjController extends Controller
     {
         return match ((int) $lpj->status_id) {
             2 => 'Revisi',
-            3 => 'Disetujui',
+            3 => 'LPJ Disetujui',
             4 => 'Ditolak',
             default => $lpj->komentar_revisi ? 'Telah Direvisi' : 'Menunggu Verifikasi',
         };
@@ -116,5 +116,94 @@ class LpjController extends Controller
     private function makeItemKey($uraian, $rincian, $vol1, $vol2, $harga): string
     {
         return implode('|', [trim((string) $uraian), trim((string) $rincian), $vol1, $vol2, $harga]);
+    }
+
+    public function proses(Request $request, $id)
+    {
+        $id = (int) $id;
+        $action = $request->input('action');
+        $notes = $request->input('notes');
+        $itemFeedback = $request->input('item_feedback') ?? [];
+
+        $kegiatan = Kegiatan::findOrFail($id);
+        $lpj = Lpj::where('kegiatan_id', $kegiatan->kegiatan_id)->firstOrFail();
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($kegiatan, $lpj, $action, $notes, $itemFeedback) {
+            // 1. Save item feedback
+            foreach ($itemFeedback as $itemId => $feedback) {
+                $rab = \App\Models\Rab::find($itemId);
+                if ($rab) {
+                    $lpjItem = \App\Models\LpjItem::where('lpj_id', $lpj->lpj_id)
+                        ->where('uraian', $rab->uraian)
+                        ->where('rincian', $rab->rincian)
+                        ->where('vol1', $rab->vol1)
+                        ->where('vol2', $rab->vol2)
+                        ->where('harga', $rab->harga)
+                        ->first();
+                    if ($lpjItem) {
+                        $lpjItem->update(['komentar' => $feedback]);
+                    }
+                }
+            }
+
+            // 2. Perform action
+            if ($action === 'approve') {
+                $lpj->update([
+                    'status_id' => 3, // Disetujui
+                    'approved_at' => now(),
+                    'komentar_revisi' => null,
+                    'komentar_penolakan' => null,
+                ]);
+
+                // Update Kegiatan table: status_utama_id = 6 ("LPJ Disetujui")
+                $kegiatan->update([
+                    'status_utama_id' => 6, // LPJ Disetujui
+                ]);
+
+                // Add progress history entry for status 6 (LPJ Disetujui)
+                \App\Models\ProgressHistory::create([
+                    'kegiatan_id' => $kegiatan->kegiatan_id,
+                    'status_id' => 6,
+                    'changed_by_user_id' => \Illuminate\Support\Facades\Session::get('user_id') ?? 1,
+                    'created_at' => now(),
+                ]);
+
+                // Send notification log in log_statuses
+                \App\Models\LogStatus::create([
+                    'user_id' => $kegiatan->user_id,
+                    'tipe_log' => 'APPROVAL',
+                    'id_referensi' => $kegiatan->kegiatan_id,
+                    'status' => 'BELUM_DIBACA',
+                    'konten_json' => [
+                        'judul' => 'LPJ Disetujui',
+                        'pesan' => "Laporan pertanggungjawaban kegiatan \"{$kegiatan->nama_kegiatan}\" telah disetujui lunas oleh Bendahara.",
+                        'link' => "/admin/pengajuan-lpj"
+                    ]
+                ]);
+
+            } elseif ($action === 'revise') {
+                $lpj->update([
+                    'status_id' => 2, // Revisi
+                    'komentar_revisi' => $notes,
+                    'approved_at' => null,
+                ]);
+
+                // Send notification log in log_statuses
+                \App\Models\LogStatus::create([
+                    'user_id' => $kegiatan->user_id,
+                    'tipe_log' => 'REVISION',
+                    'id_referensi' => $kegiatan->kegiatan_id,
+                    'status' => 'BELUM_DIBACA',
+                    'konten_json' => [
+                        'judul' => 'LPJ Perlu Revisi',
+                        'pesan' => "LPJ kegiatan \"{$kegiatan->nama_kegiatan}\" memerlukan revisi. Catatan: {$notes}",
+                        'link' => "/admin/pengajuan-lpj"
+                    ]
+                ]);
+            }
+        });
+
+        $message = $action === 'approve' ? 'LPJ berhasil disetujui lunas.' : 'Permintaan revisi LPJ berhasil dikirim.';
+        return redirect()->route('bendahara.lpj.index')->with('success', $message);
     }
 }
