@@ -157,6 +157,130 @@ class KegiatanService
     }
 
     /**
+     * Update kegiatan with all related data (KAK, indikator, tahapan, RAB) in one transaction.
+     */
+    public function updateKegiatan(int $kegiatanId, array $data, int $userId): Kegiatan
+    {
+        // Decode rab_data if sent as JSON string
+        if (isset($data['rab_data']) && is_string($data['rab_data'])) {
+            $data['rab_data'] = json_decode($data['rab_data'], true);
+        }
+
+        // Map flat array indicator inputs to nested indicator array
+        if (!empty($data['indikator_nama']) && is_array($data['indikator_nama'])) {
+            $data['indikator'] = [];
+            foreach ($data['indikator_nama'] as $idx => $nama) {
+                if (!empty($nama)) {
+                    $data['indikator'][] = [
+                        'nama' => $nama,
+                        'bulan' => $data['indikator_bulan'][$idx] ?? null,
+                        'target' => $data['indikator_target'][$idx] ?? 0,
+                    ];
+                }
+            }
+        }
+
+        return DB::transaction(function () use ($kegiatanId, $data, $userId) {
+            $kegiatan = Kegiatan::findOrFail($kegiatanId);
+            
+            $statusUtamaId = $kegiatan->status_utama_id;
+            $posisiId = $kegiatan->posisi_id;
+            
+            // If the proposal is in revision status, reset it to pending for verification
+            if ((int)$statusUtamaId === WorkflowService::STATUS_REVISI) {
+                $statusUtamaId = WorkflowService::STATUS_MENUNGGU;
+                $posisiId = WorkflowService::POSITION_VERIFIKATOR;
+            }
+
+            $kegiatan->update([
+                'nama_kegiatan' => $data['nama_kegiatan'] ?? $kegiatan->nama_kegiatan,
+                'prodi_penyelenggara' => $data['prodi'] ?? $kegiatan->prodi_penyelenggara,
+                'pemilik_kegiatan' => $data['nama_pengusul'] ?? $kegiatan->pemilik_kegiatan,
+                'nim_pelaksana' => $data['nim_nip'] ?? $kegiatan->nim_pelaksana,
+                'jurusan_penyelenggara' => $data['jurusan'] ?? $kegiatan->jurusan_penyelenggara,
+                'wadir_tujuan' => $data['wadir_tujuan'] ?? $kegiatan->wadir_tujuan,
+                'status_utama_id' => $statusUtamaId,
+                'posisi_id' => $posisiId,
+            ]);
+
+            $kak = Kak::updateOrCreate(
+                ['kegiatan_id' => $kegiatan->kegiatan_id],
+                [
+                    'iku' => $data['indikator_kinerja'] ?? 'Belum pilih',
+                    'gambaran_umum' => $data['gambaran_umum'] ?? '',
+                    'penerima_manfaat' => $data['penerima_manfaat'] ?? '',
+                    'metode_pelaksanaan' => $data['metode_pelaksanaan'] ?? '',
+                    'tgl_pembuatan' => now()->toDateString(),
+                ]
+            );
+
+            // Update Tahapan pelaksanaan: clear existing and re-insert
+            TahapanPelaksanaan::where('kak_id', $kak->kak_id)->delete();
+            foreach (($data['tahapan'] ?? []) as $tahap) {
+                if (! empty($tahap)) {
+                    TahapanPelaksanaan::create(['kak_id' => $kak->kak_id, 'nama_tahapan' => $tahap]);
+                }
+            }
+
+            // Update Indikator keberhasilan: clear existing and re-insert
+            IndikatorKak::where('kak_id', $kak->kak_id)->delete();
+            foreach (($data['indikator'] ?? []) as $ind) {
+                if (! empty($ind['nama'])) {
+                    IndikatorKak::create([
+                        'kak_id' => $kak->kak_id,
+                        'bulan' => $ind['bulan'] ?? null,
+                        'indikator_keberhasilan' => $ind['nama'],
+                        'target_persen' => (int) ($ind['target'] ?? 0),
+                    ]);
+                }
+            }
+
+            // Update RAB items: clear existing and re-insert
+            Rab::where('kak_id', $kak->kak_id)->delete();
+            foreach (($data['rab_data'] ?? []) as $namaKategori => $items) {
+                $kategori = KategoriRab::firstOrCreate(['nama_kategori' => $namaKategori]);
+
+                foreach ($items as $item) {
+                    Rab::create([
+                        'kak_id' => $kak->kak_id,
+                        'kategori_id' => $kategori->kategori_rab_id,
+                        'uraian' => $item['uraian'] ?? '',
+                        'rincian' => $item['rincian'] ?? '',
+                        'sat1' => $item['sat1'] ?? '',
+                        'sat2' => $item['sat2'] ?? '',
+                        'vol1' => (float) ($item['vol1'] ?? 0),
+                        'vol2' => (float) ($item['vol2'] ?? 1),
+                        'harga' => (float) ($item['harga'] ?? 0),
+                    ]);
+                }
+            }
+
+            // Create notification log in log_statuses
+            LogStatus::create([
+                'user_id' => $userId,
+                'tipe_log' => 'SUBMISSION',
+                'id_referensi' => $kegiatan->kegiatan_id,
+                'status' => 'BELUM_DIBACA',
+                'konten_json' => [
+                    'judul' => 'Revisi Usulan Diajukan Ulang',
+                    'pesan' => "Revisi usulan \"{$kegiatan->nama_kegiatan}\" berhasil diajukan dan sedang menunggu verifikasi.",
+                    'link' => "/admin/pengajuan-kegiatan"
+                ]
+            ]);
+
+            // Add progress history entry for STATUS_MENUNGGU
+            \App\Models\ProgressHistory::create([
+                'kegiatan_id' => $kegiatan->kegiatan_id,
+                'status_id' => WorkflowService::STATUS_MENUNGGU,
+                'changed_by_user_id' => $userId,
+                'created_at' => now(),
+            ]);
+
+            return $kegiatan->load(['kak.rabs', 'kak.indikators', 'kak.tahapans']);
+        });
+    }
+
+    /**
      * Dashboard statistics.
      */
     public function getDashboardStats(?string $jurusan = null): array

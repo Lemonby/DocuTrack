@@ -95,7 +95,7 @@ class TelaahController extends Controller
 
         $catatan_revisi = null;
 
-        return view('verifikator.telaah.show', compact('id', 'status', 'iku_data', 'rab_data', 'kegiatan_data', 'tahapan_pelaksanaan', 'indikator_keberhasilan', 'catatan_revisi'));
+        return view('verifikator.telaah.show', compact('id', 'status', 'iku_data', 'rab_data', 'kegiatan_data', 'tahapan_pelaksanaan', 'indikator_keberhasilan', 'catatan_revisi', 'kegiatan'));
     }
 
     public function store(Request $request, $id)
@@ -112,7 +112,26 @@ class TelaahController extends Controller
         } elseif ($action == 'reject') {
             $workflowService->reject($id, \App\Services\WorkflowService::POSITION_VERIFIKATOR, $request->input('alasan_penolakan') ?? 'Ditolak Verifikator');
         } elseif ($action == 'revise') {
-            $workflowService->requestRevision($id, \App\Services\WorkflowService::POSITION_VERIFIKATOR, $request->input('catatan_revisi') ?? 'Perlu Revisi');
+            $fieldComments = [];
+            if ($request->has('field_comments')) {
+                foreach ($request->input('field_comments') as $table => $columns) {
+                    foreach ($columns as $column => $commentText) {
+                        if (!empty($commentText)) {
+                            $fieldComments[] = [
+                                'komentar' => $commentText,
+                                'target_tabel' => $table,
+                                'target_kolom' => $column,
+                            ];
+                        }
+                    }
+                }
+            }
+            $workflowService->requestRevision(
+                $id,
+                \App\Services\WorkflowService::POSITION_VERIFIKATOR,
+                $request->input('catatan_revisi') ?? 'Perlu Revisi',
+                $fieldComments
+            );
         }
 
         return redirect()->route('verifikator.telaah.index')->with('success', 'Telaah berhasil disimpan.');

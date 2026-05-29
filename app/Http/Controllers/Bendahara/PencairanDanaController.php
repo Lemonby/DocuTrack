@@ -128,7 +128,7 @@ class PencairanDanaController extends Controller
             'id', 'status', 'lpj_status', 'iku_data', 'rab_data', 'kegiatan_data',
             'tahapan_pelaksanaan', 'indikator_keberhasilan', 'anggaran_disetujui', 'jumlah_dicairkan',
             'sisa_dana', 'boleh_cairkan', 'riwayat_pencairan',
-            'kode_mak', 'catatan_bendahara'
+            'kode_mak', 'catatan_bendahara', 'kegiatan'
         ));
     }
 

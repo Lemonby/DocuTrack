@@ -86,21 +86,35 @@ class UsulanController extends Controller
             'kode_mak' => $kegiatan->bukti_mak ?? null,
             'payout_status' => $payout_status,
             'lpj_status' => $lpj_status,
-            'total_cair' => $kegiatan->jumlah_dicairkan ?? 0
+            'total_cair' => $kegiatan->jumlah_dicairkan ?? 0,
+            'surat_pengantar' => $kegiatan->surat_pengantar ?? null,
+            'tanggal_mulai' => $kegiatan->tanggal_mulai ?? null,
+            'tanggal_selesai' => $kegiatan->tanggal_selesai ?? null,
+            'metode_pencairan' => $kegiatan->metode_pencairan ?? null
         ];
 
         $catatan_revisi = null;
+        $revisi_comments = [];
         if ($kegiatan->status_utama_id == \App\Services\WorkflowService::STATUS_REVISI) {
             $latestRevisi = $kegiatan->progressHistories()
                 ->where('status_id', \App\Services\WorkflowService::STATUS_REVISI)
                 ->latest()
                 ->first();
             if ($latestRevisi && $latestRevisi->revisiComments->isNotEmpty()) {
-                $catatan_revisi = $latestRevisi->revisiComments->pluck('komentar_revisi')->implode("\n");
+                // Keep the general comment where target_tabel is null for the main welcome banner
+                $mainComment = $latestRevisi->revisiComments->whereNull('target_tabel')->first();
+                $catatan_revisi = $mainComment ? $mainComment->komentar_revisi : null;
+
+                foreach ($latestRevisi->revisiComments as $rc) {
+                    if ($rc->target_tabel) {
+                        $key = $rc->target_tabel . '.' . $rc->target_kolom;
+                        $revisi_comments[$key] = $rc->komentar_revisi;
+                    }
+                }
             }
         }
 
-        return view('admin.usulan.detail', compact('id', 'status', 'iku_data', 'rab_data', 'kegiatan_data', 'tahapan_pelaksanaan', 'indikator_keberhasilan', 'catatan_revisi'));
+        return view('admin.usulan.detail', compact('id', 'status', 'iku_data', 'rab_data', 'kegiatan_data', 'tahapan_pelaksanaan', 'indikator_keberhasilan', 'catatan_revisi', 'revisi_comments', 'kegiatan'));
     }
 
     public function edit($id)
@@ -168,7 +182,7 @@ class UsulanController extends Controller
             }
         }
 
-        return view('admin.usulan.edit', compact('id', 'status', 'iku_data', 'rab_data', 'kegiatan_data', 'tahapan_pelaksanaan', 'indikator_keberhasilan', 'catatan_revisi'));
+        return view('admin.usulan.edit', compact('id', 'status', 'iku_data', 'rab_data', 'kegiatan_data', 'tahapan_pelaksanaan', 'indikator_keberhasilan', 'catatan_revisi', 'kegiatan'));
     }
 
     public function store(Request $request)
@@ -185,7 +199,12 @@ class UsulanController extends Controller
 
     public function update(Request $request, $id)
     {
-        // Will be implemented with DB integration detail logic
-        return redirect()->route('admin.usulan.index')->with('success_message', 'Revisi usulan berhasil disimpan dan diajukan ulang!');
+        $userId = \Illuminate\Support\Facades\Session::get('user_id') ?? 1;
+        try {
+            (new \App\Services\KegiatanService())->updateKegiatan($id, $request->all(), $userId);
+            return redirect()->route('admin.usulan.index')->with('success_message', 'Revisi usulan berhasil disimpan dan diajukan ulang!');
+        } catch (\Exception $e) {
+            return back()->withInput()->with('error_message', 'Gagal memperbarui usulan: ' . $e->getMessage());
+        }
     }
 }

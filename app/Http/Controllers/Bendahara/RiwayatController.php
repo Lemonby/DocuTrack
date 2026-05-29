@@ -108,7 +108,7 @@ class RiwayatController extends Controller
         return view('bendahara.riwayat.detail', compact(
             'id', 'status', 'kegiatan_data', 'rab_data', 'catatan_revisi',
             'anggaran_disetujui', 'jumlah_dicairkan', 'tanggal_pencairan',
-            'metode_pencairan', 'kode_mak', 'riwayat_pencairan', 'iku_data'
+            'metode_pencairan', 'kode_mak', 'riwayat_pencairan', 'iku_data', 'kegiatan'
         ));
     }
 }

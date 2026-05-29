@@ -100,7 +100,7 @@ class KegiatanController extends Controller
             }
         }
 
-        return view('ppk.kegiatan.show', compact('id', 'status', 'kegiatan_data', 'iku_data', 'tahapan_pelaksanaan', 'indikator_keberhasilan', 'rab_data'));
+        return view('ppk.kegiatan.show', compact('id', 'status', 'kegiatan_data', 'iku_data', 'tahapan_pelaksanaan', 'indikator_keberhasilan', 'rab_data', 'kegiatan'));
     }
 
     public function store(Request $request, $id)

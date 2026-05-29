@@ -304,9 +304,15 @@
                             <button type="button" class="btn-nav btn-kembali inline-flex items-center gap-2 px-6 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-all" data-target-step="3" data-direction="prev">
                                 <i class="fas fa-arrow-left btn-icon text-xs"></i> <span class="btn-text">Kembali</span>
                             </button>
-                            <button type="submit" class="btn-nav inline-flex items-center gap-2 px-6 py-2.5 text-sm font-medium text-center text-white bg-green-600 rounded-lg hover:bg-green-700 focus:ring-4 focus:ring-green-300 transition-all">
-                                <i class="fas fa-check-circle"></i> Simpan & Ajukan
-                            </button>
+                            @if(isset($kegiatan) && (int)$kegiatan->status_utama_id === \App\Services\WorkflowService::STATUS_REVISI)
+                                <button type="submit" class="btn-nav inline-flex items-center gap-2 px-6 py-2.5 text-sm font-medium text-center text-white bg-amber-500 rounded-lg hover:bg-amber-600 focus:ring-4 focus:ring-amber-300 transition-all">
+                                    <i class="fas fa-edit"></i> Revisi & Ajukan
+                                </button>
+                            @else
+                                <button type="submit" class="btn-nav inline-flex items-center gap-2 px-6 py-2.5 text-sm font-medium text-center text-white bg-green-600 rounded-lg hover:bg-green-700 focus:ring-4 focus:ring-green-300 transition-all">
+                                    <i class="fas fa-check-circle"></i> Simpan & Ajukan
+                                </button>
+                            @endif
                         </div>
                     </div>
                 </div>

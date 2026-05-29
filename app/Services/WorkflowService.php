@@ -156,7 +156,7 @@ class WorkflowService
      */
     public function requestRevision(int $kegiatanId, int $currentPosition, string $comments, array $fieldComments = []): bool
     {
-        return DB::transaction(function () use ($kegiatanId, $comments, $fieldComments) {
+        return DB::transaction(function () use ($kegiatanId, $currentPosition, $comments, $fieldComments) {
             $kegiatan = Kegiatan::lockForUpdate()->findOrFail($kegiatanId);
 
             $kegiatan->update([

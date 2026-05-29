@@ -337,4 +337,155 @@ class UsulanTest extends TestCase
         // Active status is reset to STATUS_MENUNGGU (1)
         $this->assertEquals(\App\Services\WorkflowService::STATUS_MENUNGGU, $kegiatan->status_utama_id);
     }
+
+    /**
+     * Test admin updating a proposal in revision status.
+     */
+    #[Test]
+    #[TestDox('Memastikan admin berhasil mengajukan ulang usulan revisi, data diperbarui, dan status direset kembali ke Menunggu')]
+    public function test_kegiatan_revision_update_works(): void
+    {
+        // 1. Create an Admin user
+        $admin = User::create([
+            'nama'         => 'Admin Revisi',
+            'email'        => 'adminrevisi@example.com',
+            'password'     => Hash::make('password123'),
+            'nama_jurusan' => 'Teknik Informatika dan Komputer',
+            'status'       => 'Aktif',
+        ]);
+        $admin->assignRole('Admin');
+
+        // 2. Create a mock Kegiatan in STATUS_REVISI (2)
+        $kegiatan = Kegiatan::create([
+            'nama_kegiatan' => 'Seminar Awal 2026',
+            'prodi_penyelenggara' => 'D4 Teknik Informatika',
+            'pemilik_kegiatan' => 'Admin Revisi',
+            'nim_pelaksana' => '19200388273',
+            'user_id' => $admin->user_id,
+            'jurusan_penyelenggara' => 'Teknik Informatika dan Komputer',
+            'status_utama_id' => \App\Services\WorkflowService::STATUS_REVISI,
+            'wadir_tujuan' => 1,
+            'posisi_id' => \App\Services\WorkflowService::POSITION_ADMIN,
+        ]);
+
+        $kak = Kak::create([
+            'kegiatan_id' => $kegiatan->kegiatan_id,
+            'iku' => 'IKU 1',
+            'gambaran_umum' => 'Gambaran awal',
+            'penerima_manfaat' => 'Mahasiswa',
+            'metode_pelaksanaan' => 'Online',
+        ]);
+
+        $kategori = \App\Models\KategoriRab::firstOrCreate(['nama_kategori' => 'Belanja Barang']);
+
+        $oldRab = Rab::create([
+            'kak_id' => $kak->kak_id,
+            'kategori_id' => $kategori->kategori_rab_id,
+            'uraian' => 'Kertas Kuno',
+            'rincian' => '1 Rim',
+            'vol1' => 1,
+            'sat1' => 'Rim',
+            'vol2' => 1,
+            'sat2' => 'Rim',
+            'harga' => 30000
+        ]);
+
+        // 3. Prepare mock request payload for revision update
+        $rabDataJson = json_encode([
+            'Belanja Barang' => [
+                [
+                    'uraian' => 'Kertas A4 HVS',
+                    'rincian' => '2 Rim',
+                    'vol1' => 2,
+                    'sat1' => 'Rim',
+                    'vol2' => 1,
+                    'sat2' => 'Rim',
+                    'harga' => 60000
+                ]
+            ]
+        ]);
+
+        $payload = [
+            'nama_kegiatan' => 'Seminar Akhir Sukses 2026',
+            'prodi' => 'D4 Teknik Informatika',
+            'nama_pengusul' => 'Admin Revisi Baru',
+            'nim_nip' => '19200388273',
+            'jurusan' => 'Teknik Informatika dan Komputer',
+            'wadir_tujuan' => 1,
+            'indikator_kinerja' => 'Meningkatkan IKU 2',
+            'gambaran_umum' => 'Gambaran akhir yang jelas sekali.',
+            'penerima_manfaat' => 'Seluruh Mahasiswa TIK',
+            'metode_pelaksanaan' => 'Hybrid',
+            'tahapan' => [
+                'Tahap revisi sukses',
+            ],
+            'indikator_nama' => [
+                'Tingkat pemahaman materi',
+            ],
+            'indikator_bulan' => [
+                3
+            ],
+            'indikator_target' => [
+                95
+            ],
+            'rab_data' => $rabDataJson
+        ];
+
+        // 4. Submit PUT request
+        $response = $this->withSession([
+            'user_id' => $admin->user_id,
+            'role' => 'admin'
+        ])->put("/admin/pengajuan-usulan/update/{$kegiatan->kegiatan_id}", $payload);
+
+        // 5. Assert redirect and success
+        $response->assertRedirect(route('admin.usulan.index'));
+        $response->assertSessionHas('success_message', 'Revisi usulan berhasil disimpan dan diajukan ulang!');
+
+        // 6. Assert database was updated
+        $kegiatan->refresh();
+        $this->assertEquals('Seminar Akhir Sukses 2026', $kegiatan->nama_kegiatan);
+        $this->assertEquals('Admin Revisi Baru', $kegiatan->pemilik_kegiatan);
+        $this->assertEquals(\App\Services\WorkflowService::STATUS_MENUNGGU, $kegiatan->status_utama_id);
+        $this->assertEquals(\App\Services\WorkflowService::POSITION_VERIFIKATOR, $kegiatan->posisi_id);
+
+        $this->assertDatabaseHas('kaks', [
+            'kegiatan_id' => $kegiatan->kegiatan_id,
+            'iku' => 'Meningkatkan IKU 2',
+            'gambaran_umum' => 'Gambaran akhir yang jelas sekali.',
+            'metode_pelaksanaan' => 'Hybrid'
+        ]);
+
+        // Assert old RAB was deleted and new RAB was created
+        $this->assertDatabaseMissing('rabs', [
+            'uraian' => 'Kertas Kuno'
+        ]);
+        $this->assertDatabaseHas('rabs', [
+            'kak_id' => $kak->kak_id,
+            'uraian' => 'Kertas A4 HVS',
+            'harga' => 60000,
+            'vol1' => 2,
+            'total_harga' => 120000
+        ]);
+
+        // Assert Indikator
+        $this->assertDatabaseHas('indikator_kaks', [
+            'kak_id' => $kak->kak_id,
+            'indikator_keberhasilan' => 'Tingkat pemahaman materi',
+            'bulan' => 3,
+            'target_persen' => 95
+        ]);
+
+        // Assert Tahapan
+        $this->assertDatabaseHas('tahapan_pelaksanaans', [
+            'kak_id' => $kak->kak_id,
+            'nama_tahapan' => 'Tahap revisi sukses'
+        ]);
+
+        // Assert Progress history
+        $this->assertDatabaseHas('progress_histories', [
+            'kegiatan_id' => $kegiatan->kegiatan_id,
+            'status_id' => \App\Services\WorkflowService::STATUS_MENUNGGU,
+            'changed_by_user_id' => $admin->user_id
+        ]);
+    }
 }
