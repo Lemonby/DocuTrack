@@ -53,6 +53,8 @@ class LpjController extends Controller
             'penerima_manfaat' => $kegiatan->kak->penerima_manfaat ?? '-',
             'tanggal_mulai' => $kegiatan->tanggal_mulai ? $kegiatan->tanggal_mulai->format('Y-m-d') : null,
             'tanggal_selesai' => $kegiatan->tanggal_selesai ? $kegiatan->tanggal_selesai->format('Y-m-d') : null,
+            'realisasi_tanggal_mulai' => $kegiatan->lpj && $kegiatan->lpj->realisasi_tanggal_mulai ? $kegiatan->lpj->realisasi_tanggal_mulai->format('Y-m-d') : null,
+            'realisasi_tanggal_selesai' => $kegiatan->lpj && $kegiatan->lpj->realisasi_tanggal_selesai ? $kegiatan->lpj->realisasi_tanggal_selesai->format('Y-m-d') : null,
         ];
 
         $kode_mak = $kegiatan->bukti_mak ?? '-';
@@ -61,36 +63,55 @@ class LpjController extends Controller
         $anggaran_disetujui = 0;
         $anggaran_realisasi = 0;
 
-        $lpjItemMap = collect();
+        $lpjItemsGrouped = collect();
         if ($kegiatan->lpj && $kegiatan->lpj->items) {
-            $lpjItemMap = $kegiatan->lpj->items->keyBy(function ($item) {
-                return $this->makeItemKey($item->uraian, $item->rincian, $item->vol1, $item->vol2, $item->harga);
-            });
+            $lpjItemsGrouped = $kegiatan->lpj->items->groupBy('jenis_belanja');
         }
 
+        $categoryCounters = [];
         if ($kegiatan->kak) {
             foreach ($kegiatan->kak->rabs as $rab) {
                 $cat = $rab->kategori->nama_kategori ?? 'Lainnya';
-                $key = $this->makeItemKey($rab->uraian, $rab->rincian, $rab->vol1, $rab->vol2, $rab->harga);
-                $lpjItem = $lpjItemMap->get($key);
+                if (!isset($categoryCounters[$cat])) {
+                    $categoryCounters[$cat] = 0;
+                }
+                $index = $categoryCounters[$cat];
+
+                $lpjItem = null;
+                if (isset($lpjItemsGrouped[$cat]) && isset($lpjItemsGrouped[$cat][$index])) {
+                    $lpjItem = $lpjItemsGrouped[$cat][$index];
+                }
+
                 $realisasi = $lpjItem ? (float) $lpjItem->realisasi : 0;
 
                 $rab_items[$cat][] = [
-                    'id' => $rab->rab_item_id,
-                    'uraian' => $rab->uraian,
-                    'rincian' => $rab->rincian,
-                    'vol1' => $rab->vol1,
-                    'sat1' => $rab->sat1,
-                    'vol2' => $rab->vol2,
-                    'sat2' => $rab->sat2,
-                    'harga' => $rab->harga,
+                    'id' => $lpjItem ? $lpjItem->lpj_item_id : $rab->rab_item_id,
+                    'uraian' => $lpjItem ? $lpjItem->uraian : $rab->uraian,
+                    'rincian' => $lpjItem ? $lpjItem->rincian : $rab->rincian,
+                    'vol1' => $lpjItem ? $lpjItem->vol1 : $rab->vol1,
+                    'sat1' => $lpjItem ? $lpjItem->sat1 : $rab->sat1,
+                    'vol2' => $lpjItem ? $lpjItem->vol2 : $rab->vol2,
+                    'sat2' => $lpjItem ? $lpjItem->sat2 : $rab->sat2,
+                    'harga' => $lpjItem ? $lpjItem->harga : $rab->harga,
                     'realisasi' => $realisasi,
+                    'file_bukti' => $lpjItem ? $lpjItem->file_bukti : null,
                     'keterangan' => $lpjItem->komentar ?? '',
                     'catatan_item' => $lpjItem->komentar ?? '',
+                    'anggaran_original' => $rab->vol1 * ($rab->vol2 ?? 1) * $rab->harga,
                 ];
 
-                $anggaran_disetujui += $rab->vol1 * ($rab->vol2 ?? 1) * $rab->harga;
                 $anggaran_realisasi += $realisasi;
+
+                $categoryCounters[$cat]++;
+            }
+        }
+
+        $grand_total_anggaran = (float) ($kegiatan->jumlah_dicairkan ?? 0);
+        if ($grand_total_anggaran <= 0) {
+            if ($kegiatan->kak) {
+                foreach ($kegiatan->kak->rabs as $rab) {
+                    $grand_total_anggaran += $rab->vol1 * ($rab->vol2 ?? 1) * $rab->harga;
+                }
             }
         }
 
@@ -99,7 +120,7 @@ class LpjController extends Controller
 
         return view('bendahara.lpj.detail', compact(
             'id', 'status', 'rab_items', 'kegiatan_data', 'catatan_revisi', 
-            'from', 'kode_mak', 'anggaran_disetujui', 'anggaran_realisasi', 'iku_data'
+            'from', 'kode_mak', 'grand_total_anggaran', 'anggaran_realisasi', 'iku_data'
         ));
     }
 
@@ -131,17 +152,27 @@ class LpjController extends Controller
         \Illuminate\Support\Facades\DB::transaction(function () use ($kegiatan, $lpj, $action, $notes, $itemFeedback) {
             // 1. Save item feedback
             foreach ($itemFeedback as $itemId => $feedback) {
-                $rab = \App\Models\Rab::find($itemId);
-                if ($rab) {
-                    $lpjItem = \App\Models\LpjItem::where('lpj_id', $lpj->lpj_id)
-                        ->where('uraian', $rab->uraian)
-                        ->where('rincian', $rab->rincian)
-                        ->where('vol1', $rab->vol1)
-                        ->where('vol2', $rab->vol2)
-                        ->where('harga', $rab->harga)
-                        ->first();
-                    if ($lpjItem) {
-                        $lpjItem->update(['komentar' => $feedback]);
+                // Try finding by lpj_item_id directly
+                $lpjItem = \App\Models\LpjItem::where('lpj_id', $lpj->lpj_id)
+                    ->where('lpj_item_id', $itemId)
+                    ->first();
+                
+                if ($lpjItem) {
+                    $lpjItem->update(['komentar' => $feedback]);
+                } else {
+                    // Backward compatibility safety net
+                    $rab = \App\Models\Rab::find($itemId);
+                    if ($rab) {
+                        $lpjItem = \App\Models\LpjItem::where('lpj_id', $lpj->lpj_id)
+                            ->where('uraian', $rab->uraian)
+                            ->where('rincian', $rab->rincian)
+                            ->where('vol1', $rab->vol1)
+                            ->where('vol2', $rab->vol2)
+                            ->where('harga', $rab->harga)
+                            ->first();
+                        if ($lpjItem) {
+                            $lpjItem->update(['komentar' => $feedback]);
+                        }
                     }
                 }
             }

@@ -12,6 +12,7 @@ class Lpj extends Model
     protected $fillable = [
         'kegiatan_id', 'grand_total_realisasi', 'submitted_at', 'approved_at',
         'tenggat_lpj', 'status_id', 'komentar_penolakan', 'komentar_revisi',
+        'realisasi_tanggal_mulai', 'realisasi_tanggal_selesai',
     ];
 
     protected function casts(): array
@@ -21,6 +22,8 @@ class Lpj extends Model
             'submitted_at' => 'datetime',
             'approved_at' => 'datetime',
             'tenggat_lpj' => 'date',
+            'realisasi_tanggal_mulai' => 'date',
+            'realisasi_tanggal_selesai' => 'date',
         ];
     }
 

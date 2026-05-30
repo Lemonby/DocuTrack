@@ -41,6 +41,8 @@ return new class extends Migration
             $table->unsignedBigInteger('status_id')->default(1);
             $table->text('komentar_penolakan')->nullable();
             $table->text('komentar_revisi')->nullable();
+            $table->date('realisasi_tanggal_mulai')->nullable();
+            $table->date('realisasi_tanggal_selesai')->nullable();
 
             $table->foreign('kegiatan_id')->references('kegiatan_id')->on('kegiatans')->cascadeOnDelete();
             $table->foreign('status_id')->references('status_id')->on('status_utamas')->cascadeOnUpdate();

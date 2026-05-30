@@ -48,6 +48,11 @@
                 <a href="{{ route('ppk.kegiatan.index') }}" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl transition font-bold text-sm border border-slate-200">
                     <i class="fas fa-arrow-left"></i> Kembali
                 </a>
+                @if($kegiatan->posisi_id >= 3 || in_array($kegiatan->status_utama_id, [5, 6, 8]))
+                <a href="{{ route('cetak.kak', $id) }}" target="_blank" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition font-bold text-sm shadow-lg shadow-emerald-200 active:scale-95">
+                    <i class="fas fa-print"></i> Cetak KAK
+                </a>
+                @endif
             </div>
         </div>
 

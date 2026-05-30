@@ -17,7 +17,12 @@ class RiwayatController extends Controller
         $historyQuery = ProgressHistory::with(['kegiatan.user', 'status'])
             ->when($userId, fn ($q) => $q->where('changed_by_user_id', $userId))
             ->whereHas('kegiatan', function ($q) {
-                $q->where('posisi_id', '>=', WorkflowService::POSITION_WADIR);
+                $q->where('posisi_id', '>', WorkflowService::POSITION_WADIR)
+                  ->orWhereIn('status_utama_id', [
+                      WorkflowService::STATUS_DANA_DIBERIKAN,
+                      WorkflowService::STATUS_LPJ_DISETUJUI,
+                      WorkflowService::STATUS_SELESAI
+                  ]);
             })
             ->latest('created_at')
             ->get()
@@ -36,7 +41,7 @@ class RiwayatController extends Controller
                 'prodi' => $kegiatan->prodi_penyelenggara,
                 'jurusan' => $kegiatan->jurusan_penyelenggara,
                 'tgl' => $history->created_at ? $history->created_at->format('Y-m-d') : null,
-                'status' => $history->status->nama_status_usulan ?? 'Disetujui',
+                'status' => 'Disetujui',
             ];
         })->values()->toArray();
 

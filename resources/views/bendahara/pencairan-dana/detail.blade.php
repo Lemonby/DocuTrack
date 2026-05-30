@@ -72,9 +72,9 @@
                 <a href="{{ route('bendahara.pencairan.index') }}" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl transition font-bold text-sm border border-slate-200 shadow-sm">
                     <i class="fas fa-arrow-left"></i> Kembali
                 </a>
-                <button class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition font-bold text-sm shadow-lg shadow-emerald-200">
+                <a href="{{ route('cetak.kak', $id) }}" target="_blank" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition font-bold text-sm shadow-lg shadow-emerald-200">
                     <i class="fas fa-print"></i> Cetak KAK
-                </button>
+                </a>
             </div>
         </div>
 
@@ -286,7 +286,6 @@
                                         <i class="fas fa-shopping-bag text-base"></i>
                                     </div>
                                     <h4 class="text-base font-black text-slate-800 tracking-tight">{{ $kategori }}</h4>
-                                    <i class="fas fa-comment-dots text-violet-500 text-base cursor-pointer hover:scale-110 transition-transform" title="Lihat catatan"></i>
                                 </div>
                                 <div class="text-right">
                                     <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Subtotal</span>

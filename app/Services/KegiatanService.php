@@ -348,17 +348,16 @@ class KegiatanService
     {
         $query = Kegiatan::query();
 
+        $menungguCount = (clone $query)->where('posisi_id', 3)->count();
+        $disetujuiCount = (clone $query)->where(function ($q) {
+            $q->where('posisi_id', '>', 3)
+              ->orWhereIn('status_utama_id', [5, 6, 8]);
+        })->count();
+
         return [
-            'total' => (clone $query)->count(),
-            'disetujui' => (clone $query)->where(function ($q) {
-                $q->where('posisi_id', '>', 3)
-                  ->orWhere(function ($q2) {
-                      $q2->where('status_utama_id', 8)
-                         ->where('posisi_id', 1);
-                  });
-            })->count(),
-            'ditolak' => (clone $query)->where('status_utama_id', 4)->count(),
-            'menunggu' => (clone $query)->where('posisi_id', 3)->count(),
+            'total' => $menungguCount + $disetujuiCount,
+            'disetujui' => $disetujuiCount,
+            'menunggu' => $menungguCount,
         ];
     }
 
@@ -369,17 +368,16 @@ class KegiatanService
     {
         $query = Kegiatan::query();
 
+        $menungguCount = (clone $query)->where('posisi_id', 4)->count();
+        $disetujuiCount = (clone $query)->where(function ($q) {
+            $q->where('posisi_id', '>', 4)
+              ->orWhereIn('status_utama_id', [5, 6, 8]);
+        })->count();
+
         return [
-            'total' => (clone $query)->count(),
-            'disetujui' => (clone $query)->where(function ($q) {
-                $q->where('posisi_id', '>', 4)
-                  ->orWhere(function ($q2) {
-                      $q2->where('status_utama_id', 8)
-                         ->where('posisi_id', 1);
-                  });
-            })->count(),
-            'ditolak' => (clone $query)->where('status_utama_id', 4)->count(),
-            'menunggu' => (clone $query)->where('posisi_id', 4)->count(),
+            'total' => $menungguCount + $disetujuiCount,
+            'disetujui' => $disetujuiCount,
+            'menunggu' => $menungguCount,
         ];
     }
 

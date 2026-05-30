@@ -20,7 +20,7 @@
     }
     $isEditable = false; 
     $statusColor = match(strtolower(str_replace(' ', '_', $status))) {
-        'selesai', 'disetujui', 'setuju' => 'emerald',
+        'selesai', 'disetujui', 'setuju', 'lpj_disetujui' => 'emerald',
         'revisi' => 'amber',
         'menunggu', 'review', 'siap_submit', 'menunggu_verifikasi' => 'blue',
         'ditolak' => 'rose',
@@ -101,7 +101,7 @@
                     $progressWidth = '0%';
                     if (in_array($s, ['menunggu_upload', 'siap_submit', 'draft'])) $progressWidth = '0%';
                     elseif (in_array($s, ['menunggu', 'review', 'revisi', 'telah_direvisi', 'menunggu_verifikasi'])) $progressWidth = '50%';
-                    elseif (in_array($s, ['selesai', 'disetujui', 'setuju'])) $progressWidth = '100%';
+                    elseif (in_array($s, ['selesai', 'disetujui', 'setuju', 'lpj_disetujui'])) $progressWidth = '100%';
                 @endphp
                 <div class="absolute top-1/2 left-0 h-1.5 bg-{{ $statusColor }}-500 -translate-y-1/2 z-0 transition-all duration-1000 rounded-full" style="width: {{ $progressWidth }}"></div>
                 
@@ -110,14 +110,14 @@
                         $stepActive = false;
                         $stepDone = false;
                         if ($index == 0) {
-                            $stepDone = in_array($s, ['menunggu', 'review', 'revisi', 'telah_direvisi', 'selesai', 'disetujui', 'setuju', 'menunggu_verifikasi']);
+                            $stepDone = in_array($s, ['menunggu', 'review', 'revisi', 'telah_direvisi', 'selesai', 'disetujui', 'setuju', 'menunggu_verifikasi', 'lpj_disetujui']);
                             $stepActive = in_array($s, ['menunggu_upload', 'siap_submit', 'draft']);
                         } elseif ($index == 1) {
-                            $stepDone = in_array($s, ['selesai', 'disetujui', 'setuju']);
+                            $stepDone = in_array($s, ['selesai', 'disetujui', 'setuju', 'lpj_disetujui']);
                             $stepActive = in_array($s, ['menunggu', 'review', 'revisi', 'telah_direvisi', 'menunggu_verifikasi']);
                         } elseif ($index == 2) {
-                            $stepDone = false;
-                            $stepActive = in_array($s, ['selesai', 'disetujui', 'setuju']);
+                            $stepDone = in_array($s, ['selesai', 'disetujui', 'setuju', 'lpj_disetujui']);
+                            $stepActive = false;
                         }
                     @endphp
                     <div class="relative z-10 flex flex-col items-center">
@@ -131,154 +131,467 @@
         </div>
 
         <div class="p-8 md:p-12">
-            <!-- Basic Information Summary -->
-            <div class="mb-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                <div class="p-6 bg-slate-50 rounded-3xl border border-slate-100">
-                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Pelaksana</label>
-                    <div class="text-sm font-bold text-slate-700 leading-tight">{{ $kegiatan_data['nama_pelaksana'] }}</div>
-                    <div class="text-[10px] text-slate-400 mt-1 font-medium">{{ $kegiatan_data['nama_pengusul'] }}</div>
-                </div>
-                <div class="p-6 bg-slate-50 rounded-3xl border border-slate-100">
-                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Penanggung Jawab</label>
-                    <div class="text-sm font-bold text-slate-700 leading-tight">{{ $kegiatan_data['nama_penanggung_jawab'] }}</div>
-                    <div class="text-[10px] text-slate-400 mt-1 font-medium">NIP. {{ $kegiatan_data['nip_penanggung_jawab'] }}</div>
-                </div>
-                <div class="p-6 bg-blue-50/50 rounded-3xl border border-blue-100">
-                    <label class="block text-[10px] font-black text-blue-400 uppercase tracking-widest mb-2">Kode MAK Aktif</label>
-                    <div class="text-sm font-black text-blue-600 tracking-tight font-mono">{{ $kode_mak ?? '-' }}</div>
-                </div>
-                <div class="p-6 bg-slate-50 rounded-3xl border border-slate-100">
-                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Waktu Pelaksanaan</label>
-                    <div class="text-sm font-bold text-slate-700">
-                        {{ fmtDateIndo($kegiatan_data['tanggal_mulai']) }} - {{ fmtDateIndo($kegiatan_data['tanggal_selesai']) }}
-                    </div>
-                </div>
-            </div>
+            <!-- Form LPJ Validation -->
 
             <form id="form-lpj-verify" action="{{ route('bendahara.lpj.proses', $id) }}" method="POST" class="space-y-16">
                 @csrf
                 <input type="hidden" name="action" id="action-input" value="">
-                @php $grand_total_anggaran = 0; $grand_total_realisasi = 0; @endphp
-                @foreach($rab_items as $kategori => $items)
-                    @php $subtotal_anggaran = 0; $subtotal_realisasi = 0; @endphp
-                    
-                    <div class="relative">
-                        <div class="flex items-center gap-4 mb-8">
-                            <div class="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-blue-600 border border-slate-200 shadow-sm relative z-10">
-                                <i class="fas fa-folder-open text-sm"></i>
+                @php $grand_total_realisasi = 0; @endphp
+
+                {{-- Accordion 1: RAB KEGIATAN --}}
+                <div class="bg-white border border-slate-200 rounded-[2rem] shadow-sm overflow-hidden mb-8 transition-all duration-300">
+                    <button type="button" onclick="document.getElementById('rab-kegiatan-content').classList.toggle('hidden'); document.getElementById('rab-chevron').classList.toggle('rotate-180')" class="w-full px-8 sm:px-10 py-6 bg-slate-50 border-b border-slate-100 flex items-center justify-between text-left group transition-all hover:bg-slate-100/50 outline-none">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform">
+                                <i class="fas fa-shopping-bag text-lg"></i>
                             </div>
                             <div>
-                                <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest leading-none">{{ $kategori }}</h3>
-                                <p class="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest">Kategori Belanja Operasional</p>
+                                <h3 class="text-base sm:text-lg font-black text-slate-800 uppercase tracking-tight">RAB KEGIATAN</h3>
+                                <p class="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest">Rencana Anggaran Biaya awal yang disetujui</p>
                             </div>
-                            <div class="flex-1 h-px bg-slate-100 ml-4"></div>
                         </div>
-                        
-                        <div class="overflow-hidden border border-slate-100 rounded-3xl shadow-xl shadow-slate-100/50 bg-white">
-                            <table class="w-full">
-                                <thead>
-                                    <tr class="bg-slate-50/80">
-                                        <th class="px-8 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Uraian Transaksi</th>
-                                        <th class="px-8 py-5 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 w-44">Anggaran</th>
-                                        <th class="px-8 py-5 text-right text-[10px] font-black text-blue-500 uppercase tracking-widest border-b border-slate-100 w-52">Realisasi</th>
-                                        <th class="px-8 py-5 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 w-64">Validasi / Feedback</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-slate-50">
-                                    @foreach($items as $index => $item)
-                                        @php 
-                                            $anggaran = $item['total'] ?? ($item['vol1'] * ($item['vol2'] ?? 1) * $item['harga']);
-                                            $realisasi = $item['realisasi'] ?? 0;
-                                            $subtotal_anggaran += $anggaran;
-                                            $subtotal_realisasi += $realisasi;
-                                        @endphp
-                                        <tr class="group hover:bg-slate-50/50 transition-all duration-300">
-                                            <td class="px-8 py-6">
-                                                <div class="text-sm font-black text-slate-800 group-hover:text-blue-600 transition-colors">{{ $item['uraian'] }}</div>
-                                                <div class="text-[10px] text-slate-400 font-bold mt-1.5 flex items-center gap-2">
-                                                    <span class="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200">{{ $item['rincian'] }}</span>
-                                                    <span class="opacity-30">&bull;</span>
-                                                    <span>{{ $item['vol1'] }} {{ $item['sat1'] }}</span>
-                                                </div>
-                                            </td>
-                                            <td class="px-8 py-6 text-right">
-                                                <span class="text-sm font-black text-slate-500 tracking-tighter">{{ number_format($anggaran, 0, ',', '.') }}</span>
-                                            </td>
-                                            <td class="px-8 py-6 text-right">
-                                                <span class="text-sm font-black text-blue-600 tracking-tighter">{{ number_format($realisasi, 0, ',', '.') }}</span>
-                                            </td>
-                                            <td class="px-8 py-6 text-center">
-                                                <div class="flex items-center justify-center gap-2">
-                                                    <button type="button" class="w-12 h-12 rounded-2xl bg-slate-50 text-slate-600 border border-slate-100 hover:bg-blue-600 hover:text-white transition-all shadow-sm active:scale-90 flex items-center justify-center">
-                                                        <i class="fas fa-file-invoice text-xs"></i>
-                                                    </button>
-                                                    
-                                                    <button type="button" onclick="toggleFeedback('{{ $item['id'] }}')" class="w-12 h-12 rounded-2xl {{ !empty($item['catatan_item']) ? 'bg-amber-100 text-amber-600 border-amber-200' : 'bg-slate-50 text-slate-400 border-slate-100' }} hover:bg-amber-500 hover:text-white transition-all shadow-sm active:scale-90 flex items-center justify-center relative">
-                                                        <i class="fas fa-comment-dots text-xs"></i>
-                                                        @if(!empty($item['catatan_item']))
-                                                            <span class="absolute -top-1 -right-1 w-3 h-3 bg-rose-500 rounded-full border-2 border-white animate-bounce"></span>
-                                                        @endif
-                                                    </button>
-                                                </div>
-                                                
-                                                <div id="feedback-{{ $item['id'] }}" class="hidden mt-4 p-5 bg-slate-50 rounded-2xl border border-slate-200 shadow-inner animate-fade-in text-left">
-                                                    <div class="flex items-center gap-2 mb-3">
-                                                        <i class="fas fa-pen-nib text-[10px] text-blue-600"></i>
-                                                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest">Catatan Perbaikan Bendahara</label>
-                                                    </div>
-                                                    @php $isActionable = in_array(strtolower($status), ['menunggu verifikasi', 'telah direvisi', 'menunggu_verifikasi']); @endphp
-                                                    <textarea name="item_feedback[{{ $item['id'] }}]" 
-                                                        class="w-full p-4 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none focus:ring-4 focus:ring-blue-50 focus:border-blue-500 transition-all placeholder:text-slate-300 shadow-sm {{ !$isActionable ? 'opacity-70 cursor-not-allowed' : '' }}" 
-                                                        placeholder="Tuliskan alasan jika perlu perbaikan pada item ini..."
-                                                        rows="3" {{ !$isActionable ? 'readonly' : '' }}>{{ $item['catatan_item'] }}</textarea>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
+                        <div class="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center shadow-sm text-slate-400 group-hover:text-slate-600 group-hover:border-slate-300 transition-all">
+                            <i id="rab-chevron" class="fas fa-chevron-down transition-transform duration-300"></i>
+                        </div>
+                    </button>
+
+                    <div id="rab-kegiatan-content" class="hidden p-8 sm:p-10 space-y-12 bg-white">
+                        @foreach($rab_items as $kategori => $items)
+                            @php $subtotal_anggaran_rab = 0; @endphp
+                            <div class="relative">
+                                <div class="flex items-center justify-between gap-4 mb-6 flex-wrap">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-blue-600 border border-slate-200 shadow-sm">
+                                            <i class="fas fa-folder-open text-xs"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-sm font-black text-slate-800 uppercase tracking-widest leading-none">{{ $kategori }}</h4>
+                                            <p class="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-widest">Kategori Belanja Operasional</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        @foreach($items as $item)
+                                            @php $subtotal_anggaran_rab += $item['total'] ?? ($item['vol1'] * ($item['vol2'] ?? 1) * $item['harga']); @endphp
+                                        @endforeach
+                                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Subtotal</span>
+                                        <span class="text-xs font-black text-emerald-600">{{ formatRupiah($subtotal_anggaran_rab) }}</span>
+                                    </div>
+                                </div>
+
+                                <div class="overflow-x-auto border border-slate-100 rounded-2xl shadow-sm bg-white">
+                                    <table class="min-w-[1000px] w-full text-left table-auto border-separate border-spacing-y-2 px-6 pb-4">
+                                        <thead>
+                                            <tr class="text-slate-400 text-[10px] font-black uppercase tracking-wider">
+                                                <th class="pb-2 pt-4 pl-2">Uraian</th>
+                                                <th class="pb-2 pt-4">Rincian</th>
+                                                <th class="pb-2 pt-4 text-center w-20">Vol 1</th>
+                                                <th class="pb-2 pt-4 text-center w-20">Sat 1</th>
+                                                <th class="pb-2 pt-4 text-center w-20">Vol 2</th>
+                                                <th class="pb-2 pt-4 text-center w-20">Sat 2</th>
+                                                <th class="pb-2 pt-4 text-center w-36">Harga (RP)</th>
+                                                <th class="pb-2 pt-4 text-right pr-4 w-40">Total</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="bg-white">
+                                            @foreach($items as $item)
+                                                @php 
+                                                    $anggaran_item = $item['total'] ?? ($item['vol1'] * ($item['vol2'] ?? 1) * $item['harga']);
+                                                @endphp
+                                                <tr class="hover:bg-slate-50/30 transition-colors">
+                                                    <td class="py-1 pr-3 pl-2">
+                                                        <div class="border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-600 bg-white w-full truncate" title="{{ $item['uraian'] }}">{{ $item['uraian'] }}</div>
+                                                    </td>
+                                                    <td class="py-1 pr-3">
+                                                        <div class="border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-600 bg-white w-full truncate" title="{{ $item['rincian'] }}">{{ $item['rincian'] }}</div>
+                                                    </td>
+                                                    <td class="py-1 pr-3 text-center">
+                                                        <div class="border border-slate-200 rounded-xl py-2 text-xs font-semibold text-slate-600 bg-white text-center w-full">{{ number_format($item['vol1'], 0) }}</div>
+                                                    </td>
+                                                    <td class="py-1 pr-3 text-center">
+                                                        <div class="border border-slate-200 rounded-xl py-2 text-xs font-semibold text-slate-600 bg-white text-center w-full uppercase text-[10px]">{{ $item['sat1'] }}</div>
+                                                    </td>
+                                                    <td class="py-1 pr-3 text-center">
+                                                        <div class="border border-slate-200 rounded-xl py-2 text-xs font-semibold text-slate-600 bg-white text-center w-full">{{ number_format($item['vol2'] ?? 1, 0) }}</div>
+                                                    </td>
+                                                    <td class="py-1 pr-3 text-center">
+                                                        <div class="border border-slate-200 rounded-xl py-2 text-xs font-semibold text-slate-600 bg-white text-center w-full uppercase text-[10px]">{{ $item['sat2'] ?? '-' }}</div>
+                                                    </td>
+                                                    <td class="py-1 pr-3 text-center">
+                                                        <div class="border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-600 bg-white text-center w-full">{{ number_format($item['harga'], 0, ',', '.') }}</div>
+                                                    </td>
+                                                    <td class="py-1 text-right pr-4">
+                                                        <span class="text-xs font-black text-slate-700 leading-tight block">{{ formatRupiah($anggaran_item) }}</span>
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                {{-- Accordion: REALISASI TANGGAL PELAKSANAAN --}}
+                <div class="bg-white border border-slate-200 rounded-[2rem] shadow-sm overflow-hidden mb-8 transition-all duration-300">
+                    <button type="button" onclick="document.getElementById('realisasi-tanggal-content').classList.toggle('hidden'); document.getElementById('tanggal-chevron').classList.toggle('rotate-180')" class="w-full px-8 sm:px-10 py-6 bg-slate-50 border-b border-slate-100 flex items-center justify-between text-left group transition-all hover:bg-slate-100/50 outline-none">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform">
+                                <i class="fas fa-calendar-alt text-lg"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-base sm:text-lg font-black text-slate-800 uppercase tracking-tight">REALISASI TANGGAL PELAKSANAAN</h3>
+                                <p class="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest">Penyesuaian tanggal mulai dan tanggal selesai riil kegiatan</p>
+                            </div>
+                        </div>
+                        <div class="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center shadow-sm text-slate-400 group-hover:text-slate-600 group-hover:border-slate-300 transition-all">
+                            <i id="tanggal-chevron" class="fas fa-chevron-down transition-transform duration-300"></i>
+                        </div>
+                    </button>
+
+                    <div id="realisasi-tanggal-content" class="hidden p-8 sm:p-10 bg-white">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <!-- Planned/Rencana Dates Info -->
+                            <div class="p-6 bg-slate-50 rounded-3xl border border-slate-100 flex flex-col justify-between">
+                                <div>
+                                    <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Waktu Pelaksanaan Asli (Rencana)</h4>
+                                    <p class="text-xs font-bold text-slate-600 leading-relaxed mb-2">
+                                        Tanggal pelaksanaan yang diajukan
+                                    </p>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4 pt-4 border-t border-slate-200">
+                                    <div>
+                                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Tanggal Mulai</span>
+                                        <span class="text-xs font-black text-slate-700">{{ \Carbon\Carbon::parse($kegiatan_data['tanggal_mulai'])->format('d F Y') }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Tanggal Selesai</span>
+                                        <span class="text-xs font-black text-slate-700">{{ \Carbon\Carbon::parse($kegiatan_data['tanggal_selesai'])->format('d F Y') }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Realization/Realisasi Date Info -->
+                            <div class="p-6 bg-blue-50/20 rounded-3xl border border-blue-100/50 flex flex-col justify-between">
+                                <div>
+                                    <h4 class="text-xs font-black text-blue-500 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                                        <i class="fas fa-calendar-check"></i> Waktu Pelaksanaan Riil (Realisasi)
+                                    </h4>
+                                    <p class="text-xs font-bold text-slate-500 leading-relaxed mb-6">
+                                        Tanggal pelaksanaan realisasi kegiatan.
+                                    </p>
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Tanggal Mulai Riil</label>
+                                        <div class="px-4 py-3 text-xs font-black border border-slate-200 bg-slate-50 rounded-2xl text-slate-700">
+                                            {{ $kegiatan_data['realisasi_tanggal_mulai'] ? \Carbon\Carbon::parse($kegiatan_data['realisasi_tanggal_mulai'])->format('d F Y') : '-' }}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Tanggal Selesai Riil</label>
+                                        <div class="px-4 py-3 text-xs font-black border border-slate-200 bg-slate-50 rounded-2xl text-slate-700">
+                                            {{ $kegiatan_data['realisasi_tanggal_selesai'] ? \Carbon\Carbon::parse($kegiatan_data['realisasi_tanggal_selesai'])->format('d F Y') : '-' }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                @php
+                                    $tglMulaiPlan = \Carbon\Carbon::parse($kegiatan_data['tanggal_mulai']);
+                                    $tglSelesaiPlan = \Carbon\Carbon::parse($kegiatan_data['tanggal_selesai']);
+                                    $tglMulaiReal = $kegiatan_data['realisasi_tanggal_mulai'] ? \Carbon\Carbon::parse($kegiatan_data['realisasi_tanggal_mulai']) : null;
+                                    $tglSelesaiReal = $kegiatan_data['realisasi_tanggal_selesai'] ? \Carbon\Carbon::parse($kegiatan_data['realisasi_tanggal_selesai']) : null;
+
+                                    $isSame = false;
+                                    $statusText = '';
+                                    
+                                    if ($tglMulaiReal && $tglSelesaiReal) {
+                                        if ($tglMulaiPlan->equalTo($tglMulaiReal) && $tglSelesaiPlan->equalTo($tglSelesaiReal)) {
+                                            $isSame = true;
+                                            $statusText = 'JADWAL SESUAI RENCANA';
+                                        } else {
+                                            $durasiPlan = $tglMulaiPlan->diffInDays($tglSelesaiPlan) + 1;
+                                            $durasiReal = $tglMulaiReal->diffInDays($tglSelesaiReal) + 1;
+                                            
+                                            $selisihHari = $durasiReal - $durasiPlan;
+                                            $shiftMulai = $tglMulaiPlan->diffInDays($tglMulaiReal, false);
+
+                                            $reasons = [];
+                                            if ($shiftMulai < 0) {
+                                                $reasons[] = abs($shiftMulai) . ' HARI LEBIH AWAL DIMULAI';
+                                            } elseif ($shiftMulai > 0) {
+                                                $reasons[] = $shiftMulai . ' HARI LEBIH LAMBAT DIMULAI';
+                                            }
+
+                                            if ($selisihHari > 0) {
+                                                $reasons[] = abs($selisihHari) . ' HARI LEBIH LAMA';
+                                            } elseif ($selisihHari < 0) {
+                                                $reasons[] = abs($selisihHari) . ' HARI LEBIH SINGKAT';
+                                            }
+
+                                            if (empty($reasons)) {
+                                                $statusText = 'JADWAL BERGESER ' . abs($shiftMulai) . ' HARI';
+                                            } else {
+                                                $statusText = implode(' & ', array_map('strtoupper', $reasons));
+                                            }
+                                        }
+                                    } else {
+                                        $statusText = 'BELUM ADA REALISASI';
+                                    }
+                                @endphp
+
+                                <div id="realisasi-date-status-container" class="mt-5 pt-3 border-t border-blue-100/50 flex items-center justify-between w-full">
+                                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Status Pelaksanaan</span>
+                                    <div id="realisasi-date-badge">
+                                        @if($tglMulaiReal && $tglSelesaiReal)
+                                            @if($isSame)
+                                                <span class="text-[9px] font-black text-emerald-600 bg-emerald-50 border border-emerald-200/60 px-2.5 py-1 rounded-xl flex items-center gap-1">
+                                                    <i class="fas fa-check-circle text-[10px]"></i> {{ $statusText }}
+                                                </span>
+                                            @else
+                                                <span class="text-[9px] font-black text-amber-600 bg-amber-50 border border-amber-200/60 px-2.5 py-1 rounded-xl flex items-center gap-1 animate-pulse">
+                                                    <i class="fas fa-exclamation-triangle text-[10px]"></i> {{ $statusText }}
+                                                </span>
+                                            @endif
+                                        @else
+                                            <span class="text-[9px] font-black text-slate-505 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-xl flex items-center gap-1">
+                                                {{ $statusText }}
+                                            </span>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    @php $grand_total_anggaran += $subtotal_anggaran; $grand_total_realisasi += $subtotal_realisasi; @endphp
-                @endforeach
+                </div>
 
-                <!-- Summary Dashboard -->
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+                {{-- Accordion 2: REALISASI KEGIATAN --}}
+                <div class="bg-white border border-slate-200 rounded-[2rem] shadow-sm overflow-hidden mb-8 transition-all duration-300">
+                    <button type="button" onclick="document.getElementById('realisasi-kegiatan-content').classList.toggle('hidden'); document.getElementById('realisasi-chevron').classList.toggle('rotate-180')" class="w-full px-8 sm:px-10 py-6 bg-slate-50 border-b border-slate-100 flex items-center justify-between text-left group transition-all hover:bg-slate-100/50 outline-none">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform">
+                                <i class="fas fa-file-invoice-dollar text-lg"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-base sm:text-lg font-black text-slate-800 uppercase tracking-tight">REALISASI KEGIATAN</h3>
+                                <p class="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest">Pelaporan pengeluaran riil beserta bukti transaksi</p>
+                            </div>
+                        </div>
+                        <div class="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center shadow-sm text-slate-400 group-hover:text-slate-600 group-hover:border-slate-300 transition-all">
+                            <i id="realisasi-chevron" class="fas fa-chevron-down transition-transform duration-300 rotate-180"></i>
+                        </div>
+                    </button>
+
+                    <div id="realisasi-kegiatan-content" class="p-8 sm:p-10 space-y-12 bg-white">
+                        @foreach($rab_items as $kategori => $items)
+                            @php $subtotal_anggaran = 0; $subtotal_realisasi = 0; @endphp
+                            <div class="relative">
+                                <div class="flex items-center justify-between gap-4 mb-6 flex-wrap">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-blue-600 border border-slate-200 shadow-sm">
+                                            <i class="fas fa-folder-open text-xs"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-sm font-black text-slate-800 uppercase tracking-widest leading-none">{{ $kategori }}</h4>
+                                            <p class="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-widest">Kategori Belanja Operasional</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        @foreach($items as $item)
+                                            @php 
+                                                $subtotal_anggaran += $item['anggaran_original'];
+                                                $subtotal_realisasi += $item['realisasi'] ?? 0;
+                                            @endphp
+                                        @endforeach
+                                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Subtotal Realisasi</span>
+                                        <span class="text-xs font-black text-blue-600">{{ formatRupiah($subtotal_realisasi) }}</span>
+                                    </div>
+                                </div>
+
+                                <div class="overflow-x-auto border border-slate-100 rounded-2xl shadow-sm bg-white">
+                                    <table class="min-w-[1200px] w-full text-left table-auto border-separate border-spacing-y-2 px-6 pb-4">
+                                        <thead>
+                                            <tr class="text-slate-400 text-[10px] font-black uppercase tracking-wider">
+                                                <th class="pb-2 pt-4 pl-2">Uraian</th>
+                                                <th class="pb-2 pt-4">Rincian</th>
+                                                <th class="pb-2 pt-4 text-center w-20">Vol 1</th>
+                                                <th class="pb-2 pt-4 text-center w-20">Sat 1</th>
+                                                <th class="pb-2 pt-4 text-center w-20">Vol 2</th>
+                                                <th class="pb-2 pt-4 text-center w-20">Sat 2</th>
+                                                <th class="pb-2 pt-4 text-center w-36">Harga (RP)</th>
+                                                <th class="pb-2 pt-4 text-right pr-4 w-40">Anggaran</th>
+                                                <th class="pb-2 pt-4 text-right pr-4 w-48 text-blue-500">Realisasi</th>
+                                                <th class="pb-2 pt-4 text-center w-60">Lampiran / Feedback</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="bg-white">
+                                            @foreach($items as $index => $item)
+                                                @php 
+                                                    $anggaran = $item['anggaran_original'];
+                                                    $realisasi = $item['realisasi'] ?? 0;
+                                                @endphp
+                                                <tr class="hover:bg-slate-50/30 transition-colors">
+                                                    <td class="py-1 pr-3 pl-2">
+                                                        <div class="border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 bg-white w-full truncate" title="{{ $item['uraian'] }}">{{ $item['uraian'] }}</div>
+                                                    </td>
+                                                    <td class="py-1 pr-3">
+                                                        <div class="border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 bg-white w-full truncate" title="{{ $item['rincian'] }}">{{ $item['rincian'] }}</div>
+                                                    </td>
+                                                    <td class="py-1 pr-3 text-center">
+                                                        <div class="border border-slate-200 rounded-xl py-2 text-xs font-semibold text-slate-700 bg-white text-center w-full">{{ number_format($item['vol1'], 0) }}</div>
+                                                    </td>
+                                                    <td class="py-1 pr-3 text-center">
+                                                        <div class="border border-slate-200 rounded-xl py-2 text-xs font-semibold text-slate-700 bg-white text-center w-full uppercase text-[10px]">{{ $item['sat1'] }}</div>
+                                                    </td>
+                                                    <td class="py-1 pr-3 text-center">
+                                                        <div class="border border-slate-200 rounded-xl py-2 text-xs font-semibold text-slate-700 bg-white text-center w-full">{{ number_format($item['vol2'] ?? 1, 0) }}</div>
+                                                    </td>
+                                                    <td class="py-1 pr-3 text-center">
+                                                        <div class="border border-slate-200 rounded-xl py-2 text-xs font-semibold text-slate-700 bg-white text-center w-full uppercase text-[10px]">{{ $item['sat2'] ?? '-' }}</div>
+                                                    </td>
+                                                    <td class="py-1 pr-3 text-center">
+                                                        <div class="border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 bg-white text-center w-full">{{ number_format($item['harga'], 0, ',', '.') }}</div>
+                                                    </td>
+                                                    <td class="py-1 text-right pr-4">
+                                                        <span class="text-xs font-black text-slate-700 leading-tight block">{{ formatRupiah($anggaran) }}</span>
+                                                    </td>
+                                                    <td class="py-1 text-right pr-4">
+                                                        <span class="text-xs font-black text-blue-600 tracking-tighter block text-right">{{ formatRupiah($realisasi) }}</span>
+                                                        
+                                                        @php
+                                                            $selisih = $realisasi - $anggaran;
+                                                        @endphp
+                                                        <div class="selisih-badge-container text-[9px] font-black uppercase text-right mt-1.5 transition-all">
+                                                            @if($selisih > 0)
+                                                                <span class="text-rose-500 bg-rose-50 px-2 py-0.5 rounded-lg border border-rose-100"><i class="fas fa-arrow-up mr-0.5"></i> +{{ formatRupiah($selisih) }} (Lebih)</span>
+                                                            @elseif($selisih < 0)
+                                                                <span class="text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-100"><i class="fas fa-arrow-down mr-0.5"></i> -{{ formatRupiah(abs($selisih)) }} (Hemat)</span>
+                                                            @else
+                                                                <span class="text-slate-400 bg-slate-50 px-2 py-0.5 rounded-lg border border-slate-100"><i class="fas fa-check-circle mr-0.5"></i> Sesuai</span>
+                                                            @endif
+                                                        </div>
+                                                    </td>
+                                                    <td class="py-1 text-center">
+                                                        <div class="flex items-center justify-center gap-2">
+                                                            @if(!empty($item['file_bukti']))
+                                                                <a href="{{ asset('storage/' . $item['file_bukti']) }}" target="_blank" class="w-12 h-12 rounded-2xl bg-{{ $statusColor }}-50 text-{{ $statusColor }}-600 border border-{{ $statusColor }}-100 hover:bg-{{ $statusColor }}-600 hover:text-white transition-all shadow-sm active:scale-90 flex items-center justify-center">
+                                                                    <i class="fas fa-file-invoice text-xs"></i>
+                                                                </a>
+                                                            @else
+                                                                <span class="text-[10px] font-bold text-slate-400 italic">No File</span>
+                                                            @endif
+
+                                                            <button type="button" onclick="toggleFeedback('{{ $item['id'] }}')" class="w-12 h-12 rounded-2xl {{ !empty($item['catatan_item']) ? 'bg-amber-100 text-amber-600 border-amber-200' : 'bg-slate-50 text-slate-400 border-slate-100' }} hover:bg-amber-500 hover:text-white transition-all shadow-sm active:scale-90 flex items-center justify-center relative">
+                                                                <i class="fas fa-comment-dots text-xs"></i>
+                                                                @if(!empty($item['catatan_item']))
+                                                                    <span class="absolute -top-1 -right-1 w-3 h-3 bg-rose-500 rounded-full border-2 border-white animate-bounce"></span>
+                                                                @endif
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+
+                                                <tr id="tr-feedback-{{ $item['id'] }}" class="hidden bg-slate-50/50">
+                                                    <td colspan="10" class="px-6 py-4">
+                                                        <div id="feedback-{{ $item['id'] }}" class="p-5 bg-slate-50 rounded-2xl border border-slate-200 shadow-inner animate-fade-in text-left">
+                                                            <div class="flex items-center gap-2 mb-3">
+                                                                <i class="fas fa-pen-nib text-[10px] text-blue-600"></i>
+                                                                <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest">Catatan Perbaikan Bendahara</label>
+                                                            </div>
+                                                            @php $isActionable = in_array(strtolower($status), ['menunggu verifikasi', 'telah direvisi', 'menunggu_verifikasi']); @endphp
+                                                            <textarea name="item_feedback[{{ $item['id'] }}]" 
+                                                                class="w-full p-4 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none focus:ring-4 focus:ring-blue-50 focus:border-blue-500 transition-all placeholder:text-slate-300 shadow-sm {{ !$isActionable ? 'opacity-70 cursor-not-allowed' : '' }}" 
+                                                                placeholder="Tuliskan alasan jika perlu perbaikan pada item ini..."
+                                                                rows="3" {{ !$isActionable ? 'readonly' : '' }}>{{ $item['catatan_item'] }}</textarea>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            @php $grand_total_realisasi += $subtotal_realisasi; @endphp
+                        @endforeach
+                    </div>
+                </div>
+
+                <!-- Dynamic Summary Dashboard -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div class="lg:col-span-2 bg-slate-900 rounded-[2.5rem] p-10 text-white relative overflow-hidden shadow-2xl shadow-slate-300">
                         <div class="absolute right-0 bottom-0 w-64 h-64 bg-blue-500/20 rounded-full -mr-32 -mb-32 blur-3xl"></div>
                         <div class="relative z-10 grid grid-cols-1 sm:grid-cols-2 gap-10">
                             <div>
-                                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3 italic">Anggaran Disetujui</span>
+                                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3">Anggaran Disetujui</span>
                                 <div class="text-4xl font-black tracking-tighter">{{ formatRupiah($grand_total_anggaran) }}</div>
-                                <div class="mt-6 flex items-center gap-2">
+                                <div class="mt-4 flex items-center gap-2">
                                     <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Dana Terverifikasi</span>
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Dana Tersedia</span>
                                 </div>
                             </div>
                             <div>
-                                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3 italic">Total Realisasi Dilaporkan</span>
-                                <div id="grand-total-realisasi" class="text-4xl font-black tracking-tighter text-blue-400">{{ formatRupiah($grand_total_realisasi) }}</div>
+                                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3">Realisasi Dilaporkan</span>
                                 @php $diff = $grand_total_realisasi - $grand_total_anggaran; @endphp
-                                <div class="mt-6 text-[10px] font-black uppercase tracking-widest">
+                                <div id="grand-total-realisasi" class="text-4xl font-black tracking-tighter text-{{ abs($diff) < 1 ? 'emerald-400' : ($diff > 0 ? 'rose-500' : 'blue-400') }}">
+                                    {{ formatRupiah($grand_total_realisasi) }}
+                                </div>
+                                <div class="mt-4 text-[10px] font-black uppercase tracking-widest">
                                     @if(abs($diff) < 1)
-                                        <span class="text-emerald-500"><i class="fas fa-check-circle mr-1"></i> Balance: Sesuai Anggaran</span>
+                                        <span class="text-emerald-400"><i class="fas fa-check-circle mr-1"></i> NOMINAL SESUAI ANGGARAN</span>
                                     @elseif($diff > 0)
-                                        <span class="text-rose-500"><i class="fas fa-exclamation-triangle mr-1"></i> Over: {{ formatRupiah($diff) }}</span>
+                                        <span class="text-rose-500"><i class="fas fa-times-circle mr-1"></i> REALISASI MELEBIHI ANGGARAN</span>
                                     @else
-                                        <span class="text-blue-400"><i class="fas fa-info-circle mr-1"></i> Under: {{ formatRupiah(abs($diff)) }}</span>
+                                        <span class="text-blue-400"><i class="fas fa-info-circle mr-1"></i> REALISASI KURANG DARI ANGGARAN</span>
                                     @endif
                                 </div>
                             </div>
                         </div>
+                        <div class="mt-10 pt-6 border-t border-white/10 flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400">
+                                    <i class="fas fa-fingerprint text-xs"></i>
+                                </div>
+                                <div>
+                                    <span class="block text-[8px] font-black text-slate-400 uppercase tracking-[0.2em]">Kode MAK Aktif</span>
+                                    <span class="text-xs font-mono font-bold text-blue-100 tracking-wider">{{ $kode_mak ?? '-' }}</span>
+                                </div>
+                            </div>
+                            <div class="px-3 py-1 bg-emerald-500/10 rounded-lg text-emerald-400 text-[9px] font-black uppercase tracking-widest border border-emerald-500/20">
+                                <i class="fas fa-check-circle"></i> Terverifikasi
+                            </div>
+                        </div>
                     </div>
 
+                    @php
+                        $circleColor = 'slate';
+                        $circleIcon = 'fas fa-hourglass-half';
+                        $statusTitle = 'Pengecekan Data';
+                        $statusDesc = 'Status pertanggungjawaban sedang dianalisis.';
+                        
+                        if (abs($diff) < 1) {
+                            $circleColor = 'emerald';
+                            $circleIcon = 'fas fa-check-circle';
+                            $statusTitle = 'DANA BALANCE';
+                            $statusDesc = 'Total realisasi sesuai dengan pagu anggaran yang disetujui.';
+                        } elseif ($diff > 0) {
+                            $circleColor = 'rose';
+                            $circleIcon = 'fas fa-exclamation-circle';
+                            $statusTitle = 'DANA BERLEBIH';
+                            $statusDesc = 'Total realisasi melebihi pagu anggaran.';
+                        } else {
+                            $circleColor = 'blue';
+                            $circleIcon = 'fas fa-info-circle';
+                            $statusTitle = 'SISA ANGGARAN';
+                            $statusDesc = 'Total realisasi kurang dari pagu anggaran.';
+                        }
+                    @endphp
                     <div class="bg-white rounded-[2.5rem] border border-slate-100 p-10 shadow-xl shadow-slate-100 flex flex-col justify-center items-center text-center relative overflow-hidden">
                         <div class="absolute -right-6 -bottom-6 w-32 h-32 bg-slate-50 rounded-full blur-2xl"></div>
-                        <div class="w-20 h-20 rounded-full border-8 border-slate-50 flex items-center justify-center mb-6 shadow-inner">
-                            <i class="fas fa-shield-alt text-slate-300 text-2xl"></i>
+                        <div class="w-24 h-24 rounded-full border-[8px] border-{{ $circleColor }}-100 flex items-center justify-center mb-6 text-{{ $circleColor }}-500 bg-{{ $circleColor }}-50 shadow-inner">
+                            <i class="{{ $circleIcon }} text-2xl"></i>
                         </div>
-                        <h4 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-2">Validitas Data</h4>
-                        <p class="text-[10px] font-bold text-slate-400 uppercase leading-relaxed max-w-[180px]">Sistem mendeteksi tingkat akurasi bukti sebesar 100%.</p>
+                        <h4 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-2">{{ $statusTitle }}</h4>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase leading-relaxed max-w-[200px]">{{ $statusDesc }}</p>
                     </div>
                 </div>
 
@@ -355,9 +668,9 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     function toggleFeedback(id) {
-        const el = document.getElementById(`feedback-${id}`);
-        if (el) {
-            el.classList.toggle('hidden');
+        const tr = document.getElementById(`tr-feedback-${id}`);
+        if (tr) {
+            tr.classList.toggle('hidden');
         }
     }
 
