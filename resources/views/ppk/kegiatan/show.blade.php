@@ -75,11 +75,11 @@
             </div>
         </div>
 
-        {{-- main content layout with two columns --}}
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-10 mt-16 max-w-6xl mx-auto">
+        {{-- main content layout --}}
+        <div class="mt-16 max-w-6xl mx-auto space-y-12">
             
-            {{-- Left column: KAK Details --}}
-            <div class="lg:col-span-2 space-y-12">
+            {{-- KAK Details --}}
+            <div class="space-y-12">
                 
                 {{-- KERANGKA ACUAN KERJA (KAK) SECTION --}}
                 <div class="space-y-6">
@@ -226,99 +226,10 @@
                     </div>
                 </div>
             </div>
-
-            {{-- Right Column: Lampiran & Actions --}}
-            <div class="space-y-8">
-                
-                {{-- Metadata Lampiran --}}
-                <div class="bg-slate-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden group">
-                    <div class="absolute -right-10 -top-10 w-40 h-40 bg-white/5 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700"></div>
-                    
-                    <h3 class="text-sm font-black uppercase tracking-widest mb-8 flex items-center gap-2 opacity-60">
-                        <i class="fas fa-paperclip"></i> Lampiran & Berkas
-                    </h3>
-
-                    <div class="space-y-6 relative z-10">
-                        <div class="p-5 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 transition-all cursor-pointer">
-                            <div class="flex items-center gap-4">
-                                <div class="w-12 h-12 rounded-xl bg-red-500/20 flex items-center justify-center text-red-400">
-                                    <i class="fas fa-file-pdf text-xl"></i>
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <span class="block text-[8px] font-black text-white/40 uppercase tracking-widest mb-1">Surat Pengantar</span>
-                                    <span class="text-xs font-bold truncate block">
-                                        @if(!empty($kegiatan_data['surat_pengantar']))
-                                            <a href="{{ asset('storage/' . $kegiatan_data['surat_pengantar']) }}" target="_blank" class="text-blue-400 hover:text-blue-300 hover:underline">
-                                                {{ basename($kegiatan_data['surat_pengantar']) }}
-                                            </a>
-                                        @else
-                                            Belum ada file
-                                        @endif
-                                    </span>
-                                </div>
-                                <i class="fas fa-download text-white/20"></i>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="p-4 bg-white/5 rounded-2xl border border-white/10">
-                                <span class="block text-[8px] font-black text-white/40 uppercase tracking-widest mb-2">Tanggal Mulai</span>
-                                <span class="text-[10px] font-black">
-                                    {{ $kegiatan_data['tanggal_mulai'] ? \Carbon\Carbon::parse($kegiatan_data['tanggal_mulai'])->translatedFormat('d F Y') : '-' }}
-                                </span>
-                            </div>
-                            <div class="p-4 bg-white/5 rounded-2xl border border-white/10">
-                                <span class="block text-[8px] font-black text-white/40 uppercase tracking-widest mb-2">Tanggal Selesai</span>
-                                <span class="text-[10px] font-black">
-                                    {{ $kegiatan_data['tanggal_selesai'] ? \Carbon\Carbon::parse($kegiatan_data['tanggal_selesai'])->translatedFormat('d F Y') : '-' }}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Approval Panel / Persetujuan PPK --}}
-                <div class="bg-white rounded-[2.5rem] shadow-xl border border-slate-100 overflow-hidden p-8 relative">
-                    <div class="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full -mr-16 -mt-16 z-0"></div>
-                    
-                    <div class="relative z-10">
-                        <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-8 flex items-center gap-2">
-                            <i class="fas fa-stamp text-blue-600"></i> Panel Persetujuan
-                        </h3>
-
-                        @if($kegiatan->posisi_id == 3)
-                            <form action="{{ route('ppk.kegiatan.store', $id) }}" method="POST" class="space-y-6">
-                                @csrf
-                                <div class="space-y-3">
-                                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Catatan / Komentar PPK</label>
-                                    <textarea name="catatan" rows="4" placeholder="Berikan catatan jika diperlukan..." 
-                                        class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 outline-none transition-all font-medium text-xs leading-relaxed shadow-inner"></textarea>
-                                </div>
-
-                                <div class="space-y-3 pt-4">
-                                    <button type="submit" name="action" value="approve" class="w-full py-4 bg-emerald-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-emerald-100 hover:bg-emerald-700 hover:-translate-y-1 transition-all flex items-center justify-center gap-2 group">
-                                        <i class="fas fa-check-circle group-hover:scale-110 transition-transform"></i>
-                                        Setujui Usulan
-                                    </button>
-                                </div>
-                            </form>
-                        @else
-                            <div class="text-center py-10">
-                                <div class="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6 text-emerald-600 shadow-xl shadow-emerald-50">
-                                    <i class="fas fa-check-double text-3xl"></i>
-                                </div>
-                                <h4 class="text-base font-black text-slate-800 uppercase tracking-widest">Telah Diproses</h4>
-                                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-tight mt-2 italic">Keputusan akhir telah dikirim.</p>
-                            </div>
-                        @endif
-                    </div>
-                </div>
-
-            </div>
         </div>
 
         {{-- RINCIAN ANGGARAN BIAYA (RAB) SECTION --}}
-        <div class="mt-12 pt-12 border-t border-slate-100">
+        <div class="mt-12 pt-12 border-t border-slate-100 max-w-6xl mx-auto">
             <h3 class="text-2xl font-black text-slate-800 mb-8 flex items-center gap-3">
                 <i class="fas fa-calculator text-blue-500"></i> Rincian Anggaran (RAB)
             </h3>
@@ -419,6 +330,112 @@
                     <span class="text-2xl font-black text-blue-600 tracking-tight">{{ formatRupiah($grand_total) }}</span>
                 </div>
             </div>
+        </div>
+
+        {{-- Rincian Rancangan, MAK & Persetujuan Section --}}
+        <div class="mt-12 pt-12 border-t border-slate-100 max-w-6xl mx-auto space-y-10">
+            
+            {{-- Section 1: Rincian Rancangan Kegiatan --}}
+            <div class="space-y-6">
+                <h3 class="text-2xl font-black text-slate-800 tracking-tight">Rincian Rancangan Kegiatan</h3>
+                
+                <div class="space-y-6">
+                    {{-- Surat Pengantar --}}
+                    <div class="space-y-2">
+                        <label class="block text-xs font-bold text-slate-700">Surat Pengantar</label>
+                        <div class="relative border border-slate-200 rounded-2xl px-4 py-3 bg-white hover:border-slate-300 transition-all duration-200 flex items-center justify-between">
+                            <span class="absolute -top-2 left-4 bg-white px-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Upload Surat</span>
+                            <div class="text-sm font-semibold text-slate-700 min-h-[1.5rem] mt-1 flex items-center gap-2">
+                                @if(!empty($kegiatan_data['surat_pengantar']))
+                                    <a href="{{ asset('storage/' . $kegiatan_data['surat_pengantar']) }}" target="_blank" class="text-blue-600 hover:underline flex items-center gap-1.5">
+                                        <i class="fas fa-file-pdf text-red-500 text-base"></i>
+                                        Lihat Surat Pengantar
+                                    </a>
+                                @else
+                                    <span class="text-slate-400 italic">Belum ada berkas</span>
+                                @endif
+                            </div>
+                            @if(!empty($kegiatan_data['surat_pengantar']))
+                                <a href="{{ asset('storage/' . $kegiatan_data['surat_pengantar']) }}" download class="text-slate-400 hover:text-slate-600">
+                                    <i class="fas fa-upload text-sm"></i>
+                                </a>
+                            @else
+                                <i class="fas fa-upload text-slate-300 text-sm"></i>
+                            @endif
+                        </div>
+                    </div>
+
+                    {{-- Kurun Waktu Pelaksanaan --}}
+                    <div class="space-y-3">
+                        <span class="text-xs font-bold text-slate-700 block">Kurun Waktu Pelaksanaan</span>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="relative border border-slate-200 rounded-2xl px-4 py-3 bg-white hover:border-slate-300 transition-all duration-200 flex items-center justify-between">
+                                <span class="absolute -top-2 left-4 bg-white px-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tanggal Mulai</span>
+                                <div class="text-xs font-semibold text-slate-700 min-h-[1.5rem] mt-1">
+                                    {{ $kegiatan_data['tanggal_mulai'] ? \Carbon\Carbon::parse($kegiatan_data['tanggal_mulai'])->translatedFormat('d M Y') : '-' }}
+                                </div>
+                                <i class="far fa-calendar-alt text-slate-400 text-sm"></i>
+                            </div>
+                            <div class="relative border border-slate-200 rounded-2xl px-4 py-3 bg-white hover:border-slate-300 transition-all duration-200 flex items-center justify-between">
+                                <span class="absolute -top-2 left-4 bg-white px-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tanggal Selesai</span>
+                                <div class="text-xs font-semibold text-slate-700 min-h-[1.5rem] mt-1">
+                                    {{ $kegiatan_data['tanggal_selesai'] ? \Carbon\Carbon::parse($kegiatan_data['tanggal_selesai'])->translatedFormat('d M Y') : '-' }}
+                                </div>
+                                <i class="far fa-calendar-alt text-slate-400 text-sm"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Section 2: Kode MAK --}}
+            <div class="space-y-6 pt-4 border-t border-slate-100">
+                <h3 class="text-2xl font-black text-slate-800 tracking-tight">Kode Mata Anggaran Kegiatan (MAK)</h3>
+                <div class="w-full">
+                    <div class="relative border border-slate-200 rounded-2xl px-4 py-3 bg-white hover:border-slate-300 transition-all duration-200">
+                        <span class="absolute -top-2 left-4 bg-white px-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Kode MAK</span>
+                        <div class="text-sm font-semibold text-slate-700 min-h-[1.5rem] mt-1">
+                            {{ $kegiatan_data['mak_code'] ?? '-' }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Section 3: Panel Persetujuan --}}
+            <div class="space-y-6 pt-4 border-t border-slate-100">
+                @if($kegiatan->posisi_id == 3)
+                    <form action="{{ route('ppk.kegiatan.store', $id) }}" method="POST" class="space-y-6 w-full">
+                        @csrf
+                        <h3 class="text-2xl font-black text-slate-800 tracking-tight">Panel Persetujuan</h3>
+                        
+                        <div class="relative border border-slate-200 rounded-2xl px-4 py-3 bg-white hover:border-slate-300 transition-all duration-200">
+                            <span class="absolute -top-2 left-4 bg-white px-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Catatan / Komentar PPK</span>
+                            <textarea name="catatan" rows="3" placeholder="Berikan catatan jika diperlukan..." 
+                                class="w-full mt-2 bg-transparent outline-none text-slate-600 font-semibold text-xs leading-relaxed border-none focus:ring-0 p-0 resize-none"></textarea>
+                        </div>
+
+                        <div class="flex items-center justify-between gap-4 pt-4">
+                            <a href="{{ route('ppk.kegiatan.index') }}" class="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 bg-[#007BFF] hover:bg-blue-700 text-white rounded-xl font-bold text-xs transition duration-200 shadow-md">
+                                <i class="fas fa-arrow-left"></i> Kembali
+                            </a>
+                            <button type="submit" name="action" value="approve" class="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 bg-[#198754] hover:bg-green-700 text-white rounded-xl font-bold text-xs transition duration-200 shadow-md">
+                                <i class="fas fa-check-circle"></i> Setujui Usulan
+                            </button>
+                        </div>
+                    </form>
+                @else
+                    <h3 class="text-2xl font-black text-slate-800 tracking-tight">Panel Persetujuan</h3>
+                    <div class="flex items-center justify-between gap-4 pt-4 w-full">
+                        <a href="{{ route('ppk.kegiatan.index') }}" class="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 bg-[#007BFF] hover:bg-blue-700 text-white rounded-xl font-bold text-xs transition duration-200 shadow-md">
+                            <i class="fas fa-arrow-left"></i> Kembali
+                        </a>
+                        <div class="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 bg-[#A8E6CF] text-[#1D7A46] rounded-xl font-bold text-xs border border-[#8FE0C0] shadow-sm">
+                            <i class="fas fa-check-circle"></i> Telah Disetujui
+                        </div>
+                    </div>
+                @endif
+            </div>
+
         </div>
 
     </section>

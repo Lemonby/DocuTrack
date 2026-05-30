@@ -51,7 +51,7 @@
                         <div class="h-4 w-px bg-slate-200 mx-1"></div>
                         <span class="text-slate-400 text-[10px] font-black uppercase tracking-widest">KODE LPJ: #{{ str_pad($id, 5, '0', STR_PAD_LEFT) }}</span>
                     </div>
-                    <h2 class="text-3xl md:text-4xl font-black text-slate-800 tracking-tighter leading-tight">Laporan Pertanggungjawaban</h2>
+                    <h2 class="text-3xl md:text-4xl font-black text-slate-800 tracking-tighter leading-tight">Laporan Pertanggung jawaban</h2>
                     <p class="text-sm text-slate-500 mt-2 font-medium flex items-center gap-2">
                         <i class="fas fa-calendar-check text-blue-500"></i>
                         Kegiatan: <span class="text-blue-600 font-black tracking-tight underline decoration-blue-200 underline-offset-4">{{ $kegiatan_nama }}</span>
@@ -154,17 +154,23 @@
                             <div class="flex-1 h-px bg-slate-100 ml-4"></div>
                         </div>
                         
-                        <div class="overflow-hidden border border-slate-100 rounded-3xl shadow-xl shadow-slate-100/50 bg-white">
-                            <table class="w-full">
+                        <div class="overflow-x-auto border border-slate-100 rounded-3xl shadow-xl shadow-slate-100/50 bg-white">
+                            <table class="min-w-[1200px] w-full text-left table-auto border-separate border-spacing-y-2 px-6 pb-4">
                                 <thead>
-                                    <tr class="bg-slate-50/80">
-                                        <th class="px-8 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Uraian Transaksi</th>
-                                        <th class="px-8 py-5 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 w-44">Anggaran</th>
-                                        <th class="px-8 py-5 text-right text-[10px] font-black text-blue-500 uppercase tracking-widest border-b border-slate-100 w-52">Realisasi (Input)</th>
-                                        <th class="px-8 py-5 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 w-64">Lampiran / Feedback</th>
+                                    <tr class="text-slate-400 text-[11px] font-black uppercase tracking-wider">
+                                        <th class="pb-2 pt-4 pl-2">Uraian</th>
+                                        <th class="pb-2 pt-4">Rincian</th>
+                                        <th class="pb-2 pt-4 text-center w-20">Vol 1</th>
+                                        <th class="pb-2 pt-4 text-center w-20">Sat 1</th>
+                                        <th class="pb-2 pt-4 text-center w-20">Vol 2</th>
+                                        <th class="pb-2 pt-4 text-center w-20">Sat 2</th>
+                                        <th class="pb-2 pt-4 text-center w-36">Harga (RP)</th>
+                                        <th class="pb-2 pt-4 text-right pr-4 w-40">Anggaran</th>
+                                        <th class="pb-2 pt-4 text-right pr-4 w-48 text-blue-500">Realisasi (Input)</th>
+                                        <th class="pb-2 pt-4 text-center w-60">Lampiran / Feedback</th>
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-slate-50">
+                                <tbody class="bg-white">
                                     @foreach($items as $index => $item)
                                         @php 
                                             $anggaran = $item['total'] ?? ($item['vol1'] * ($item['vol2'] ?? 1) * $item['harga']);
@@ -172,34 +178,47 @@
                                             $subtotal_anggaran += $anggaran;
                                             $subtotal_realisasi += $realisasi;
                                         @endphp
-                                        <tr class="group hover:bg-slate-50/50 transition-all duration-300">
-                                            <td class="px-8 py-6">
-                                                <div class="text-sm font-black text-slate-800 group-hover:text-blue-600 transition-colors">{{ $item['uraian'] }}</div>
-                                                <div class="text-[10px] text-slate-400 font-bold mt-1.5 flex items-center gap-2">
-                                                    <span class="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200">{{ $item['rincian'] }}</span>
-                                                    <span class="opacity-30">&bull;</span>
-                                                    <span>{{ $item['vol1'] }} {{ $item['sat1'] }}</span>
-                                                </div>
+                                        <tr class="hover:bg-slate-50/30 transition-colors">
+                                            <td class="py-1 pr-3 pl-2">
+                                                <div class="border border-slate-200 rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 bg-white w-full truncate" title="{{ $item['uraian'] }}">{{ $item['uraian'] }}</div>
                                             </td>
-                                            <td class="px-8 py-6 text-right">
-                                                <span class="text-sm font-black text-slate-500 tracking-tighter">{{ number_format($anggaran, 0, ',', '.') }}</span>
+                                            <td class="py-1 pr-3">
+                                                <div class="border border-slate-200 rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 bg-white w-full truncate" title="{{ $item['rincian'] }}">{{ $item['rincian'] }}</div>
                                             </td>
-                                            <td class="px-8 py-6 text-right">
+                                            <td class="py-1 pr-3 text-center">
+                                                <div class="border border-slate-200 rounded-xl py-2 text-sm font-semibold text-slate-700 bg-white text-center w-full">{{ number_format($item['vol1'], 0) }}</div>
+                                            </td>
+                                            <td class="py-1 pr-3 text-center">
+                                                <div class="border border-slate-200 rounded-xl py-2 text-sm font-semibold text-slate-700 bg-white text-center w-full uppercase text-xs">{{ $item['sat1'] }}</div>
+                                            </td>
+                                            <td class="py-1 pr-3 text-center">
+                                                <div class="border border-slate-200 rounded-xl py-2 text-sm font-semibold text-slate-700 bg-white text-center w-full">{{ number_format($item['vol2'] ?? 1, 0) }}</div>
+                                            </td>
+                                            <td class="py-1 pr-3 text-center">
+                                                <div class="border border-slate-200 rounded-xl py-2 text-sm font-semibold text-slate-700 bg-white text-center w-full uppercase text-xs">{{ $item['sat2'] ?? '-' }}</div>
+                                            </td>
+                                            <td class="py-1 pr-3 text-center">
+                                                <div class="border border-slate-200 rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 bg-white text-center w-full">{{ number_format($item['harga'], 0, ',', '.') }}</div>
+                                            </td>
+                                            <td class="py-1 text-right pr-4">
+                                                <span class="text-sm font-black text-slate-800 leading-tight block">{{ formatRupiah($anggaran) }}</span>
+                                            </td>
+                                            <td class="py-1 pr-4">
                                                 @if($isEditable)
                                                     <div class="relative group/input max-w-[200px] ml-auto">
                                                         <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 text-[10px] font-black group-focus-within/input:text-blue-500 transition-colors">Rp</span>
                                                         <input type="number" 
                                                                name="realisasi[{{ $kategori }}][{{ $index }}]"
                                                                class="realisasi-input w-full pl-10 pr-4 py-3 text-xs text-right font-black border-2 border-slate-100 rounded-2xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all outline-none bg-white"
-                                                               value="{{ $realisasi }}" 
+                                                               value="{{ (int) $realisasi }}" 
                                                                data-max="{{ $anggaran }}"
                                                                required>
                                                     </div>
                                                 @else
-                                                    <span class="text-sm font-black text-{{ $statusColor }}-600 tracking-tighter">{{ number_format($realisasi, 0, ',', '.') }}</span>
+                                                    <span class="text-sm font-black text-{{ $statusColor }}-600 tracking-tighter block text-right">{{ formatRupiah($realisasi) }}</span>
                                                 @endif
                                             </td>
-                                            <td class="px-8 py-6 text-center">
+                                            <td class="py-1 text-center">
                                                 <div class="flex items-center justify-center gap-2">
                                                     @if($isEditable)
                                                         <label class="cursor-pointer group/upload relative inline-block">
@@ -207,12 +226,16 @@
                                                             <div class="w-12 h-12 rounded-2xl bg-white border-2 border-slate-100 text-slate-400 flex items-center justify-center group-hover/upload:bg-blue-600 group-hover/upload:text-white group-hover/upload:border-blue-600 transition-all shadow-sm active:scale-90">
                                                                 <i class="fas fa-camera text-xs"></i>
                                                             </div>
-                                                            <div class="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white hidden file-badge"></div>
+                                                            <div class="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white {{ !empty($item['file_bukti']) ? '' : 'hidden' }} file-badge"></div>
                                                         </label>
                                                     @else
-                                                        <button type="button" class="w-12 h-12 rounded-2xl bg-{{ $statusColor }}-50 text-{{ $statusColor }}-600 border border-{{ $statusColor }}-100 hover:bg-{{ $statusColor }}-600 hover:text-white transition-all shadow-sm active:scale-90 flex items-center justify-center">
-                                                            <i class="fas fa-file-invoice text-xs"></i>
-                                                        </button>
+                                                        @if(!empty($item['file_bukti']))
+                                                            <a href="{{ asset('storage/' . $item['file_bukti']) }}" target="_blank" class="w-12 h-12 rounded-2xl bg-{{ $statusColor }}-50 text-{{ $statusColor }}-600 border border-{{ $statusColor }}-100 hover:bg-{{ $statusColor }}-600 hover:text-white transition-all shadow-sm active:scale-90 flex items-center justify-center">
+                                                                <i class="fas fa-file-invoice text-xs"></i>
+                                                            </a>
+                                                        @else
+                                                            <span class="text-[10px] font-bold text-slate-400 italic">No File</span>
+                                                        @endif
                                                     @endif
 
                                                     {{-- Feedback View for Admin (Read-Only) --}}

@@ -168,15 +168,52 @@ document.addEventListener('DOMContentLoaded', () => {
             const matchesJurusan = !jurusanVal || row.dataset.jurusan === jurusanVal;
             const matchesStatus = !statusVal || row.dataset.status === statusVal;
 
-            if (matchesSearch && matchesJurusan && matchesStatus) {
-                row.style.display = '';
+            const shouldShow = matchesSearch && matchesJurusan && matchesStatus;
+
+            if (shouldShow) {
+                if (row.style.display === 'none') {
+                    row.style.display = '';
+                    row.style.opacity = '0';
+                    row.style.transform = 'translateY(8px)';
+                    row.style.transition = 'opacity 250ms ease-out, transform 250ms ease-out';
+                    
+                    // Trigger reflow
+                    row.offsetHeight;
+                    
+                    row.style.opacity = '1';
+                    row.style.transform = 'translateY(0)';
+                } else {
+                    row.style.opacity = '1';
+                    row.style.transform = 'translateY(0)';
+                    row.style.transition = 'opacity 250ms ease-out, transform 250ms ease-out';
+                }
                 visible++;
             } else {
-                row.style.display = 'none';
+                if (row.style.display !== 'none') {
+                    row.style.transition = 'opacity 200ms ease-in, transform 200ms ease-in';
+                    row.style.opacity = '0';
+                    row.style.transform = 'translateY(-8px)';
+                    
+                    setTimeout(() => {
+                        if (row.style.opacity === '0') {
+                            row.style.display = 'none';
+                        }
+                    }, 200);
+                }
             }
         });
 
-        if (empty) empty.style.display = visible === 0 ? '' : 'none';
+        if (empty) {
+            if (visible === 0) {
+                empty.style.display = '';
+                empty.style.opacity = '0';
+                empty.offsetHeight;
+                empty.style.transition = 'opacity 250ms ease-out';
+                empty.style.opacity = '1';
+            } else {
+                empty.style.display = 'none';
+            }
+        }
     }
 
     window.setStatus = s => {

@@ -17,10 +17,19 @@ class MonitoringController extends Controller
 
         $list_proposal = $kegiatanList->map(function ($kegiatan) {
             $tahap = 'Pengajuan';
-            if ($kegiatan->posisi_aktif == \App\Services\WorkflowService::POSITION_VERIFIKATOR) $tahap = 'Verifikasi';
-            elseif ($kegiatan->posisi_aktif == \App\Services\WorkflowService::POSITION_WADIR) $tahap = 'ACC WD';
-            elseif ($kegiatan->posisi_aktif == \App\Services\WorkflowService::POSITION_PPK) $tahap = 'ACC PPK';
-            elseif ($kegiatan->posisi_aktif == \App\Services\WorkflowService::POSITION_BENDAHARA) $tahap = 'Dana Cair';
+            if ($kegiatan->status_utama_id == \App\Services\WorkflowService::STATUS_SELESAI || $kegiatan->status_utama_id == \App\Services\WorkflowService::STATUS_LPJ_DISETUJUI) {
+                $tahap = 'LPJ';
+            } elseif ($kegiatan->status_utama_id == \App\Services\WorkflowService::STATUS_DANA_DIBERIKAN) {
+                $tahap = 'Dana Cair';
+            } elseif ($kegiatan->posisi_id == \App\Services\WorkflowService::POSITION_BENDAHARA) {
+                $tahap = 'Dana Cair';
+            } elseif ($kegiatan->posisi_id == \App\Services\WorkflowService::POSITION_WADIR) {
+                $tahap = 'ACC WD';
+            } elseif ($kegiatan->posisi_id == \App\Services\WorkflowService::POSITION_PPK) {
+                $tahap = 'ACC PPK';
+            } elseif ($kegiatan->posisi_id == \App\Services\WorkflowService::POSITION_VERIFIKATOR) {
+                $tahap = 'Verifikasi';
+            }
 
             return [
                 'id' => $kegiatan->kegiatan_id,

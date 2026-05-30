@@ -106,7 +106,8 @@ class LpjController extends Controller
                     'sat2' => $rab->sat2,
                     'harga' => $rab->harga,
                     'realisasi' => $lpjItem ? $lpjItem->realisasi : ($rab->harga * $rab->vol1 * $rab->vol2),
-                    'catatan_item' => $lpjItem ? $lpjItem->komentar : null
+                    'catatan_item' => $lpjItem ? $lpjItem->komentar : null,
+                    'file_bukti' => $lpjItem ? $lpjItem->file_bukti : null
                 ];
             }
         }

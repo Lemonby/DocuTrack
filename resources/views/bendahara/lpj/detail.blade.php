@@ -73,7 +73,7 @@
                         <div class="h-4 w-px bg-slate-200 mx-1"></div>
                         <span class="text-slate-400 text-[10px] font-black uppercase tracking-widest">KODE LPJ: #{{ str_pad($id, 5, '0', STR_PAD_LEFT) }}</span>
                     </div>
-                    <h2 class="text-3xl md:text-4xl font-black text-slate-800 tracking-tighter leading-tight">Validasi Pertanggungjawaban</h2>
+                    <h2 class="text-3xl md:text-4xl font-black text-slate-800 tracking-tighter leading-tight">Validasi Pertanggung jawaban</h2>
                     <p class="text-sm text-slate-500 mt-2 font-medium flex items-center gap-2">
                         <i class="fas fa-calendar-check text-blue-500"></i>
                         Kegiatan: <span class="text-blue-600 font-black tracking-tight underline decoration-blue-200 underline-offset-4">{{ $kegiatan_data['nama_kegiatan'] }}</span>

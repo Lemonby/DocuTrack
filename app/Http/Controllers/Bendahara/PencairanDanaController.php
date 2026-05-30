@@ -117,6 +117,7 @@ class PencairanDanaController extends Controller
             'gambaran_umum' => $kegiatan->kak->gambaran_umum ?? '-',
             'metode_pelaksanaan' => $kegiatan->kak->metode_pelaksanaan ?? '-',
             'tahapan_kegiatan' => $kegiatan->kak ? $kegiatan->kak->tahapans->pluck('nama_tahapan')->implode("\n") : '',
+            'surat_pengantar' => $kegiatan->surat_pengantar,
             'tanggal_mulai' => $kegiatan->tanggal_mulai ? $kegiatan->tanggal_mulai->format('Y-m-d') : null,
             'tanggal_selesai' => $kegiatan->tanggal_selesai ? $kegiatan->tanggal_selesai->format('Y-m-d') : null,
         ];

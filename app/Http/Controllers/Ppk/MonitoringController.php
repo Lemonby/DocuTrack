@@ -10,36 +10,48 @@ class MonitoringController extends Controller
     public function index()
     {
         $tahapan_all = ['Pengajuan', 'Verifikasi', 'ACC WD', 'ACC PPK', 'Dana Cair', 'LPJ'];
-        $list_proposal = [
-            [
-                'id' => 1,
-                'nama' => 'Penyediaan Alat Lab Komputer',
-                'pengusul' => 'Andi Wijaya',
-                'tahap_sekarang' => 'ACC WD',
-                'status' => 'In Process'
-            ],
-            [
-                'id' => 2,
-                'nama' => 'Pelatihan Jaringan CISCO',
-                'pengusul' => 'Budi Santoso',
-                'tahap_sekarang' => 'Dana Cair',
-                'status' => 'In Process'
-            ],
-            [
-                'id' => 3,
-                'nama' => 'Seminar Cyber Security',
-                'pengusul' => 'Siti Aminah',
-                'tahap_sekarang' => 'ACC PPK',
-                'status' => 'In Process'
-            ],
-            [
-                'id' => 4,
-                'nama' => 'Workshop Multimedia',
-                'pengusul' => 'Ahmad Fauzi',
-                'tahap_sekarang' => 'LPJ',
-                'status' => 'Approved'
-            ],
-        ]; 
-        return view('ppk.monitoring.index', compact('list_proposal', 'tahapan_all'));
+        
+        $kegiatanList = \App\Models\Kegiatan::with(['statusUtama', 'user'])
+            ->latest()
+            ->get();
+
+        $list_proposal = $kegiatanList->map(function ($kegiatan) {
+            $tahap = 'Pengajuan';
+            if ($kegiatan->status_utama_id == \App\Services\WorkflowService::STATUS_SELESAI || $kegiatan->status_utama_id == \App\Services\WorkflowService::STATUS_LPJ_DISETUJUI) {
+                $tahap = 'LPJ';
+            } elseif ($kegiatan->status_utama_id == \App\Services\WorkflowService::STATUS_DANA_DIBERIKAN) {
+                $tahap = 'Dana Cair';
+            } elseif ($kegiatan->posisi_id == \App\Services\WorkflowService::POSITION_BENDAHARA) {
+                $tahap = 'Dana Cair';
+            } elseif ($kegiatan->posisi_id == \App\Services\WorkflowService::POSITION_WADIR) {
+                $tahap = 'ACC WD';
+            } elseif ($kegiatan->posisi_id == \App\Services\WorkflowService::POSITION_PPK) {
+                $tahap = 'ACC PPK';
+            } elseif ($kegiatan->posisi_id == \App\Services\WorkflowService::POSITION_VERIFIKATOR) {
+                $tahap = 'Verifikasi';
+            }
+
+            return [
+                'id' => $kegiatan->kegiatan_id,
+                'nama' => $kegiatan->nama_kegiatan,
+                'pengusul' => $kegiatan->user->nama ?? $kegiatan->pemilik_kegiatan,
+                'nim' => $kegiatan->nim_pelaksana,
+                'jurusan' => $kegiatan->jurusan_penyelenggara,
+                'tahap_sekarang' => $tahap,
+                'status' => $kegiatan->statusUtama->nama_status_usulan ?? 'In Process'
+            ];
+        })->toArray();
+
+        $jurusan_list = [
+            'Teknik Informatika dan Komputer',
+            'Teknik Grafika dan Penerbitan',
+            'Teknik Elektro',
+            'Teknik Mesin',
+            'Teknik Sipil',
+            'Administrasi Niaga',
+            'Akuntansi',
+        ];
+
+        return view('ppk.monitoring.index', compact('list_proposal', 'tahapan_all', 'jurusan_list'));
     }
 }

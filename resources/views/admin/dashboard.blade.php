@@ -352,8 +352,8 @@ window.dataLPJ = @json($list_lpj ?? []);
             cls = 'bg-emerald-100 text-emerald-700 border-emerald-200';
         } else if (['revisi', 'perlu perbaikan'].includes(s)) {
             cls = 'bg-amber-100 text-amber-700 border-amber-200';
-        } else if (s === 'telah direvisi') {
-            cls = 'bg-violet-100 text-violet-700 border-violet-200';
+        } else if (['telah direvisi', 'telah diverifikasi'].includes(s)) {
+            cls = 'bg-purple-100 text-purple-700 border-purple-200';
         } else if (['menunggu', 'review', 'pending', 'sedang diproses', 'menunggu verifikasi', 'siap submit', 'menunggu upload'].includes(s)) {
             cls = 'bg-blue-100 text-blue-700 border-blue-200';
         } else if (['ditolak', 'tolak', 'batal'].includes(s)) {

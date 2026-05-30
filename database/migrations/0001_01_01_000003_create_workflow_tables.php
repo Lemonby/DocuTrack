@@ -54,9 +54,9 @@ return new class extends Migration
             $table->string('jenis_belanja', 100)->nullable();
             $table->text('uraian')->nullable();
             $table->text('rincian')->nullable();
-            $table->decimal('total_harga', 15, 2)->nullable();
-            $table->decimal('realisasi', 15, 2)->nullable();
-            $table->decimal('sub_total', 15, 2)->nullable();
+            $table->decimal('total_harga', 10, 2)->nullable();
+            $table->decimal('realisasi', 10, 2)->nullable();
+            $table->decimal('sub_total', 10, 2)->nullable();
             $table->string('file_bukti', 255)->nullable();
             $table->text('komentar')->nullable();
             $table->string('sat1', 50)->nullable();

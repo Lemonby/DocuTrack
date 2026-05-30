@@ -45,12 +45,17 @@ class KegiatanController extends Controller
             'nim_nip' => $kegiatan->nim_pelaksana,
             'jurusan' => $kegiatan->jurusan_penyelenggara,
             'prodi' => $kegiatan->prodi_penyelenggara,
+            'nama_penanggung_jawab' => $kegiatan->nama_pj ?? '-',
+            'nip_penanggung_jawab' => $kegiatan->nip ?? '-',
             'nama_kegiatan' => $kegiatan->nama_kegiatan,
             'mak_code' => $kegiatan->bukti_mak ?? '-',
-            'wadir_tujuan' => $kegiatan->wadir->nama_wadir ?? $kegiatan->wadir_tujuan,
-            'penerima_manfaat' => $kegiatan->kak->penerima_manfaat ?? '-',
             'gambaran_umum' => $kegiatan->kak->gambaran_umum ?? '-',
+            'penerima_manfaat' => $kegiatan->kak->penerima_manfaat ?? '-',
             'metode_pelaksanaan' => $kegiatan->kak->metode_pelaksanaan ?? '-',
+            'tahapan_kegiatan' => $kegiatan->kak ? $kegiatan->kak->tahapans->pluck('nama_tahapan')->implode("\n") : '',
+            'surat_pengantar' => $kegiatan->surat_pengantar,
+            'tanggal_mulai' => $kegiatan->tanggal_mulai ? $kegiatan->tanggal_mulai->format('Y-m-d') : '-',
+            'tanggal_selesai' => $kegiatan->tanggal_selesai ? $kegiatan->tanggal_selesai->format('Y-m-d') : '-',
         ];
 
         $iku_data = $kegiatan->kak ? array_filter(array_map('trim', explode(',', $kegiatan->kak->iku ?? ''))) : [];
@@ -100,17 +105,8 @@ class KegiatanController extends Controller
 
     public function store(Request $request, $id)
     {
-        $action = $request->input('action', $request->input('decision', 'approve'));
-        $notes = $request->input('notes', '');
-
         $workflowService = new WorkflowService();
-        if ($action === 'reject') {
-            $workflowService->reject($id, WorkflowService::POSITION_WADIR, $notes ?: 'Usulan ditolak oleh Wadir.');
-        } elseif ($action === 'revisi') {
-            $workflowService->requestRevision($id, WorkflowService::POSITION_WADIR, $notes ?: 'Mohon revisi usulan.');
-        } else {
-            $workflowService->moveToNextPosition($id, WorkflowService::POSITION_WADIR);
-        }
+        $workflowService->moveToNextPosition($id, WorkflowService::POSITION_WADIR);
 
         return redirect()->route('wadir.dashboard')->with('success', 'Persetujuan Wadir berhasil disimpan.');
     }

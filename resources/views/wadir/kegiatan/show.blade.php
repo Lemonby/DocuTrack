@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Review & Telaah Usulan')
+@section('title', 'Review & Telaah Usulan (Wadir)')
 
 @section('content')
 @php
@@ -78,7 +78,7 @@
                 </div>
                 <h2 class="text-3xl font-black text-slate-800 tracking-tight">Detail Usulan Kegiatan</h2>
                 <p class="text-slate-400 text-xs mt-1">Review & Persetujuan Usulan KAK oleh Wadir</p>
-                <div class="mt-2">
+                <div class="mt-2 flex flex-wrap gap-2">
                     <span class="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] bg-blue-50 px-3 py-1 rounded-md border border-blue-100">
                         MAK: {{ $kegiatan_data['mak_code'] ?? '000.00.0.000.000' }}
                     </span>
@@ -122,11 +122,11 @@
             </div>
         </div>
 
-        {{-- main content layout with two columns --}}
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-10 mt-16 max-w-6xl mx-auto">
+        {{-- main content layout --}}
+        <div class="mt-16 max-w-6xl mx-auto space-y-12">
             
-            {{-- Left column: detail forms --}}
-            <div class="lg:col-span-2 space-y-12">
+            {{-- KAK Details --}}
+            <div class="space-y-12">
                 
                 {{-- KERANGKA ACUAN KERJA (KAK) SECTION --}}
                 <div class="space-y-6">
@@ -144,11 +144,11 @@
                         </div>
                         <div class="relative border border-slate-200 rounded-2xl px-4 py-3 bg-white hover:border-slate-300 transition-all duration-200">
                             <span class="absolute -top-2 left-4 bg-white px-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Nama Penanggung Jawab</span>
-                            <div class="text-sm font-semibold text-slate-700 min-h-[1.5rem] mt-1">{!! displayValue($kegiatan->nama_pj ?? '-') !!}</div>
+                            <div class="text-sm font-semibold text-slate-700 min-h-[1.5rem] mt-1">{!! displayValue($kegiatan_data['nama_penanggung_jawab'] ?? '') !!}</div>
                         </div>
                         <div class="relative border border-slate-200 rounded-2xl px-4 py-3 bg-white hover:border-slate-300 transition-all duration-200">
                             <span class="absolute -top-2 left-4 bg-white px-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">NIM/NIP Nama Penanggung Jawab</span>
-                            <div class="text-sm font-semibold text-slate-700 min-h-[1.5rem] mt-1">{!! displayValue($kegiatan->nip ?? '-') !!}</div>
+                            <div class="text-sm font-semibold text-slate-700 min-h-[1.5rem] mt-1">{!! displayValue($kegiatan_data['nip_penanggung_jawab'] ?? '') !!}</div>
                         </div>
                     </div>
 
@@ -273,88 +273,18 @@
                     </div>
                 </div>
             </div>
-
-            {{-- Right column: Panel Persetujuan Wadir --}}
-            <div class="space-y-8">
-                
-                {{-- RAB Total Card --}}
-                <div class="bg-gradient-to-br from-blue-600 to-cyan-500 p-8 rounded-[2rem] text-white shadow-xl shadow-blue-100 relative overflow-hidden group">
-                    <div class="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700"></div>
-                    <div class="relative z-10">
-                        <div class="flex items-center gap-2 mb-4">
-                            <div class="p-2 bg-white/20 rounded-lg backdrop-blur-md">
-                                <i class="fas fa-wallet text-white text-sm"></i>
-                            </div>
-                            <span class="text-xs font-black uppercase tracking-widest opacity-80 italic">Estimasi Anggaran</span>
-                        </div>
-                        <div class="text-3xl font-black mb-2 tracking-tighter">
-                            @php 
-                                $grand_total = 0;
-                                if (!empty($rab_data)) {
-                                    foreach($rab_data as $cat => $items) {
-                                        foreach($items as $it) {
-                                            $grand_total += $it['vol1'] * ($it['vol2'] ?? 1) * $it['harga'];
-                                        }
-                                    }
-                                }
-                            @endphp
-                            {{ formatRupiah($grand_total) }}
-                        </div>
-                        <p class="text-[10px] font-bold opacity-60">Total Rincian Anggaran Biaya (RAB)</p>
-                    </div>
-                </div>
-
-                {{-- Action Panel / Persetujuan Wadir --}}
-                <div class="bg-white rounded-[2.5rem] shadow-xl border border-slate-100 overflow-hidden p-8 animate-reveal">
-                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-6 flex items-center gap-2">
-                        <i class="fas fa-stamp text-blue-600"></i> Panel Telaah
-                    </h3>
-
-                    @if($kegiatan->posisi_id == 4)
-                        <form id="form-review" action="{{ route('wadir.kegiatan.store', $id) }}" method="POST" class="space-y-6">
-                            @csrf
-                            <input type="hidden" id="action-input" name="action" value="approve">
-                            <div>
-                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Catatan / Feedback</label>
-                                <textarea name="notes" rows="4" placeholder="Tuliskan catatan persetujuan, revisi, atau penolakan..." 
-                                    class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 outline-none transition-all font-medium text-xs leading-relaxed"></textarea>
-                            </div>
-
-                            <div class="space-y-3 pt-4">
-                                <button type="button" onclick="handleAction('approve')" class="w-full py-4 bg-emerald-600 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-lg shadow-emerald-100 hover:bg-emerald-700 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2">
-                                    <i class="fas fa-check-circle"></i> Setujui Usulan
-                                </button>
-                                
-                                <button type="button" onclick="handleAction('revisi')" class="w-full py-4 bg-amber-500 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-lg shadow-amber-100 hover:bg-amber-600 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2">
-                                    <i class="fas fa-exclamation-circle"></i> Minta Revisi
-                                </button>
-
-                                <button type="button" onclick="handleAction('reject')" class="w-full py-4 bg-rose-500 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-lg shadow-rose-100 hover:bg-rose-600 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2">
-                                    <i class="fas fa-times-circle"></i> Tolak Usulan
-                                </button>
-                            </div>
-                        </form>
-                    @else
-                        <div class="text-center py-10">
-                            <div class="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6 text-emerald-600 shadow-xl shadow-emerald-50">
-                                    <i class="fas fa-check-double text-3xl"></i>
-                            </div>
-                            <h4 class="text-base font-black text-slate-800 uppercase tracking-widest">Telah Diproses</h4>
-                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-tight mt-2 italic">Keputusan akhir telah dikirim.</p>
-                        </div>
-                    @endif
-                </div>
-
-            </div>
         </div>
 
         {{-- RINCIAN ANGGARAN BIAYA (RAB) SECTION --}}
-        <div class="mt-12 pt-12 border-t border-slate-100">
+        <div class="mt-12 pt-12 border-t border-slate-100 max-w-6xl mx-auto">
             <h3 class="text-2xl font-black text-slate-800 mb-8 flex items-center gap-3">
                 <i class="fas fa-calculator text-blue-500"></i> Rincian Anggaran (RAB)
             </h3>
             
             <div class="space-y-10">
+                @php 
+                    $grand_total = 0;
+                @endphp
                 @if(!empty($rab_data))
                     @foreach($rab_data as $kategori => $items)
                         @php 
@@ -362,6 +292,7 @@
                             foreach($items as $it) {
                                 $subtotal += $it['vol1'] * ($it['vol2'] ?? 1) * $it['harga'];
                             }
+                            $grand_total += $subtotal;
                         @endphp
                         
                         {{-- Category Card --}}
@@ -448,49 +379,117 @@
             </div>
         </div>
 
+        {{-- Rincian Rancangan, MAK & Persetujuan Section --}}
+        <div class="mt-12 pt-12 border-t border-slate-100 max-w-6xl mx-auto space-y-10">
+            
+            {{-- Section 1: Rincian Rancangan Kegiatan --}}
+            <div class="space-y-6">
+                <h3 class="text-2xl font-black text-slate-800 tracking-tight">Rincian Rancangan Kegiatan</h3>
+                
+                <div class="space-y-6">
+                    {{-- Surat Pengantar --}}
+                    <div class="space-y-2">
+                        <label class="block text-xs font-bold text-slate-700">Surat Pengantar</label>
+                        <div class="relative border border-slate-200 rounded-2xl px-4 py-3 bg-white hover:border-slate-300 transition-all duration-200 flex items-center justify-between">
+                            <span class="absolute -top-2 left-4 bg-white px-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Upload Surat</span>
+                            <div class="text-sm font-semibold text-slate-700 min-h-[1.5rem] mt-1 flex items-center gap-2">
+                                @if(!empty($kegiatan_data['surat_pengantar']))
+                                    <a href="{{ asset('storage/' . $kegiatan_data['surat_pengantar']) }}" target="_blank" class="text-blue-600 hover:underline flex items-center gap-1.5">
+                                        <i class="fas fa-file-pdf text-red-500 text-base"></i>
+                                        Lihat Surat Pengantar
+                                    </a>
+                                @else
+                                    <span class="text-slate-400 italic">Belum ada berkas</span>
+                                @endif
+                            </div>
+                            @if(!empty($kegiatan_data['surat_pengantar']))
+                                <a href="{{ asset('storage/' . $kegiatan_data['surat_pengantar']) }}" download class="text-slate-400 hover:text-slate-600">
+                                    <i class="fas fa-upload text-sm"></i>
+                                </a>
+                            @else
+                                <i class="fas fa-upload text-slate-300 text-sm"></i>
+                            @endif
+                        </div>
+                    </div>
+
+                    {{-- Kurun Waktu Pelaksanaan --}}
+                    <div class="space-y-3">
+                        <span class="text-xs font-bold text-slate-700 block">Kurun Waktu Pelaksanaan</span>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="relative border border-slate-200 rounded-2xl px-4 py-3 bg-white hover:border-slate-300 transition-all duration-200 flex items-center justify-between">
+                                <span class="absolute -top-2 left-4 bg-white px-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tanggal Mulai</span>
+                                <div class="text-xs font-semibold text-slate-700 min-h-[1.5rem] mt-1">
+                                    {{ $kegiatan_data['tanggal_mulai'] ? \Carbon\Carbon::parse($kegiatan_data['tanggal_mulai'])->translatedFormat('d M Y') : '-' }}
+                                </div>
+                                <i class="far fa-calendar-alt text-slate-400 text-sm"></i>
+                            </div>
+                            <div class="relative border border-slate-200 rounded-2xl px-4 py-3 bg-white hover:border-slate-300 transition-all duration-200 flex items-center justify-between">
+                                <span class="absolute -top-2 left-4 bg-white px-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tanggal Selesai</span>
+                                <div class="text-xs font-semibold text-slate-700 min-h-[1.5rem] mt-1">
+                                    {{ $kegiatan_data['tanggal_selesai'] ? \Carbon\Carbon::parse($kegiatan_data['tanggal_selesai'])->translatedFormat('d M Y') : '-' }}
+                                </div>
+                                <i class="far fa-calendar-alt text-slate-400 text-sm"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Section 2: Kode MAK --}}
+            <div class="space-y-6 pt-4 border-t border-slate-100">
+                <h3 class="text-2xl font-black text-slate-800 tracking-tight">Kode Mata Anggaran Kegiatan (MAK)</h3>
+                <div class="w-full">
+                    <div class="relative border border-slate-200 rounded-2xl px-4 py-3 bg-white hover:border-slate-300 transition-all duration-200">
+                        <span class="absolute -top-2 left-4 bg-white px-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Kode MAK</span>
+                        <div class="text-sm font-semibold text-slate-700 min-h-[1.5rem] mt-1">
+                            {{ $kegiatan_data['mak_code'] ?? '-' }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Section 3: Panel Persetujuan --}}
+            <div class="space-y-6 pt-4 border-t border-slate-100">
+                @if($kegiatan->posisi_id == 4)
+                    <form action="{{ route('wadir.kegiatan.store', $id) }}" method="POST" class="space-y-6 w-full">
+                        @csrf
+                        <h3 class="text-2xl font-black text-slate-800 tracking-tight">Panel Persetujuan</h3>
+                        
+                        <div class="relative border border-slate-200 rounded-2xl px-4 py-3 bg-white hover:border-slate-300 transition-all duration-200">
+                            <span class="absolute -top-2 left-4 bg-white px-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Catatan / Komentar Wadir</span>
+                            <textarea name="notes" rows="3" placeholder="Berikan catatan jika diperlukan..." 
+                                class="w-full mt-2 bg-transparent outline-none text-slate-600 font-semibold text-xs leading-relaxed border-none focus:ring-0 p-0 resize-none"></textarea>
+                        </div>
+
+                        <div class="flex items-center justify-between gap-4 pt-4">
+                            <a href="{{ route('wadir.kegiatan.index') }}" class="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 bg-[#007BFF] hover:bg-blue-700 text-white rounded-xl font-bold text-xs transition duration-200 shadow-md">
+                                <i class="fas fa-arrow-left"></i> Kembali
+                            </a>
+                            <button type="submit" class="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 bg-[#198754] hover:bg-green-700 text-white rounded-xl font-bold text-xs transition duration-200 shadow-md">
+                                <i class="fas fa-check-circle"></i> Setujui Usulan
+                            </button>
+                        </div>
+                    </form>
+                @else
+                    <h3 class="text-2xl font-black text-slate-800 tracking-tight">Panel Persetujuan</h3>
+                    <div class="flex items-center justify-between gap-4 pt-4 w-full">
+                        <a href="{{ route('wadir.kegiatan.index') }}" class="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 bg-[#007BFF] hover:bg-blue-700 text-white rounded-xl font-bold text-xs transition duration-200 shadow-md">
+                            <i class="fas fa-arrow-left"></i> Kembali
+                        </a>
+                        <div class="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 bg-[#A8E6CF] text-[#1D7A46] rounded-xl font-bold text-xs border border-[#8FE0C0] shadow-sm">
+                            <i class="fas fa-check-circle"></i> Telah Disetujui
+                        </div>
+                    </div>
+                @endif
+            </div>
+
+        </div>
+
     </section>
 </main>
 
 <style>
-    @keyframes slide-up {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes fade-in {
-        from { opacity: 0; }
-        to { opacity: 1; }
-    }
-    .animate-slide-up { animation: slide-up 0.6s ease-out forwards; }
-    .animate-fade-in { animation: fade-in 0.3s ease-out forwards; }
+    @keyframes fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .animate-fade-in { animation: fade-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 </style>
 @endsection
-
-@push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-    function handleAction(type) {
-        const config = {
-            approve: { title: 'Setujui Usulan?', text: 'Usulan akan dilanjutkan ke tahap berikutnya.', icon: 'success', color: '#10b981', label: 'Ya, Setujui' },
-            revisi:  { title: 'Minta Revisi?', text: 'Usulan akan dikembalikan ke Admin untuk diperbaiki.', icon: 'warning', color: '#f59e0b', label: 'Ya, Minta Revisi' },
-            reject:  { title: 'Tolak Usulan?', text: 'Usulan akan dihentikan dan ditolak permanen.', icon: 'error', color: '#f43f5e', label: 'Ya, Tolak' }
-        };
-
-        const c = config[type];
-        Swal.fire({
-            title: c.title,
-            text: c.text,
-            icon: c.icon,
-            showCancelButton: true,
-            confirmButtonText: c.label,
-            cancelButtonText: 'Batal',
-            confirmButtonColor: c.color,
-            borderRadius: '24px'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                document.getElementById('action-input').value = type;
-                document.getElementById('form-review').submit();
-            }
-        });
-    }
-</script>
-@endpush

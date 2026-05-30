@@ -190,13 +190,14 @@ window.dataLPJ = @json($list_lpj ?? []);
         return new Date(s).toLocaleDateString('id-ID', {day:'2-digit', month:'short', year:'numeric'});
     }
     function statusBadge(status) {
-        const s = (status || '').toLowerCase();
+        const s = (status || '').toLowerCase().replace(/_/g, ' ');
         let cls = 'bg-slate-100 text-slate-600 border-slate-200';
         if (['sudah dicairkan', 'disetujui', 'selesai', 'lpj disetujui'].includes(s)) cls = 'bg-emerald-100 text-emerald-700 border-emerald-200';
-        else if (['belum dicairkan', 'menunggu verifikasi', 'menunggu', 'telah direvisi'].includes(s)) cls = 'bg-blue-100 text-blue-700 border-blue-200';
+        else if (['belum dicairkan', 'menunggu verifikasi', 'menunggu'].includes(s)) cls = 'bg-blue-100 text-blue-700 border-blue-200';
+        else if (['telah direvisi', 'telah diverifikasi'].includes(s)) cls = 'bg-purple-100 text-purple-700 border-purple-200';
         else if (s === 'revisi') cls = 'bg-amber-100 text-amber-700 border-amber-200';
         else if (s === 'ditolak') cls = 'bg-rose-100 text-rose-700 border-rose-200';
-        return `<span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${cls}">${esc(status || '-')}</span>`;
+        return `<span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${cls}">${esc(status || '-').replace(/_/g, ' ')}</span>`;
     }
 
     function initTable({allData, searchId, filterStatusId, resetId, tbodyId, cardsId, showingId, totalId, paginationId, buildRow, buildCard, actionUrl}) {

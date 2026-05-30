@@ -9,35 +9,61 @@ class RiwayatController extends Controller
 {
     public function index()
     {
-        $riwayat_list = [
-            [
-                'id' => 801,
-                'nama' => 'Peralatan Robotika Semester Genap',
-                'pengusul' => 'Randi Kurnia',
-                'nim' => '2407411059',
-                'tanggal_proses' => '2026-05-10',
-                'status' => 'Disetujui',
-                'catatan' => 'Usulan sesuai dengan kebutuhan laboratorium.'
-            ],
-            [
-                'id' => 802,
-                'nama' => 'Studi Ekskursi Industri IT',
-                'pengusul' => 'Maya Sari',
-                'nim' => '2407411052',
-                'tanggal_proses' => '2026-05-12',
-                'status' => 'Disetujui',
-                'catatan' => 'Lanjutkan ke tahap verifikasi Wadir.'
-            ],
-            [
-                'id' => 803,
-                'nama' => 'Lomba Inovasi Mahasiswa',
-                'pengusul' => 'Dedy Pratama',
-                'nim' => '2407411003',
-                'tanggal_proses' => '2026-05-13',
-                'status' => 'Disetujui',
-                'catatan' => 'Sesuai dengan pagu anggaran yang tersedia.'
-            ],
-        ];
+        $kegiatanList = \App\Models\Kegiatan::with(['statusUtama', 'user', 'progressHistories.revisiComments'])
+            ->where(function($q) {
+                // Approved / passed PPK
+                $q->where('posisi_id', '>', \App\Services\WorkflowService::POSITION_PPK)
+                  // Or completed (approved and finished back at position 1)
+                  ->orWhere(function ($q2) {
+                      $q2->where('status_utama_id', \App\Services\WorkflowService::STATUS_SELESAI)
+                         ->where('posisi_id', \App\Services\WorkflowService::POSITION_ADMIN);
+                  })
+                  // Or rejected at PPK desk
+                  ->orWhere(function($q2) {
+                      $q2->where('posisi_id', \App\Services\WorkflowService::POSITION_PPK)
+                         ->where('status_utama_id', \App\Services\WorkflowService::STATUS_DITOLAK);
+                  })
+                  // Or if it was revised at PPK desk (status is STATUS_REVISI)
+                  ->orWhere(function($q2) {
+                      $q2->where('status_utama_id', \App\Services\WorkflowService::STATUS_REVISI);
+                  });
+            })
+            ->latest()
+            ->get();
+
+        $riwayat_list = $kegiatanList->map(function ($kegiatan) {
+            $statusLabel = 'Disetujui';
+            if ($kegiatan->status_utama_id == \App\Services\WorkflowService::STATUS_DITOLAK) {
+                $statusLabel = 'Ditolak';
+            } elseif ($kegiatan->status_utama_id == \App\Services\WorkflowService::STATUS_REVISI) {
+                $statusLabel = 'Revisi';
+            }
+
+            // Find the latest comment left generally or in revision/rejection history
+            $catatan = 'Tanpa catatan';
+            $history = $kegiatan->progressHistories->sortByDesc('created_at')->first();
+            if ($history) {
+                $comment = $history->revisiComments->first();
+                if ($comment && !empty($comment->komentar_revisi)) {
+                    $catatan = $comment->komentar_revisi;
+                } else {
+                    $catatan = $statusLabel === 'Disetujui' ? 'Usulan disetujui.' : 'Tanpa catatan';
+                }
+            } else {
+                $catatan = $statusLabel === 'Disetujui' ? 'Usulan disetujui.' : 'Tanpa catatan';
+            }
+
+            return [
+                'id' => $kegiatan->kegiatan_id,
+                'nama' => $kegiatan->nama_kegiatan,
+                'pengusul' => $kegiatan->user->nama ?? $kegiatan->pemilik_kegiatan,
+                'nim' => $kegiatan->nim_pelaksana,
+                'tanggal_proses' => $kegiatan->updated_at ? $kegiatan->updated_at->format('Y-m-d') : null,
+                'status' => $statusLabel,
+                'catatan' => $catatan
+            ];
+        })->toArray();
+
         return view('ppk.riwayat.index', compact('riwayat_list'));
     }
 }

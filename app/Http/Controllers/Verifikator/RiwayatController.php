@@ -11,9 +11,9 @@ class RiwayatController extends Controller
     {
         $kegiatanList = \App\Models\Kegiatan::with(['statusUtama', 'user'])
             ->where(function($q) {
-                $q->where('posisi_aktif', '>', \App\Services\WorkflowService::POSITION_VERIFIKATOR)
+                $q->where('posisi_id', '>', \App\Services\WorkflowService::POSITION_VERIFIKATOR)
                   ->orWhere(function($q2) {
-                      $q2->where('posisi_aktif', \App\Services\WorkflowService::POSITION_VERIFIKATOR)
+                      $q2->where('posisi_id', \App\Services\WorkflowService::POSITION_VERIFIKATOR)
                          ->where('status_utama_id', '!=', \App\Services\WorkflowService::STATUS_MENUNGGU);
                   });
             })

@@ -39,7 +39,7 @@
                     <i class="fas fa-check-double text-emerald-600"></i>
                 </div>
                 <div>
-                    <h3 class="text-emerald-800 font-black text-sm sm:text-base">Dana Lunas</h3>
+                    <h3 class="text-emerald-800 font-bold text-sm sm:text-base">Dana Lunas</h3>
                     <p class="text-emerald-700 text-xs sm:text-sm">Seluruh anggaran untuk kegiatan ini telah dicairkan sepenuhnya.</p>
                 </div>
             </div>
@@ -60,14 +60,19 @@
                     <span class="text-slate-400 text-xs font-medium">ID USULAN: #USL-{{ str_pad($id, 5, '0', STR_PAD_LEFT) }}</span>
                 </div>
                 <h2 class="text-3xl font-black text-slate-800 tracking-tight">Detail Usulan & Pencairan</h2>
-                <p class="text-slate-400 text-xs mt-1">Review Detail Usulan & Status Pencairan Dana Keuangan</p>
+                <p class="text-slate-400 text-xs mt-1">Review Detail Usulan & Status Pencairan Dana Keuangan oleh Bendahara</p>
+                <div class="mt-2 flex flex-wrap gap-2">
+                    <span class="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] bg-blue-50 px-3 py-1 rounded-md border border-blue-100">
+                        MAK: {{ $kegiatan_data['mak_code'] ?? '000.00.0.000.000' }}
+                    </span>
+                </div>
             </div>
             
             <div class="flex items-center gap-3 w-full sm:w-auto">
-                <a href="{{ route('bendahara.pencairan.index') }}" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl transition font-bold text-sm border border-slate-200 shadow-sm active:scale-95">
+                <a href="{{ route('bendahara.pencairan.index') }}" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl transition font-bold text-sm border border-slate-200 shadow-sm">
                     <i class="fas fa-arrow-left"></i> Kembali
                 </a>
-                <button class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition font-bold text-sm shadow-lg shadow-emerald-200 active:scale-95">
+                <button class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition font-bold text-sm shadow-lg shadow-emerald-200">
                     <i class="fas fa-print"></i> Cetak KAK
                 </button>
             </div>
@@ -98,11 +103,11 @@
             </div>
         </div>
 
-        {{-- Main Layout Grid --}}
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-10 mt-16">
+        {{-- main content layout --}}
+        <div class="mt-16 max-w-6xl mx-auto space-y-12">
             
-            {{-- Left Column: KAK Data --}}
-            <div class="lg:col-span-2 space-y-10">
+            {{-- KAK Details --}}
+            <div class="space-y-12">
                 
                 {{-- KERANGKA ACUAN KERJA (KAK) SECTION --}}
                 <div class="space-y-6">
@@ -115,16 +120,16 @@
                             <div class="text-sm font-semibold text-slate-700 min-h-[1.5rem] mt-1">{!! displayValue($kegiatan_data['nama_pengusul']) !!}</div>
                         </div>
                         <div class="relative border border-slate-200 rounded-2xl px-4 py-3 bg-white hover:border-slate-300 transition-all duration-200">
-                            <span class="absolute -top-2 left-4 bg-white px-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">NIM/NIP Pengusul</span>
+                            <span class="absolute -top-2 left-4 bg-white px-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">NIMNama Pengusul</span>
                             <div class="text-sm font-semibold text-slate-700 min-h-[1.5rem] mt-1">{!! displayValue($kegiatan_data['nim_nip'] ?? '') !!}</div>
                         </div>
                         <div class="relative border border-slate-200 rounded-2xl px-4 py-3 bg-white hover:border-slate-300 transition-all duration-200">
                             <span class="absolute -top-2 left-4 bg-white px-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Nama Penanggung Jawab</span>
-                            <div class="text-sm font-semibold text-slate-700 min-h-[1.5rem] mt-1">{!! displayValue($kegiatan_data['penanggung_jawab'] ?? '') !!}</div>
+                            <div class="text-sm font-semibold text-slate-700 min-h-[1.5rem] mt-1">{!! displayValue($kegiatan_data['nama_penanggung_jawab'] ?? '') !!}</div>
                         </div>
                         <div class="relative border border-slate-200 rounded-2xl px-4 py-3 bg-white hover:border-slate-300 transition-all duration-200">
-                            <span class="absolute -top-2 left-4 bg-white px-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">NIM/NIP Penanggung Jawab</span>
-                            <div class="text-sm font-semibold text-slate-700 min-h-[1.5rem] mt-1">{!! displayValue($kegiatan_data['nip_pj'] ?? '') !!}</div>
+                            <span class="absolute -top-2 left-4 bg-white px-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">NIM/NIP Nama Penanggung Jawab</span>
+                            <div class="text-sm font-semibold text-slate-700 min-h-[1.5rem] mt-1">{!! displayValue($kegiatan_data['nip_penanggung_jawab'] ?? '') !!}</div>
                         </div>
                     </div>
 
@@ -248,209 +253,20 @@
                         <i class="fas fa-chevron-down text-slate-400 text-sm ml-3"></i>
                     </div>
                 </div>
-
-            </div>
-
-            {{-- Right Column: Budget & Action Card --}}
-            <div class="space-y-10">
-                
-                <!-- Budget Summary Card -->
-                <div class="bg-slate-900 rounded-[2.5rem] shadow-2xl shadow-slate-300 overflow-hidden relative group">
-                    <div class="absolute right-0 top-0 w-40 h-40 bg-white/5 rounded-full -mr-20 -mt-20 blur-3xl group-hover:scale-150 transition-transform duration-700"></div>
-                    <div class="p-10 text-white border-b border-white/5">
-                        <span class="text-[10px] font-black uppercase tracking-widest opacity-60 italic">Anggaran Disetujui</span>
-                        <div class="text-4xl font-black mt-2 tracking-tighter">{{ formatRupiah($anggaran_disetujui) }}</div>
-                    </div>
-                    <div class="p-10 space-y-6 bg-slate-800/50">
-                        <div class="flex justify-between items-center">
-                            <div>
-                                <span class="text-[10px] font-black text-emerald-400 uppercase tracking-widest block mb-1">Dicairkan</span>
-                                <span class="text-xl font-black text-white">{{ formatRupiah($jumlah_dicairkan) }}</span>
-                            </div>
-                            <div class="w-12 h-12 rounded-2xl bg-emerald-500/20 flex items-center justify-center text-emerald-400 border border-emerald-500/20">
-                                <i class="fas fa-check-double"></i>
-                            </div>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <div>
-                                <span class="text-[10px] font-black text-blue-400 uppercase tracking-widest block mb-1">Sisa Dana</span>
-                                <span class="text-xl font-black text-white">{{ formatRupiah($sisa_dana) }}</span>
-                            </div>
-                            <div class="w-12 h-12 rounded-2xl bg-blue-500/20 flex items-center justify-center text-blue-400 border border-blue-500/20">
-                                <i class="fas fa-hand-holding-usd"></i>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="p-6 bg-slate-900 border-t border-white/5 flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400">
-                                <i class="fas fa-fingerprint text-xs"></i>
-                            </div>
-                            <div>
-                                <span class="block text-[8px] font-black text-slate-500 uppercase tracking-widest">KODE MAK</span>
-                                <span class="text-[10px] font-mono font-bold text-blue-200">{{ $kode_mak ?? '-' }}</span>
-                            </div>
-                        </div>
-                        <div class="px-3 py-1 bg-emerald-500/10 rounded-lg text-emerald-400 text-[9px] font-black uppercase tracking-widest border border-emerald-500/20">
-                            <i class="fas fa-check-circle"></i> Terverifikasi
-                        </div>
-                    </div>
-                </div>
-
-                <!-- LPJ Status Card -->
-                <div class="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm relative overflow-hidden group">
-                    <div class="absolute -right-4 -top-4 w-16 h-16 bg-slate-50 rounded-full group-hover:scale-150 transition-transform duration-700"></div>
-                    <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-2">
-                        <i class="fas fa-file-contract text-blue-600"></i> Status Laporan (LPJ)
-                    </h3>
-                    <div class="flex items-center justify-between gap-4">
-                        <div class="flex-1">
-                            @php
-                                $lpjColor = match(strtolower($lpj_status)) {
-                                    'disetujui' => 'emerald',
-                                    'revisi', 'menunggu verifikasi' => 'amber',
-                                    'belum ada' => 'slate',
-                                    default => 'blue'
-                                };
-                            @endphp
-                            <div class="px-4 py-3 rounded-2xl bg-{{ $lpjColor }}-50 border border-{{ $lpjColor }}-100 flex items-center gap-3 transition-all">
-                                <div class="w-8 h-8 rounded-xl bg-{{ $lpjColor }}-100 flex items-center justify-center text-{{ $lpjColor }}-600">
-                                    <i class="fas fa-{{ strtolower($lpj_status) === 'disetujui' ? 'check-double' : 'clock' }} text-xs"></i>
-                                </div>
-                                <div>
-                                    <span class="block text-[9px] font-black text-{{ $lpjColor }}-600 uppercase tracking-widest">Progress LPJ</span>
-                                    <span class="text-xs font-black text-slate-800">{{ $lpj_status }}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    @if(strtolower($lpj_status) === 'belum ada')
-                        <p class="text-[9px] text-slate-400 mt-4 font-bold uppercase tracking-tight opacity-70">
-                            <i class="fas fa-exclamation-triangle text-amber-500 mr-1"></i> LPJ belum dibuat oleh pengusul.
-                        </p>
-                    @endif
-                </div>
-
-                @if(!empty($riwayat_pencairan))
-                <!-- Riwayat Pencairan -->
-                <div class="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm relative">
-                    <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-8 flex items-center gap-2">
-                        <i class="fas fa-history text-blue-600"></i> Riwayat Pencairan
-                    </h3>
-                    <div class="space-y-6 relative before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-100">
-                        @foreach($riwayat_pencairan as $item)
-                        <div class="relative pl-10 group">
-                            <div class="absolute left-0 top-1.5 w-6 h-6 rounded-lg bg-white border-4 border-slate-100 flex items-center justify-center z-10 group-hover:border-blue-500 transition-all duration-300"></div>
-                            <div class="flex justify-between items-start mb-1">
-                                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">{{ fmtDateIndo($item['tanggal_pencairan']) }}</span>
-                                <span class="px-2 py-0.5 rounded-md bg-blue-50 text-blue-600 text-[9px] font-black uppercase tracking-widest">{{ $item['termin'] }}</span>
-                            </div>
-                            <div class="text-sm font-black text-slate-800">{{ formatRupiah($item['nominal']) }}</div>
-                            @if($item['catatan'])
-                            <div class="mt-2 text-[10px] text-slate-500 italic p-3 bg-slate-50 rounded-xl border border-slate-100">{{ $item['catatan'] }}</div>
-                            @endif
-                        </div>
-                        @endforeach
-                    </div>
-                </div>
-                @endif
-
-                <!-- Action Card: Pencairan -->
-                @if($boleh_cairkan)
-                <div class="bg-white rounded-[2.5rem] shadow-xl shadow-slate-100 border border-slate-100 overflow-hidden p-8 lg:p-10 relative">
-                    <div class="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full -mr-16 -mt-16 z-0"></div>
-                    <div class="relative z-10">
-                        <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-8 flex items-center gap-2">
-                            <i class="fas fa-money-check-alt text-blue-600"></i> Panel Pencairan
-                        </h3>
-
-                        <form id="formPencairan" action="#" method="POST" class="space-y-8">
-                            @csrf
-                            <input type="hidden" name="kegiatanId" value="{{ $id }}">
-                            <input type="hidden" name="sisa_dana" id="sisa_dana" value="{{ $sisa_dana }}">
-                            <input type="hidden" name="lpj_status" id="lpj_status_val" value="{{ strtolower($lpj_status) }}">
-
-                            <div class="space-y-5">
-                                <div class="flex items-center justify-between">
-                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tahapan Pencairan</label>
-                                    <button type="button" onclick="addStage()" class="px-4 py-2 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition shadow-lg shadow-blue-100">
-                                        <i class="fas fa-plus mr-1"></i> Tambah
-                                    </button>
-                                </div>
-                                
-                                <div id="stages-wrapper" class="space-y-4">
-                                    <!-- Dynamic inputs -->
-                                </div>
-
-                                <div class="p-6 bg-slate-900 rounded-2xl text-white shadow-xl shadow-slate-200 relative overflow-hidden">
-                                    <div class="absolute right-0 bottom-0 w-20 h-20 bg-white/5 rounded-full -mr-10 -mb-10 blur-xl"></div>
-                                    <div class="flex justify-between items-center relative z-10">
-                                        <span class="text-[10px] font-black uppercase tracking-widest opacity-60">Total Input Nominal</span>
-                                        <span id="total-nominal" class="text-xl font-black">Rp 0</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            @if($jumlah_dicairkan > 0 && strtolower($lpj_status) !== 'disetujui')
-                            <!-- Warning LPJ -->
-                            <div class="p-5 bg-rose-50 border border-rose-100 rounded-2xl animate-pulse">
-                                <div class="flex items-start gap-3">
-                                    <div class="w-8 h-8 rounded-xl bg-rose-100 flex items-center justify-center text-rose-600 flex-shrink-0">
-                                        <i class="fas fa-lock text-xs"></i>
-                                    </div>
-                                    <div>
-                                        <h4 class="text-[11px] font-black text-rose-800 uppercase tracking-widest">Termin 2 Dikunci</h4>
-                                        <p class="text-[10px] text-rose-600 font-bold mt-1 leading-relaxed">Sisa dana 50% hanya dapat dicairkan setelah LPJ disetujui. Status saat ini: <span class="uppercase">{{ $lpj_status }}</span></p>
-                                    </div>
-                                </div>
-                            </div>
-                            @endif
-
-                            <div class="space-y-3">
-                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Catatan Bendahara</label>
-                                <textarea name="catatan" rows="3" placeholder="Tambahkan instruksi khusus pencairan..." 
-                                    class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 outline-none transition-all font-medium text-xs leading-relaxed"></textarea>
-                            </div>
-
-                            <div class="pt-4">
-                                @php
-                                    $isDisabled = ($jumlah_dicairkan > 0 && strtolower($lpj_status) !== 'disetujui');
-                                @endphp
-                                <button type="button" onclick="submitPencairan()" 
-                                    class="w-full py-5 {{ $isDisabled ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none' : 'bg-blue-600 text-white shadow-2xl shadow-blue-200 hover:bg-blue-700 hover:-translate-y-1' }} rounded-[1.5rem] font-black text-[11px] uppercase tracking-widest transition-all flex items-center justify-center gap-3 group"
-                                    {{ $isDisabled ? 'disabled' : '' }}>
-                                    <span>{{ $isDisabled ? 'Pencairan Terkunci' : 'Proses Pencairan Dana' }}</span>
-                                    <i class="fas fa-{{ $isDisabled ? 'lock' : 'paper-plane' }} {{ $isDisabled ? '' : 'group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform' }}"></i>
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-                @else
-                <div class="bg-emerald-50 border border-emerald-100 rounded-[2.5rem] p-10 text-center relative overflow-hidden">
-                    <div class="absolute -right-6 -bottom-6 w-32 h-32 bg-emerald-100 rounded-full blur-2xl"></div>
-                    <div class="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6 text-emerald-600 shadow-xl shadow-emerald-100">
-                        <i class="fas fa-check-circle text-3xl"></i>
-                    </div>
-                    <h4 class="text-base font-black text-emerald-800 uppercase tracking-widest mb-2">Anggaran Lunas</h4>
-                    <p class="text-[11px] text-emerald-600 font-bold uppercase tracking-tight opacity-70">Seluruh dana telah dicairkan.</p>
-                </div>
-                @endif
             </div>
         </div>
 
         {{-- RINCIAN ANGGARAN BIAYA (RAB) SECTION --}}
-        <div class="mt-20 pt-16 border-t border-slate-100">
+        <div class="mt-12 pt-12 border-t border-slate-100 max-w-6xl mx-auto">
             <h3 class="text-2xl font-black text-slate-800 mb-8 flex items-center gap-3">
-                <i class="fas fa-table text-{{ $statusColor }}-500"></i>
-                Rincian Anggaran Biaya (RAB)
+                <i class="fas fa-calculator text-blue-500"></i> Rincian Anggaran (RAB)
             </h3>
             
-            @php 
-                $grand_total = 0;
-            @endphp
-            @if(!empty($rab_data))
-                <div class="space-y-12">
+            <div class="space-y-10">
+                @php 
+                    $grand_total = 0;
+                @endphp
+                @if(!empty($rab_data))
                     @foreach($rab_data as $kategori => $items)
                         @php 
                             $subtotal = 0;
@@ -470,6 +286,7 @@
                                         <i class="fas fa-shopping-bag text-base"></i>
                                     </div>
                                     <h4 class="text-base font-black text-slate-800 tracking-tight">{{ $kategori }}</h4>
+                                    <i class="fas fa-comment-dots text-violet-500 text-base cursor-pointer hover:scale-110 transition-transform" title="Lihat catatan"></i>
                                 </div>
                                 <div class="text-right">
                                     <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Subtotal</span>
@@ -529,115 +346,288 @@
                             </div>
                         </div>
                     @endforeach
+                @else
+                    <div class="p-8 text-center text-slate-400 italic bg-white border border-slate-200 rounded-2xl shadow-sm">
+                        Belum ada data anggaran biaya (RAB)
+                    </div>
+                @endif
+
+                {{-- Grand Total --}}
+                <div class="flex justify-between items-center bg-white p-6 rounded-2xl border border-slate-200 shadow-sm max-w-md ml-auto mt-6">
+                    <span class="text-sm font-black text-slate-500 uppercase tracking-wider">Grand Total:</span>
+                    <span class="text-2xl font-black text-blue-600 tracking-tight">{{ formatRupiah($grand_total) }}</span>
                 </div>
-            @else
-                <div class="p-8 text-center text-slate-400 italic bg-white border border-slate-200 rounded-2xl shadow-sm">
-                    Belum ada data anggaran biaya (RAB)
+            </div>
+        </div>
+
+        {{-- Rincian Rancangan, MAK & Persetujuan Section --}}
+        <div class="mt-12 pt-12 border-t border-slate-100 max-w-6xl mx-auto space-y-12">
+            
+            {{-- Section 1: Rincian Rancangan Kegiatan --}}
+            <div class="space-y-6">
+                <h3 class="text-2xl font-black text-slate-800 tracking-tight">Rincian Rancangan Kegiatan</h3>
+                
+                <div class="space-y-6">
+                    {{-- Surat Pengantar --}}
+                    <div class="space-y-2">
+                        <label class="block text-xs font-bold text-slate-700">Surat Pengantar</label>
+                        <div class="relative border border-slate-200 rounded-2xl px-4 py-3 bg-white hover:border-slate-300 transition-all duration-200 flex items-center justify-between">
+                            <span class="absolute -top-2 left-4 bg-white px-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Upload Surat</span>
+                            <div class="text-sm font-semibold text-slate-700 min-h-[1.5rem] mt-1 flex items-center gap-2">
+                                @if(!empty($kegiatan_data['surat_pengantar']))
+                                    <a href="{{ asset('storage/' . $kegiatan_data['surat_pengantar']) }}" target="_blank" class="text-blue-600 hover:underline flex items-center gap-1.5">
+                                        <i class="fas fa-file-pdf text-red-500 text-base"></i>
+                                        Lihat Surat Pengantar
+                                    </a>
+                                @else
+                                    <span class="text-slate-400 italic">Belum ada berkas</span>
+                                @endif
+                            </div>
+                            @if(!empty($kegiatan_data['surat_pengantar']))
+                                <a href="{{ asset('storage/' . $kegiatan_data['surat_pengantar']) }}" download class="text-slate-400 hover:text-slate-600">
+                                    <i class="fas fa-upload text-sm"></i>
+                                </a>
+                            @else
+                                <i class="fas fa-upload text-slate-300 text-sm"></i>
+                            @endif
+                        </div>
+                    </div>
+
+                    {{-- Kurun Waktu Pelaksanaan --}}
+                    <div class="space-y-3">
+                        <span class="text-xs font-bold text-slate-700 block">Kurun Waktu Pelaksanaan</span>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="relative border border-slate-200 rounded-2xl px-4 py-3 bg-white hover:border-slate-300 transition-all duration-200 flex items-center justify-between">
+                                <span class="absolute -top-2 left-4 bg-white px-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tanggal Mulai</span>
+                                <div class="text-xs font-semibold text-slate-700 min-h-[1.5rem] mt-1">
+                                    {{ $kegiatan_data['tanggal_mulai'] ? \Carbon\Carbon::parse($kegiatan_data['tanggal_mulai'])->translatedFormat('d M Y') : '-' }}
+                                </div>
+                                <i class="far fa-calendar-alt text-slate-400 text-sm"></i>
+                            </div>
+                            <div class="relative border border-slate-200 rounded-2xl px-4 py-3 bg-white hover:border-slate-300 transition-all duration-200 flex items-center justify-between">
+                                <span class="absolute -top-2 left-4 bg-white px-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tanggal Selesai</span>
+                                <div class="text-xs font-semibold text-slate-700 min-h-[1.5rem] mt-1">
+                                    {{ $kegiatan_data['tanggal_selesai'] ? \Carbon\Carbon::parse($kegiatan_data['tanggal_selesai'])->translatedFormat('d M Y') : '-' }}
+                                </div>
+                                <i class="far fa-calendar-alt text-slate-400 text-sm"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Section 2: Kode MAK --}}
+            <div class="space-y-6 pt-4 border-t border-slate-100">
+                <h3 class="text-2xl font-black text-slate-800 tracking-tight">Kode Mata Anggaran Kegiatan (MAK)</h3>
+                <div class="w-full">
+                    <div class="relative border border-slate-200 rounded-2xl px-4 py-3 bg-white hover:border-slate-300 transition-all duration-200">
+                        <span class="absolute -top-2 left-4 bg-white px-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Kode MAK</span>
+                        <div class="text-sm font-semibold text-slate-700 min-h-[1.5rem] mt-1">
+                            {{ $kode_mak ?? '-' }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Section 3: RAB & Disbursement Status --}}
+            <div class="space-y-6 pt-4 border-t border-slate-100">
+                <h3 class="text-2xl font-black text-slate-800 tracking-tight">Status Anggaran & Pencairan</h3>
+                <div class="w-full bg-slate-900 rounded-[2.5rem] shadow-2xl shadow-slate-300 overflow-hidden relative group">
+                    <div class="absolute right-0 top-0 w-40 h-40 bg-white/5 rounded-full -mr-20 -mt-20 blur-3xl group-hover:scale-150 transition-transform duration-700"></div>
+                    <div class="p-10 text-white border-b border-white/5">
+                        <span class="text-[10px] font-black uppercase tracking-widest opacity-60 italic font-medium">Anggaran Disetujui</span>
+                        <div class="text-4xl font-black mt-2 tracking-tighter">{{ formatRupiah($anggaran_disetujui) }}</div>
+                    </div>
+                    <div class="p-10 space-y-6 bg-slate-800/50">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <span class="text-[10px] font-black text-emerald-400 uppercase tracking-widest block mb-1">Dicairkan</span>
+                                <span class="text-xl font-black text-white">{{ formatRupiah($jumlah_dicairkan) }}</span>
+                            </div>
+                            <div class="w-12 h-12 rounded-2xl bg-emerald-500/20 flex items-center justify-center text-emerald-400 border border-emerald-500/20">
+                                <i class="fas fa-check-double text-base"></i>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <span class="text-[10px] font-black text-blue-400 uppercase tracking-widest block mb-1">Sisa Dana</span>
+                                <span class="text-xl font-black text-white">{{ formatRupiah($sisa_dana) }}</span>
+                            </div>
+                            <div class="w-12 h-12 rounded-2xl bg-blue-500/20 flex items-center justify-center text-blue-400 border border-blue-500/20">
+                                <i class="fas fa-hand-holding-usd text-base"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-6 bg-slate-900 border-t border-white/5 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400">
+                                <i class="fas fa-fingerprint text-xs"></i>
+                            </div>
+                            <div>
+                                <span class="block text-[8px] font-black text-slate-500 uppercase tracking-widest">KODE MAK</span>
+                                <span class="text-span text-[10px] font-mono font-bold text-blue-200">{{ $kode_mak ?? '-' }}</span>
+                            </div>
+                        </div>
+                        <div class="px-3 py-1 bg-emerald-500/10 rounded-lg text-emerald-400 text-[9px] font-black uppercase tracking-widest border border-emerald-500/20">
+                            <i class="fas fa-check-circle"></i> Terverifikasi
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Section 4: LPJ Status --}}
+            <div class="space-y-6 pt-4 border-t border-slate-100">
+                <h3 class="text-2xl font-black text-slate-800 tracking-tight">Status Laporan Pertanggungjawaban (LPJ)</h3>
+                <div class="w-full bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm relative overflow-hidden group">
+                    <div class="absolute -right-4 -top-4 w-16 h-16 bg-slate-50 rounded-full group-hover:scale-150 transition-transform duration-700"></div>
+                    <div class="flex items-center justify-between gap-4">
+                        <div class="flex-1">
+                            @php
+                                $lpjColor = match(strtolower($lpj_status)) {
+                                    'disetujui' => 'emerald',
+                                    'revisi', 'menunggu verifikasi' => 'amber',
+                                    'belum ada' => 'slate',
+                                    default => 'blue'
+                                };
+                            @endphp
+                            <div class="px-4 py-3 rounded-2xl bg-{{ $lpjColor }}-50 border border-{{ $lpjColor }}-100 flex items-center gap-3 transition-all">
+                                <div class="w-8 h-8 rounded-xl bg-{{ $lpjColor }}-100 flex items-center justify-center text-{{ $lpjColor }}-600">
+                                    <i class="fas fa-{{ strtolower($lpj_status) === 'disetujui' ? 'check-double' : 'clock' }} text-xs"></i>
+                                </div>
+                                <div>
+                                    <span class="block text-[9px] font-black text-{{ $lpjColor }}-600 uppercase tracking-widest">Progress LPJ</span>
+                                    <span class="text-xs font-black text-slate-800">{{ $lpj_status }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @if(strtolower($lpj_status) === 'belum ada')
+                        <p class="text-[9px] text-slate-400 mt-4 font-bold uppercase tracking-tight opacity-70">
+                            <i class="fas fa-exclamation-triangle text-amber-500 mr-1"></i> LPJ belum dibuat oleh pengusul.
+                        </p>
+                    @endif
+                </div>
+            </div>
+
+            {{-- Section 5: Riwayat Pencairan (if any) --}}
+            @if(!empty($riwayat_pencairan))
+                <div class="space-y-6 pt-4 border-t border-slate-100">
+                    <h3 class="text-2xl font-black text-slate-800 tracking-tight">Riwayat Pencairan</h3>
+                    <div class="w-full bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm relative">
+                        <div class="space-y-6 relative before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-100">
+                            @foreach($riwayat_pencairan as $item)
+                            <div class="relative pl-10 group">
+                                <div class="absolute left-0 top-1.5 w-6 h-6 rounded-lg bg-white border-4 border-slate-100 flex items-center justify-center z-10 group-hover:border-blue-500 transition-all duration-300"></div>
+                                <div class="flex justify-between items-start mb-1">
+                                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">{{ fmtDateIndo($item['tanggal_pencairan']) }}</span>
+                                    <span class="px-2 py-0.5 rounded-md bg-blue-50 text-blue-600 text-[9px] font-black uppercase tracking-widest">{{ $item['termin'] }}</span>
+                                </div>
+                                <div class="text-sm font-black text-slate-800">{{ formatRupiah($item['nominal']) }}</div>
+                                @if($item['catatan'])
+                                <div class="mt-2 text-[10px] text-slate-500 italic p-3 bg-slate-50 rounded-xl border border-slate-100">{{ $item['catatan'] }}</div>
+                                @endif
+                            </div>
+                            @endforeach
+                        </div>
+                    </div>
                 </div>
             @endif
 
-            {{-- Grand Total --}}
-            <div class="flex justify-between items-center bg-white p-6 rounded-2xl border border-slate-200 shadow-sm max-w-md ml-auto mt-6">
-                <span class="text-sm font-black text-slate-500 uppercase tracking-wider">Grand Total:</span>
-                <span class="text-2xl font-black text-blue-600 tracking-tight">{{ formatRupiah($grand_total) }}</span>
-            </div>
-        </div>
+            {{-- Section 6: Panel Pencairan --}}
+            @if($boleh_cairkan)
+                <div class="space-y-6 pt-4 border-t border-slate-100">
+                    <h3 class="text-2xl font-black text-slate-800 tracking-tight">Panel Pencairan</h3>
+                    <div class="w-full bg-white rounded-[2.5rem] shadow-xl border border-slate-100 overflow-hidden p-8 lg:p-10 relative">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full -mr-16 -mt-16 z-0"></div>
+                        <div class="relative z-10">
+                            <form id="formPencairan" action="#" method="POST" class="space-y-8 w-full">
+                                @csrf
+                                <input type="hidden" name="kegiatanId" value="{{ $id }}">
+                                <input type="hidden" name="sisa_dana" id="sisa_dana" value="{{ $sisa_dana }}">
+                                <input type="hidden" name="lpj_status" id="lpj_status_val" value="{{ strtolower($lpj_status) }}">
 
-        {{-- RINCIAN RANCANGAN KEGIATAN SECTION --}}
-        <div class="mt-20 pt-16 border-t border-slate-100">
-            <h3 class="text-2xl font-black text-slate-800 mb-8 flex items-center gap-3">
-                <i class="fas fa-file-invoice text-{{ $statusColor }}-500"></i>
-                Rincian Rancangan Kegiatan
-            </h3>
-            
-            <div class="space-y-6">
-                {{-- Surat Pengantar --}}
-                <div class="space-y-2">
-                    <span class="text-xs font-black text-slate-700 block">Surat Pengantar</span>
-                    <div class="relative border border-slate-200 rounded-2xl px-4 py-3.5 bg-white flex items-center justify-between hover:border-slate-300 transition-all duration-200">
-                        <span class="absolute -top-2 left-4 bg-white px-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Upload Surat</span>
-                        <div class="text-sm font-semibold text-slate-700 min-h-[1.5rem] mt-0.5">
-                            @if(!empty($kegiatan_data['surat_pengantar']))
-                                <a href="{{ asset('storage/' . $kegiatan_data['surat_pengantar']) }}" target="_blank" class="text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-2">
-                                    <i class="fas fa-file-alt"></i> {{ basename($kegiatan_data['surat_pengantar']) }}
-                                </a>
-                            @else
-                                <span class="text-slate-400 italic">Belum diunggah</span>
-                            @endif
+                                <div class="space-y-5">
+                                    <div class="flex items-center justify-between">
+                                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tahapan Pencairan</label>
+                                        <button type="button" onclick="addStage()" class="px-4 py-2 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition shadow-lg shadow-blue-100">
+                                            <i class="fas fa-plus mr-1"></i> Tambah
+                                        </button>
+                                    </div>
+                                    
+                                    <div id="stages-wrapper" class="space-y-4">
+                                        <!-- Dynamic inputs -->
+                                    </div>
+
+                                    <div class="p-6 bg-slate-900 rounded-2xl text-white shadow-xl shadow-slate-200 relative overflow-hidden">
+                                        <div class="absolute right-0 bottom-0 w-20 h-20 bg-white/5 rounded-full -mr-10 -mb-10 blur-xl"></div>
+                                        <div class="flex justify-between items-center relative z-10">
+                                            <span class="text-[10px] font-black uppercase tracking-widest opacity-60">Total Input Nominal</span>
+                                            <span id="total-nominal" class="text-xl font-black">Rp 0</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                @if($jumlah_dicairkan > 0 && strtolower($lpj_status) !== 'disetujui')
+                                <!-- Warning LPJ -->
+                                <div class="p-5 bg-rose-50 border border-rose-100 rounded-2xl animate-pulse">
+                                    <div class="flex items-start gap-3">
+                                        <div class="w-8 h-8 rounded-xl bg-rose-100 flex items-center justify-center text-rose-600 flex-shrink-0">
+                                            <i class="fas fa-lock text-xs"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-[11px] font-black text-rose-800 uppercase tracking-widest">Termin 2 Dikunci</h4>
+                                            <p class="text-[10px] text-rose-600 font-bold mt-1 leading-relaxed">Sisa dana 50% hanya dapat dicairkan setelah LPJ disetujui. Status saat ini: <span class="uppercase">{{ $lpj_status }}</span></p>
+                                        </div>
+                                    </div>
+                                </div>
+                                @endif
+
+                                <div class="space-y-3">
+                                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Catatan Bendahara</label>
+                                    <div class="relative border border-slate-200 rounded-2xl px-4 py-3 bg-white hover:border-slate-300 transition-all duration-200">
+                                        <span class="absolute -top-2 left-4 bg-white px-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Catatan / Komentar Bendahara</span>
+                                        <textarea name="catatan" rows="3" placeholder="Tambahkan instruksi khusus pencairan..." 
+                                            class="w-full mt-2 bg-transparent outline-none text-slate-600 font-semibold text-xs leading-relaxed border-none focus:ring-0 p-0 resize-none"></textarea>
+                                    </div>
+                                </div>
+
+                                <div class="pt-4">
+                                    @php
+                                        $isDisabled = ($jumlah_dicairkan > 0 && strtolower($lpj_status) !== 'disetujui');
+                                    @endphp
+                                    <button type="button" onclick="submitPencairan()" 
+                                        class="w-full py-5 {{ $isDisabled ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none' : 'bg-blue-600 text-white shadow-2xl shadow-blue-200 hover:bg-blue-700 hover:-translate-y-1' }} rounded-[1.5rem] font-black text-[11px] uppercase tracking-widest transition-all flex items-center justify-center gap-3 group"
+                                        {{ $isDisabled ? 'disabled' : '' }}>
+                                        <span>{{ $isDisabled ? 'Pencairan Terkunci' : 'Proses Pencairan Dana' }}</span>
+                                        <i class="fas fa-{{ $isDisabled ? 'lock' : 'paper-plane' }} {{ $isDisabled ? '' : 'group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform' }}"></i>
+                                    </button>
+                                </div>
+                            </form>
                         </div>
-                        <i class="fas fa-upload text-slate-400"></i>
                     </div>
                 </div>
-
-                {{-- Kurun Waktu Pelaksanaan --}}
-                <div class="space-y-4 pt-2">
-                    <span class="text-xs font-black text-slate-700 block">Kurun Waktu Pelaksanaan</span>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {{-- Tanggal Mulai --}}
-                        <div class="relative border border-slate-200 rounded-2xl px-4 py-3.5 bg-white flex items-center justify-between hover:border-slate-300 transition-all duration-200">
-                            <span class="absolute -top-2 left-4 bg-white px-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tanggal Mulai</span>
-                            <div class="text-sm font-semibold text-slate-700 mt-0.5">
-                                {{ $kegiatan_data['tanggal_mulai'] ? \Carbon\Carbon::parse($kegiatan_data['tanggal_mulai'])->translatedFormat('d F Y') : '-' }}
-                            </div>
-                            <i class="far fa-calendar-alt text-slate-400"></i>
+            @else
+                <div class="space-y-6 pt-4 border-t border-slate-100">
+                    <h3 class="text-2xl font-black text-slate-800 tracking-tight">Panel Pencairan</h3>
+                    <div class="w-full bg-emerald-50 border border-emerald-100 rounded-[2.5rem] p-10 text-center relative overflow-hidden">
+                        <div class="absolute -right-6 -bottom-6 w-32 h-32 bg-emerald-100 rounded-full blur-2xl"></div>
+                        <div class="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6 text-emerald-600 shadow-xl shadow-emerald-100">
+                            <i class="fas fa-check-circle text-3xl"></i>
                         </div>
-
-                        {{-- Tanggal Selesai --}}
-                        <div class="relative border border-slate-200 rounded-2xl px-4 py-3.5 bg-white flex items-center justify-between hover:border-slate-300 transition-all duration-200">
-                            <span class="absolute -top-2 left-4 bg-white px-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tanggal Selesai</span>
-                            <div class="text-sm font-semibold text-slate-700 mt-0.5">
-                                {{ $kegiatan_data['tanggal_selesai'] ? \Carbon\Carbon::parse($kegiatan_data['tanggal_selesai'])->translatedFormat('d F Y') : '-' }}
-                            </div>
-                            <i class="far fa-calendar-alt text-slate-400"></i>
-                        </div>
+                        <h4 class="text-base font-black text-emerald-800 uppercase tracking-widest mb-2">Anggaran Lunas</h4>
+                        <p class="text-[11px] text-emerald-600 font-bold uppercase tracking-tight opacity-70">Seluruh dana telah dicairkan.</p>
                     </div>
                 </div>
-            </div>
-        </div>
+            @endif
 
-        {{-- Kode MAK Section --}}
-        @if(!empty($kode_mak) && $kode_mak !== '-')
-        <div class="mt-20 pt-16 border-t border-slate-100">
-            <h3 class="text-xl font-black text-slate-800 mb-8 flex items-center gap-3">
-                <i class="fas fa-fingerprint text-{{ $statusColor }}-500"></i>
-                Kode Mata Anggaran Kegiatan (MAK)
-            </h3>
-            <div class="relative max-w-2xl">
-                <div class="flex items-center gap-6 p-8 bg-{{ $statusColor }}-50 rounded-[2rem] border-2 border-{{ $statusColor }}-200 shadow-sm animate-fade-in group hover:shadow-xl hover:shadow-{{ $statusColor }}-100/50 transition-all duration-500">
-                    <div class="w-16 h-16 rounded-[1.5rem] bg-{{ $statusColor }}-100 flex items-center justify-center text-{{ $statusColor }}-600 shadow-inner group-hover:scale-110 transition-transform">
-                        <i class="fas fa-key text-2xl"></i>
-                    </div>
-                    <div class="flex-1">
-                        <span class="block text-[10px] font-black text-{{ $statusColor }}-600 uppercase tracking-[0.3em] mb-2">KODE ANGGARAN TERVERIFIKASI</span>
-                        <span class="text-2xl font-mono font-black text-slate-800 tracking-wider">{{ $kode_mak }}</span>
-                    </div>
-                    <div class="hidden md:flex items-center gap-2 px-4 py-2 bg-white rounded-xl text-{{ $statusColor }}-600 text-[10px] font-black uppercase tracking-widest border border-{{ $statusColor }}-200 shadow-sm">
-                        <i class="fas fa-check-circle"></i> Aktif
-                    </div>
-                </div>
-                <p class="text-[10px] text-slate-400 mt-6 flex items-center gap-2 italic font-medium">
-                    <i class="fas fa-info-circle text-blue-500"></i>
-                    Kode MAK digunakan sebagai referensi utama dalam setiap transaksi pencairan dana pada sistem keuangan.
-                </p>
-            </div>
         </div>
-        @endif
 
     </section>
 </main>
 
 <style>
-    @keyframes slide-up {
-        from { opacity: 0; transform: translateY(30px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes fade-in {
-        from { opacity: 0; }
-        to { opacity: 1; }
-    }
-    .animate-slide-up { animation: slide-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-    .animate-fade-in { animation: fade-in 1s ease-out forwards; }
+    @keyframes fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .animate-fade-in { animation: fade-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 </style>
 @endsection
 
