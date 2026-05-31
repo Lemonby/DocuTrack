@@ -134,7 +134,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function formatDate(d) {
         if (!d) return '-';
-        return new Date(d).toLocaleDateString('id-ID', {day:'2-digit', month:'short', year:'numeric'});
+        const dateStr = typeof d === 'string' ? d.split('T')[0].replace(/-/g, '/') : d;
+        return new Date(dateStr).toLocaleDateString('id-ID', {day:'2-digit', month:'short', year:'numeric'});
     }
 
     function getStatusInfo(s) {
@@ -168,7 +169,14 @@ document.addEventListener('DOMContentLoaded', () => {
     function getDeadlineHtml(item, status_raw) {
         const d = item.tenggatLpj;
         if (status_raw === 'menunggu_upload' && d) {
-            const diff = Math.ceil((new Date(d) - new Date()) / 86400000);
+            const dateStr = typeof d === 'string' ? d.split('T')[0].replace(/-/g, '/') : d;
+            const targetDate = new Date(dateStr);
+            targetDate.setHours(0, 0, 0, 0);
+            
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const diff = Math.round((targetDate - today) / 86400000);
             let cls, icon, txt;
             if (diff < 0) { cls = 'bg-red-50 border-red-200 text-red-700'; icon = 'fa-exclamation-triangle'; txt = `Terlewat ${Math.abs(diff)} hari`; }
             else if (diff === 0) { cls = 'bg-red-50 border-red-200 text-red-700'; icon = 'fa-exclamation-circle'; txt = 'Hari Ini!'; }

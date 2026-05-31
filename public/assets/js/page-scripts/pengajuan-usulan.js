@@ -420,7 +420,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ===================================
     // LOGIKA MODAL INDIKATOR KINERJA UTAMA
     // ===================================
-     const allIndicators = ["Mendapat Pekerjaan", "Melanjutkan studi", "Menjadi Wiraswasta", "Kegiatan luar prodi", "Prestasi", "Pengabdian Masyarakat"];
+     const allIndicators = window.allIndicators || ["Mendapat Pekerjaan", "Melanjutkan studi", "Menjadi Wiraswasta", "Kegiatan luar prodi", "Prestasi", "Pengabdian Masyarakat"];
      let selectedIndicators = new Set();
      const openBtn = document.getElementById('open-indicator-modal-btn');
      const closeBtn = document.getElementById('close-indicator-modal-btn');

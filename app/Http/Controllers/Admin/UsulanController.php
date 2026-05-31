@@ -26,7 +26,8 @@ class UsulanController extends Controller
             ];
         })->toArray();
 
-        return view('admin.usulan.index', compact('list_usulan'));
+        $all_ikus = \App\Models\Iku::orderBy('id', 'asc')->get();
+        return view('admin.usulan.index', compact('list_usulan', 'all_ikus'));
     }
 
     public function show($id)
@@ -182,7 +183,8 @@ class UsulanController extends Controller
             }
         }
 
-        return view('admin.usulan.edit', compact('id', 'status', 'iku_data', 'rab_data', 'kegiatan_data', 'tahapan_pelaksanaan', 'indikator_keberhasilan', 'catatan_revisi', 'kegiatan'));
+        $all_ikus = \App\Models\Iku::orderBy('id', 'asc')->get();
+        return view('admin.usulan.edit', compact('id', 'status', 'iku_data', 'rab_data', 'kegiatan_data', 'tahapan_pelaksanaan', 'indikator_keberhasilan', 'catatan_revisi', 'kegiatan', 'all_ikus'));
     }
 
     public function store(Request $request)

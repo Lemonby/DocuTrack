@@ -317,5 +317,8 @@
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    window.allIndicators = {!! json_encode($all_ikus->pluck('indikator_kinerja')->toArray()) !!};
+</script>
 <script src="{{ asset('assets/js/admin/pengajuan-usulan.js') }}"></script>
 @endpush

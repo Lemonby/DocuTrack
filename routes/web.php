@@ -37,6 +37,7 @@ use App\Http\Controllers\Wadir\RiwayatController as WadirRiwayatController;
 use App\Http\Controllers\Wadir\MonitoringController as WadirMonitoringController;
 use App\Http\Controllers\Wadir\AkunController as WadirAkunController;
 use App\Http\Controllers\Direktur\DirekturController;
+use App\Http\Controllers\Direktur\IntegritasController;
 use App\Http\Controllers\Direktur\MonitoringController as DirekturMonitoringController;
 use App\Http\Controllers\Direktur\AkunController as DirekturAkunController;
 use App\Http\Controllers\SuperAdmin\SuperAdminController;
@@ -171,6 +172,7 @@ Route::middleware([CheckRole::class])->group(function () {
         Route::get('/dashboard/api/dana-per-jurusan', [DirekturController::class, 'getDanaPerJurusan'])->name('direktur.dashboard.api.dana');
         Route::get('/monitoring', [DirekturMonitoringController::class, 'index'])->name('direktur.monitoring.index');
         Route::get('/monitoring/data', [DirekturMonitoringController::class, 'getData'])->name('direktur.monitoring.data');
+        Route::get('/integritas', [IntegritasController::class, 'index'])->name('direktur.integritas.index');
         Route::get('/akun', [DirekturAkunController::class, 'index'])->name('direktur.akun.index');
         Route::patch('/akun/update', [DirekturAkunController::class, 'update'])->name('direktur.akun.update');
         Route::patch('/akun/password', [DirekturAkunController::class, 'changePassword'])->name('direktur.akun.password');

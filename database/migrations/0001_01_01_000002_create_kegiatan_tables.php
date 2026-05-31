@@ -47,7 +47,6 @@ return new class extends Migration
         Schema::create('kaks', function (Blueprint $table) {
             $table->id('kak_id');
             $table->unsignedBigInteger('kegiatan_id');
-            $table->string('iku', 200)->nullable();
             $table->text('penerima_manfaat')->nullable();
             $table->text('gambaran_umum')->nullable();
             $table->text('metode_pelaksanaan')->nullable();

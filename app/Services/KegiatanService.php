@@ -53,12 +53,27 @@ class KegiatanService
 
             $kak = Kak::create([
                 'kegiatan_id' => $kegiatan->kegiatan_id,
-                'iku' => $data['indikator_kinerja'] ?? 'Belum pilih',
                 'gambaran_umum' => $data['gambaran_umum'] ?? '',
                 'penerima_manfaat' => $data['penerima_manfaat'] ?? '',
                 'metode_pelaksanaan' => $data['metode_pelaksanaan'] ?? '',
                 'tgl_pembuatan' => now()->toDateString(),
             ]);
+
+            // Sync dynamic IKUs
+            $ikuNames = array_filter(array_map('trim', explode(',', $data['indikator_kinerja'] ?? '')));
+            $ikuIds = [];
+            foreach ($ikuNames as $idx => $name) {
+                $iku = \App\Models\Iku::firstOrCreate(
+                    ['indikator_kinerja' => $name],
+                    [
+                        'kode_iku' => 'IKU_' . strtoupper(uniqid()) . '_' . ($idx + 1),
+                        'deskripsi' => $name,
+                        'tahun' => 2020
+                    ]
+                );
+                $ikuIds[] = $iku->id;
+            }
+            $kak->ikus()->sync($ikuIds);
 
             // Tahapan pelaksanaan
             foreach (($data['tahapan'] ?? []) as $tahap) {
@@ -206,13 +221,28 @@ class KegiatanService
             $kak = Kak::updateOrCreate(
                 ['kegiatan_id' => $kegiatan->kegiatan_id],
                 [
-                    'iku' => $data['indikator_kinerja'] ?? 'Belum pilih',
                     'gambaran_umum' => $data['gambaran_umum'] ?? '',
                     'penerima_manfaat' => $data['penerima_manfaat'] ?? '',
                     'metode_pelaksanaan' => $data['metode_pelaksanaan'] ?? '',
                     'tgl_pembuatan' => now()->toDateString(),
                 ]
             );
+
+            // Sync dynamic IKUs
+            $ikuNames = array_filter(array_map('trim', explode(',', $data['indikator_kinerja'] ?? '')));
+            $ikuIds = [];
+            foreach ($ikuNames as $idx => $name) {
+                $iku = \App\Models\Iku::firstOrCreate(
+                    ['indikator_kinerja' => $name],
+                    [
+                        'kode_iku' => 'IKU_' . strtoupper(uniqid()) . '_' . ($idx + 1),
+                        'deskripsi' => $name,
+                        'tahun' => 2020
+                    ]
+                );
+                $ikuIds[] = $iku->id;
+            }
+            $kak->ikus()->sync($ikuIds);
 
             // Update Tahapan pelaksanaan: clear existing and re-insert
             TahapanPelaksanaan::where('kak_id', $kak->kak_id)->delete();

@@ -88,5 +88,69 @@ class MasterDataSeeder extends Seeder
             ['kategori_rab_id' => 5, 'nama_kategori' => 'Belanja Perjalanan'],
             ['kategori_rab_id' => 6, 'nama_kategori' => 'Belanja Jasa'],
         ]);
+
+        // Seed IKUs
+        DB::table('ikus')->insert([
+            [
+                'kode_iku' => 'IKU_1',
+                'indikator_kinerja' => 'Mendapat Pekerjaan',
+                'deskripsi' => 'Mendapat Pekerjaan',
+                'target' => '80%',
+                'realisasi' => '85%',
+                'tahun' => 2020,
+                'created_at' => now(),
+                'updated_at' => now()
+            ],
+            [
+                'kode_iku' => 'IKU_2',
+                'indikator_kinerja' => 'Melanjutkan studi',
+                'deskripsi' => 'Melanjutkan studi',
+                'target' => '50%',
+                'realisasi' => '55%',
+                'tahun' => 2020,
+                'created_at' => now(),
+                'updated_at' => now()
+            ],
+            [
+                'kode_iku' => 'IKU_3',
+                'indikator_kinerja' => 'Menjadi Wiraswasta',
+                'deskripsi' => 'Menjadi Wiraswasta',
+                'target' => '60%',
+                'realisasi' => '62%',
+                'tahun' => 2020,
+                'created_at' => now(),
+                'updated_at' => now()
+            ],
+            [
+                'kode_iku' => 'IKU_4',
+                'indikator_kinerja' => 'Kegiatan luar prodi',
+                'deskripsi' => 'Kegiatan luar prodi',
+                'target' => '70%',
+                'realisasi' => '75%',
+                'tahun' => 2020,
+                'created_at' => now(),
+                'updated_at' => now()
+            ],
+            [
+                'kode_iku' => 'IKU_5',
+                'indikator_kinerja' => 'Prestasi',
+                'deskripsi' => 'Prestasi',
+                'target' => '90%',
+                'realisasi' => '92%',
+                'tahun' => 2020,
+                'created_at' => now(),
+                'updated_at' => now()
+            ],
+            [
+                'kode_iku' => 'IKU_6',
+                'indikator_kinerja' => 'Pengabdian Masyarakat',
+                'deskripsi' => 'Pengabdian Masyarakat',
+                'target' => '80%',
+                'realisasi' => '85%',
+                'tahun' => 2020,
+                'created_at' => now(),
+                'updated_at' => now()
+            ],
+        ]);
     }
 }

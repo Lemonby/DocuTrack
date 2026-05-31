@@ -341,7 +341,8 @@ window.dataLPJ = @json($list_lpj ?? []);
 
     function fmtDate(s) {
         if (!s) return '-';
-        return new Date(s).toLocaleDateString('id-ID', {day:'2-digit', month:'short', year:'numeric'});
+        const dateStr = typeof s === 'string' ? s.split('T')[0].replace(/-/g, '/') : s;
+        return new Date(dateStr).toLocaleDateString('id-ID', {day:'2-digit', month:'short', year:'numeric'});
     }
 
     function statusBadge(status) {

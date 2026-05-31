@@ -36,7 +36,7 @@ class LpjController extends Controller
                 'nama_mahasiswa' => $kegiatan->user->nama ?? $kegiatan->pemilik_kegiatan,
                 'jurusan' => $kegiatan->jurusan_penyelenggara,
                 'tanggal_pengajuan' => $kegiatan->lpj ? ($kegiatan->lpj->submitted_at ?? $kegiatan->lpj->created_at ?? $kegiatan->created_at) : $kegiatan->created_at,
-                'tenggatLpj' => $kegiatan->tanggal_selesai ? $kegiatan->tanggal_selesai->copy()->addDays(14) : now()->addDays(14),
+                'tenggatLpj' => $kegiatan->lpj && $kegiatan->lpj->tenggat_lpj ? $kegiatan->lpj->tenggat_lpj->toDateString() : ($kegiatan->tanggal_selesai ? $kegiatan->tanggal_selesai->copy()->addDays(14)->toDateString() : now()->addDays(14)->toDateString()),
                 'status' => $statusLabel
             ];
         })->toArray();

@@ -42,7 +42,7 @@ class PencairanService
                 }
 
                 $kegiatan->update([
-                    'tanggal_pencairan' => $data['tahapan'][0]['tanggal'],
+                    'tanggal_pencairan' => now()->toDateString(),
                     'jumlah_dicairkan' => $totalDicairkan,
                     'metode_pencairan' => 'bertahap',
                     'catatan_bendahara' => $catatan,
@@ -50,13 +50,13 @@ class PencairanService
                     'posisi_id' => WorkflowService::POSITION_ADMIN,
                 ]);
 
-                $tanggalTerakhir = end($data['tahapan'])['tanggal'];
+                $tanggalTerakhir = now()->toDateString();
             } else {
                 $jumlah = (float) ($data['jumlah'] ?? 0);
                 $tanggalCair = $data['tanggal'] ?? now()->toDateString();
 
                 $kegiatan->update([
-                    'tanggal_pencairan' => $tanggalCair,
+                    'tanggal_pencairan' => now()->toDateString(),
                     'jumlah_dicairkan' => $jumlah,
                     'metode_pencairan' => 'penuh',
                     'catatan_bendahara' => $catatan,
@@ -73,7 +73,7 @@ class PencairanService
                     'created_by' => $userId,
                 ]);
 
-                $tanggalTerakhir = $tanggalCair;
+                $tanggalTerakhir = now()->toDateString();
             }
 
             // Record history
@@ -96,20 +96,12 @@ class PencairanService
     }
 
     /**
-     * Calculate LPJ deadline: 14 working days from start date.
+     * Calculate LPJ deadline: 14 calendar days from start date.
      */
     private function calculateLpjDeadline(string $startDate): string
     {
         $date = new \DateTime($startDate);
-        $remaining = 14;
-
-        while ($remaining > 0) {
-            $date->modify('+1 day');
-            if ((int) $date->format('N') <= 5) {
-                $remaining--;
-            }
-        }
-
+        $date->modify('+14 days');
         return $date->format('Y-m-d');
     }
 }

@@ -35,8 +35,8 @@ return new class extends Migration
             $table->id('lpj_id');
             $table->unsignedBigInteger('kegiatan_id')->unique();
             $table->decimal('grand_total_realisasi', 15, 2)->nullable();
-            $table->timestamp('submitted_at')->nullable();
-            $table->timestamp('approved_at')->nullable();
+            $table->date('submitted_at')->nullable();
+            $table->date('approved_at')->nullable();
             $table->date('tenggat_lpj')->nullable();
             $table->unsignedBigInteger('status_id')->default(1);
             $table->text('komentar_penolakan')->nullable();

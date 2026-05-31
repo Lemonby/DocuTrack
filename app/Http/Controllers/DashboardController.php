@@ -118,7 +118,7 @@ class DashboardController extends Controller
                 'nama_mahasiswa' => $k->user->nama ?? $k->pemilik_kegiatan,
                 'jurusan' => $k->jurusan_penyelenggara,
                 'tanggal_pengajuan' => $k->lpj->submitted_at ?? $k->created_at,
-                'tenggatLpj' => $k->lpj->tenggat_lpj ?? ($k->tanggal_selesai ? $k->tanggal_selesai->copy()->addDays(14) : now()->addDays(14)),
+                'tenggatLpj' => $k->lpj && $k->lpj->tenggat_lpj ? $k->lpj->tenggat_lpj->toDateString() : ($k->tanggal_selesai ? $k->tanggal_selesai->copy()->addDays(14)->toDateString() : now()->addDays(14)->toDateString()),
                 'status' => $statusLabel
             ];
         })->toArray();

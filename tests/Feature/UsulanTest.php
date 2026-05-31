@@ -242,13 +242,13 @@ class UsulanTest extends TestCase
         // Next workflow position is self::POSITION_ADMIN (1) (goes back to Admin to fill details)
         $this->assertEquals(\App\Services\WorkflowService::POSITION_ADMIN, $kegiatan->posisi_id);
         
-        // Status remains self::STATUS_DISETUJUI (3) when moving along
-        $this->assertEquals(\App\Services\WorkflowService::STATUS_DISETUJUI, $kegiatan->status_utama_id);
+        // Status becomes self::STATUS_TELAH_DIVERIFIKASI (7) when moving along
+        $this->assertEquals(\App\Services\WorkflowService::STATUS_TELAH_DIVERIFIKASI, $kegiatan->status_utama_id);
 
         // 6. Assert progress history was saved with the verifikator's user ID
         $this->assertDatabaseHas('progress_histories', [
             'kegiatan_id' => $kegiatan->kegiatan_id,
-            'status_id' => \App\Services\WorkflowService::STATUS_DISETUJUI,
+            'status_id' => \App\Services\WorkflowService::STATUS_TELAH_DIVERIFIKASI,
             'changed_by_user_id' => $verifikator->user_id
         ]);
 
@@ -450,10 +450,11 @@ class UsulanTest extends TestCase
 
         $this->assertDatabaseHas('kaks', [
             'kegiatan_id' => $kegiatan->kegiatan_id,
-            'iku' => 'Meningkatkan IKU 2',
             'gambaran_umum' => 'Gambaran akhir yang jelas sekali.',
             'metode_pelaksanaan' => 'Hybrid'
         ]);
+
+        $this->assertEquals('Meningkatkan IKU 2', $kegiatan->kak->iku);
 
         // Assert old RAB was deleted and new RAB was created
         $this->assertDatabaseMissing('rabs', [

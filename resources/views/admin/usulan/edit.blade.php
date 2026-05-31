@@ -350,6 +350,7 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     // Initialize global data for pengajuan-usulan.js
+    window.allIndicators = {!! json_encode($all_ikus->pluck('indikator_kinerja')->toArray()) !!};
     window.initialTahapanData = {!! isset($tahapan_pelaksanaan) ? json_encode($tahapan_pelaksanaan) : 'null' !!};
     window.initialIndikatorData = {!! isset($indikator_keberhasilan) ? json_encode($indikator_keberhasilan) : 'null' !!};
     window.initialIkuData = {!! isset($iku_data) ? json_encode($iku_data) : 'null' !!};

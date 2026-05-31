@@ -211,6 +211,12 @@ $currentRoute = request()->path();
                             <i class="fas fa-desktop text-xs xl:text-sm"></i> Monitoring
                         </a>
                     </li>
+                    <li>
+                        <a href="{{ route('direktur.integritas.index') }}"
+                        class="flex items-center gap-2 px-3 xl:px-4 py-2 rounded-full transition-colors text-sm xl:text-base whitespace-nowrap {{ str_contains($currentRoute, 'integritas') ? 'bg-white/20 font-semibold' : 'hover:bg-white/10' }}">
+                            <i class="fas fa-medal text-xs xl:text-sm"></i> Integritas Jurusan
+                        </a>
+                    </li>
                     @endif
 
 
@@ -444,6 +450,11 @@ $currentRoute = request()->path();
                 <li>
                     <a href="{{ route('direktur.monitoring.index') }}" class="flex items-center gap-3 px-4 py-3 transition-colors {{ str_contains($currentRoute, 'monitoring') ? 'bg-white/20' : '' }}">
                         <i class="fas fa-desktop text-base w-5"></i><span class="text-sm">Monitoring</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('direktur.integritas.index') }}" class="flex items-center gap-3 px-4 py-3 transition-colors {{ str_contains($currentRoute, 'integritas') ? 'bg-white/20' : '' }}">
+                        <i class="fas fa-medal text-base w-5"></i><span class="text-sm">Integritas Jurusan</span>
                     </a>
                 </li>
                 @endif

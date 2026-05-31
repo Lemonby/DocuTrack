@@ -19,8 +19,8 @@ class Lpj extends Model
     {
         return [
             'grand_total_realisasi' => 'decimal:2',
-            'submitted_at' => 'datetime',
-            'approved_at' => 'datetime',
+            'submitted_at' => 'date',
+            'approved_at' => 'date',
             'tenggat_lpj' => 'date',
             'realisasi_tanggal_mulai' => 'date',
             'realisasi_tanggal_selesai' => 'date',

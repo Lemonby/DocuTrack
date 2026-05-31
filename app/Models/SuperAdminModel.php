@@ -383,13 +383,13 @@ class SuperAdminModel
     public function getAllIKU(): array
     {
         // Check if table exists
-        $checkTable = mysqli_query($this->db, "SHOW TABLES LIKE 'tbl_iku'");
+        $checkTable = mysqli_query($this->db, "SHOW TABLES LIKE 'ikus'");
 
         if (mysqli_num_rows($checkTable) == 0) {
             return [];
         }
 
-        $query = "SELECT id, indikator_kinerja as nama, deskripsi FROM tbl_iku ORDER BY created_at DESC";
+        $query = "SELECT id, indikator_kinerja as nama, deskripsi FROM ikus ORDER BY created_at DESC";
         $result = mysqli_query($this->db, $query);
         $data = [];
 
@@ -404,7 +404,7 @@ class SuperAdminModel
 
     public function createIKU(string $nama, string $deskripsi): bool
     {
-        $query = "INSERT INTO tbl_iku (indikator_kinerja, deskripsi) VALUES (?, ?)";
+        $query = "INSERT INTO ikus (indikator_kinerja, deskripsi, created_at, updated_at) VALUES (?, ?, NOW(), NOW())";
         $stmt = mysqli_prepare($this->db, $query);
         mysqli_stmt_bind_param($stmt, "ss", $nama, $deskripsi);
         return mysqli_stmt_execute($stmt);
@@ -412,7 +412,7 @@ class SuperAdminModel
 
     public function updateIKU(int $id, string $nama, string $deskripsi): bool
     {
-        $query = "UPDATE tbl_iku SET indikator_kinerja = ?, deskripsi = ? WHERE id = ?";
+        $query = "UPDATE ikus SET indikator_kinerja = ?, deskripsi = ?, updated_at = NOW() WHERE id = ?";
         $stmt = mysqli_prepare($this->db, $query);
         mysqli_stmt_bind_param($stmt, "ssi", $nama, $deskripsi, $id);
         return mysqli_stmt_execute($stmt);
@@ -420,7 +420,7 @@ class SuperAdminModel
 
     public function deleteIKU(int $id): bool
     {
-        $query = "DELETE FROM tbl_iku WHERE id = ?";
+        $query = "DELETE FROM ikus WHERE id = ?";
         $stmt = mysqli_prepare($this->db, $query);
         mysqli_stmt_bind_param($stmt, "i", $id);
         return mysqli_stmt_execute($stmt);

@@ -646,6 +646,8 @@
         if (stageCount >= 5) return;
         stageCount++;
         
+        const todayStr = new Date().toISOString().split('T')[0];
+        
         const wrapper = document.getElementById('stages-wrapper');
         const div = document.createElement('div');
         div.className = 'p-5 bg-white border border-slate-100 rounded-[1.5rem] shadow-sm relative animate-fade-in group/stage hover:border-blue-200 transition-all';
@@ -661,7 +663,7 @@
                 <div class="grid grid-cols-2 gap-4">
                     <div class="space-y-1.5">
                         <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Tgl Estimasi</label>
-                        <input type="date" name="tanggalTahapan[]" class="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold outline-none focus:border-blue-500 transition-all" required>
+                        <input type="date" name="tanggalTahapan[]" value="${todayStr}" class="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold outline-none focus:border-blue-500 transition-all" required>
                     </div>
                     <div class="space-y-1.5">
                         <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Keterangan Termin</label>

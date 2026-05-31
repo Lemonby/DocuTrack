@@ -52,6 +52,16 @@ return new class extends Migration
             $table->timestamps();
         });
 
+        Schema::create('kak_iku', function (Blueprint $table) {
+            $table->unsignedBigInteger('kak_id');
+            $table->unsignedBigInteger('iku_id');
+
+            $table->foreign('kak_id')->references('kak_id')->on('kaks')->cascadeOnDelete();
+            $table->foreign('iku_id')->references('id')->on('ikus')->cascadeOnDelete();
+
+            $table->primary(['kak_id', 'iku_id']);
+        });
+
         Schema::create('ai_log_summaries', function (Blueprint $table) {
             $table->id();
             $table->text('summary_text');
@@ -72,6 +82,7 @@ return new class extends Migration
 
     public function down(): void
     {
+        Schema::dropIfExists('kak_iku');
         Schema::dropIfExists('ai_security_alerts');
         Schema::dropIfExists('ai_log_summaries');
         Schema::dropIfExists('ikus');
