@@ -25,12 +25,14 @@ use App\Http\Controllers\API\PPK\DashboardController as PPKDashboard;
 use App\Http\Controllers\API\PPK\AkunController as PPKAkun;
 use App\Http\Controllers\API\PPK\TelaahController as PPKTelaah;
 use App\Http\Controllers\API\PPK\MonitoringController as PPKMonitoring;
+use App\Http\Controllers\API\PPK\RiwayatController as PPKRiwayat;
 
 // Wadir
 use App\Http\Controllers\API\Wadir\DashboardController as WadirDashboard;
 use App\Http\Controllers\API\Wadir\AkunController as WadirAkun;
 use App\Http\Controllers\API\Wadir\TelaahController as WadirTelaah;
 use App\Http\Controllers\API\Wadir\MonitoringController as WadirMonitoring;
+use App\Http\Controllers\API\Wadir\RiwayatController as WadirRiwayat;
 
 // Bendahara
 use App\Http\Controllers\API\Bendahara\DashboardController as BendaharaDashboard;
@@ -51,6 +53,7 @@ use App\Http\Controllers\API\SuperAdmin\AiMonitoringController;
 use App\Http\Controllers\API\Direktur\DashboardController as DirekturDashboard;
 use App\Http\Controllers\API\Direktur\AkunController as DirekturAkun;
 use App\Http\Controllers\API\Direktur\MonitoringController as DirekturMonitoring;
+use App\Http\Controllers\API\Direktur\IntegritasController as DirekturIntegritas;
 
 /*
 |--------------------------------------------------------------------------
@@ -61,6 +64,12 @@ use App\Http\Controllers\API\Direktur\MonitoringController as DirekturMonitoring
 Route::prefix('v1')->group(function () {
 
     // === Public (unauthenticated) ===
+    Route::get('/', fn () => response()->json([
+        'success' => true,
+        'message' => 'Welcome to DocuTrack API v1',
+        'status' => 'online'
+    ]));
+
     Route::post('/captcha', [AuthController::class, 'captcha']);
     Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
 
@@ -109,7 +118,9 @@ Route::prefix('v1')->group(function () {
                 Route::get('/', [PengajuanUsulanController::class, 'index']);
                 Route::post('/', [PengajuanUsulanController::class, 'store']);
                 Route::get('/{id}', [PengajuanUsulanController::class, 'show']);
+                Route::put('/{id}', [PengajuanUsulanController::class, 'update']);
                 Route::delete('/{id}', [PengajuanUsulanController::class, 'destroy']);
+                Route::post('/{id}/selesai', [PengajuanUsulanController::class, 'selesai']);
             });
 
             // Pengajuan Kegiatan (rincian)
@@ -170,6 +181,7 @@ Route::prefix('v1')->group(function () {
             });
 
             Route::get('/monitoring', [PPKMonitoring::class, 'index']);
+            Route::get('/riwayat', [PPKRiwayat::class, 'index']);
         });
 
         // ===============================
@@ -189,6 +201,7 @@ Route::prefix('v1')->group(function () {
             });
 
             Route::get('/monitoring', [WadirMonitoring::class, 'index']);
+            Route::get('/riwayat', [WadirRiwayat::class, 'index']);
         });
 
         // ===============================
@@ -249,6 +262,7 @@ Route::prefix('v1')->group(function () {
             Route::get('/akun', [DirekturAkun::class, 'show']);
             Route::put('/akun', [DirekturAkun::class, 'update']);
             Route::get('/monitoring', [DirekturMonitoring::class, 'index']);
+            Route::get('/integritas', [DirekturIntegritas::class, 'index']);
         });
     });
 });

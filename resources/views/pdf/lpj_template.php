@@ -1,12 +1,14 @@
 <?php
-// File: src/views/pdf/kak_template.php
-// Template HTML untuk PDF KAK - Sesuai Struktur PDF Polibatam & Cover Baru PNJ
+// File: src/views/pdf/lpj_template.php
+// Template HTML untuk PDF LPJ
 
 $kegiatan_data = $kegiatan_data ?? [];
 $iku_data = $iku_data ?? [];
 $indikator_data = $indikator_data ?? [];
 $rab_data = $rab_data ?? [];
 $kode_mak = $kode_mak ?? '';
+$realisasi_data = $realisasi_data ?? [];
+$grand_total_realisasi = $grand_total_realisasi ?? 0;
 $tanggal_mulai = $kegiatan_data['tanggal_mulai'] ?? date('Y-m-d');
 $tanggal_selesai = $kegiatan_data['tanggal_selesai'] ?? '';
 
@@ -32,7 +34,7 @@ $grand_total_rab = 0;
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>KERANGKA ACUAN KERJA - <?= htmlspecialchars($kegiatan_data['nama_kegiatan'] ?? 'N/A'); ?></title>
+    <title>LAPORAN PERTANGGUNGJAWABAN - <?= htmlspecialchars($kegiatan_data['nama_kegiatan'] ?? 'N/A'); ?></title>
     <style>
         @page {
             margin: 2.5cm 2.5cm 2.5cm 2.5cm;
@@ -195,7 +197,7 @@ $grand_total_rab = 0;
             text-align: right;
         }
 
-        /* RAB Table */
+        /* RAB & Realisasi Table */
         .rab-table {
             width: 100%;
             border-collapse: collapse;
@@ -243,6 +245,32 @@ $grand_total_rab = 0;
         .page-break {
             page-break-after: always;
         }
+
+        /* Bukti / Lampiran Styles */
+        .bukti-item {
+            margin-bottom: 30px;
+            page-break-inside: avoid;
+            text-align: center;
+            border: 1px solid #000;
+            padding: 15px;
+            background: #ffffff;
+        }
+
+        .bukti-title {
+            font-weight: bold;
+            margin-bottom: 12px;
+            text-align: left;
+            font-size: 11pt;
+            border-bottom: 1px solid #000;
+            padding-bottom: 5px;
+        }
+
+        .bukti-image {
+            max-width: 100%;
+            max-height: 400px;
+            display: block;
+            margin: 0 auto;
+        }
     </style>
 </head>
 <body>
@@ -264,7 +292,7 @@ $grand_total_rab = 0;
     <img src="<?= $src; ?>" class="cover-logo" alt="Logo PNJ" style="width: 130px;">
 
     <div class="cover-main-title">
-        KERANGKA ACUAN KERJA
+        LAPORAN PERTANGGUNGJAWABAN (LPJ)
     </div>
     
     <div class="cover-sub-title">
@@ -464,12 +492,129 @@ $grand_total_rab = 0;
     </tr>
     <tr>
         <td colspan="3" style="padding-top: 15px;">
-            <span class="checkbox"></span> Uang Muka
+            <span class="checkbox" style="<?= ($kegiatan_data['wadir_tujuan'] ?? '') ? 'background-color: #000;' : ''; ?>"></span> Uang Muka
             &nbsp;&nbsp;&nbsp;&nbsp;
-            <span class="checkbox"></span> Dana Penuh
+            <span class="checkbox" style="<?= !($kegiatan_data['wadir_tujuan'] ?? '') ? 'background-color: #000;' : ''; ?>"></span> Dana Penuh
         </td>
     </tr>
 </table>
+
+<div class="page-break"></div>
+
+<div class="section-header">IV. Laporan Realisasi Anggaran (LPJ)</div>
+
+<?php if (!empty($realisasi_data)): ?>
+    <?php $total_realisasi_kegiatan = 0; ?>
+    <?php foreach ($realisasi_data as $kategori => $items): ?>
+        <?php if (empty($items)) continue; ?>
+        <?php $subtotal_realisasi = 0; ?>
+        
+        <div class="subsection-header"><?= htmlspecialchars($kategori); ?></div>
+        
+        <table class="rab-table">
+            <thead>
+                <tr>
+                    <th rowspan="2" style="width: 20%;">Uraian</th>
+                    <th rowspan="2" style="width: 20%;">Rincian</th>
+                    <th colspan="4" style="width: 20%;">Satuan</th>
+                    <th rowspan="2" style="width: 20%;">Total Realisasi</th>
+                </tr>
+                <tr>
+                    <th style="width: 8%;">Vol 1</th>
+                    <th style="width: 7%;">Sat 1</th>
+                    <th style="width: 8%;">Vol 2</th>
+                    <th style="width: 7%;">Sat 2</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($items as $item): ?>
+                    <?php
+                    $vol1 = $item['vol1'] ?? 0;
+                    $vol2 = $item['vol2'] ?? 1;
+                    $sat1 = $item['sat1'] ?? '';
+                    $sat2 = $item['sat2'] ?? '';
+                    $realisasi = $item['realisasi'] ?? 0;
+                    $subtotal_realisasi += $realisasi;
+                    ?>
+                    <tr>
+                        <td><?= htmlspecialchars($item['uraian'] ?? ''); ?></td>
+                        <td><?= htmlspecialchars($item['rincian'] ?? ''); ?></td>
+                        <td class="text-center"><?= htmlspecialchars($vol1); ?></td>
+                        <td class="text-center"><?= htmlspecialchars($sat1); ?></td>
+                        <td class="text-center"><?= htmlspecialchars($vol2); ?></td>
+                        <td class="text-center"><?= htmlspecialchars($sat2); ?></td>
+                        <td class="text-right"><?= formatRupiah($realisasi); ?></td>
+                    </tr>
+                <?php endforeach; ?>
+                <tr class="subtotal-row">
+                    <td colspan="6" class="text-right">Sub Total Realisasi</td>
+                    <td class="text-right"><?= formatRupiah($subtotal_realisasi); ?></td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <?php $total_realisasi_kegiatan += $subtotal_realisasi; ?>
+    <?php endforeach; ?>
+    
+    <table class="rab-table">
+        <tr class="grand-total-row">
+            <td class="text-right" style="padding: 10px;">Grand Total Realisasi : <?= formatRupiah($total_realisasi_kegiatan); ?></td>
+        </tr>
+    </table>
+<?php else: ?>
+    <div class="content-text" style="font-style: italic;">Tidak ada data Realisasi</div>
+<?php endif; ?>
+
+<?php
+// Cek apakah ada bukti pembayaran yang diunggah
+$hasImages = false;
+if (!empty($realisasi_data)) {
+    foreach ($realisasi_data as $kategori => $items) {
+        foreach ($items as $item) {
+            if (!empty($item['file_bukti'])) {
+                $hasImages = true;
+                break 2;
+            }
+        }
+    }
+}
+?>
+
+<?php if ($hasImages): ?>
+    <div class="page-break"></div>
+    <div class="section-header">V. Lampiran Bukti Pertanggungjawaban (Dokumentasi)</div>
+    
+    <div style="margin-top: 15px;">
+        <?php foreach ($realisasi_data as $kategori => $items): ?>
+            <?php foreach ($items as $item): ?>
+                <?php 
+                if (empty($item['file_bukti'])) continue; 
+                $buktiPath = storage_path('app/public/' . $item['file_bukti']);
+                $src = null;
+                if (file_exists($buktiPath)) {
+                    try {
+                        $imageData = base64_encode(file_get_contents($buktiPath));
+                        $mime = mime_content_type($buktiPath) ?: 'image/jpeg';
+                        $src = 'data:' . $mime . ';base64,' . $imageData;
+                    } catch (\Exception $e) {
+                        $src = null;
+                    }
+                }
+                ?>
+                <div class="bukti-item">
+                    <div class="bukti-title"><?= htmlspecialchars($kategori); ?> - Uraian: <?= htmlspecialchars($item['uraian'] ?? '-'); ?></div>
+                    <?php if ($src): ?>
+                        <img src="<?= $src; ?>" class="bukti-image" alt="Bukti Pembayaran">
+                    <?php else: ?>
+                        <div style="padding: 20px; border: 1px dashed #ccc; color: #999; font-style: italic; font-size: 10pt;">
+                            Berkas bukti pembayaran tidak ditemukan atau tidak dapat dimuat (<?= htmlspecialchars($item['file_bukti']); ?>)
+                        </div>
+                    <?php endif; ?>
+                </div>
+            <?php endforeach; ?>
+        <?php endforeach; ?>
+    </div>
+<?php endif; ?>
 
 </body>
 </html>

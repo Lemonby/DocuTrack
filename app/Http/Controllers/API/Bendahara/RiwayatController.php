@@ -14,7 +14,13 @@ class RiwayatController extends Controller
     public function index(): JsonResponse
     {
         $kegiatans = Kegiatan::with(['statusUtama', 'user', 'tahapanPencairans'])
-            ->withStatus(WorkflowService::STATUS_DANA_DIBERIKAN)
+            ->whereIn('status_utama_id', [
+                WorkflowService::STATUS_DANA_DIBERIKAN,
+                WorkflowService::STATUS_REVISI,
+                WorkflowService::STATUS_DITOLAK,
+                WorkflowService::STATUS_LPJ_DISETUJUI,
+                WorkflowService::STATUS_SELESAI,
+            ])
             ->latest()
             ->paginate(15);
 

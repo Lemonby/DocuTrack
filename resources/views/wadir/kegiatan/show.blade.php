@@ -20,7 +20,7 @@
     };
 @endphp
 
-<main class="main-content font-poppins p-4 sm:p-6 lg:p-10 -mt-8 md:-mt-20 max-w-7xl mx-auto w-full animate-fade-in bg-slate-50/50">
+<main class="main-content font-poppins p-4 sm:p-6 lg:p-10 -mt-8 md:-mt-20 max-w-7xl mx-auto w-full animate-fade-in">
     
     {{-- Status Header Alert --}}
     @if(strtolower($status) === 'revisi')
@@ -101,19 +101,24 @@
         <div class="mb-14 px-4">
             <div class="relative flex justify-between items-center max-w-4xl mx-auto">
                 <div class="absolute top-1/2 left-0 w-full h-1 bg-slate-100 -translate-y-1/2 z-0"></div>
-                <div class="absolute top-1/2 left-0 {{ $kegiatan->posisi_id >= 5 ? 'w-full' : ($kegiatan->posisi_id == 1 ? 'w-0' : 'w-1/2') }} h-1 bg-{{ $statusColor }}-500 -translate-y-1/2 z-0 transition-all duration-1000"></div>
+                @php
+                    $isSelesai = (isset($kegiatan) && $kegiatan->status_utama_id == 8) || strtolower($status) === 'selesai';
+                    $progressColor = $isSelesai ? 'emerald' : $statusColor;
+                    $progressWidth = $isSelesai ? 'w-full' : ($kegiatan->posisi_id == 1 ? 'w-0' : 'w-1/2');
+                @endphp
+                <div class="absolute top-1/2 left-0 {{ $progressWidth }} h-1 bg-{{ $progressColor }}-500 -translate-y-1/2 z-0 transition-all duration-1000"></div>
                 
                 @foreach(['Pengajuan', 'Verifikasi', 'Selesai'] as $index => $step)
                     @php
-                        $isCompleted = ($index === 0 && $kegiatan->posisi_id > 1) ||
-                                       ($index === 1 && $kegiatan->posisi_id > 4) ||
-                                       ($index === 2 && $kegiatan->posisi_id >= 5);
-                        $isActive = ($index === 0 && $kegiatan->posisi_id == 1) ||
-                                    ($index === 1 && in_array($kegiatan->posisi_id, [2, 3, 4])) ||
-                                    ($index === 2 && $kegiatan->posisi_id >= 5);
+                        $isCompleted = $isSelesai ||
+                                       ($index === 0 && $kegiatan->posisi_id > 1) ||
+                                       ($index === 1 && $kegiatan->posisi_id > 4);
+                        $isActive = ($index === 2 && $isSelesai) ||
+                                    ($index === 1 && !$isSelesai && in_array($kegiatan->posisi_id, [2, 3, 4])) ||
+                                    ($index === 0 && !$isSelesai && $kegiatan->posisi_id == 1);
                     @endphp
                     <div class="relative z-10 flex flex-col items-center">
-                        <div class="w-10 h-10 rounded-full {{ $isCompleted ? 'bg-'.$statusColor.'-500 text-white' : ($isActive ? 'bg-white border-4 border-'.$statusColor.'-500 text-'.$statusColor.'-500' : 'bg-white border-4 border-slate-200 text-slate-300') }} flex items-center justify-center shadow-md transition-all duration-500">
+                        <div class="w-10 h-10 rounded-full {{ $isCompleted ? 'bg-'.$progressColor.'-500 text-white' : ($isActive ? 'bg-white border-4 border-'.$progressColor.'-500 text-'.$progressColor.'-500' : 'bg-white border-4 border-slate-200 text-slate-300') }} flex items-center justify-center shadow-md transition-all duration-500">
                             @if($isCompleted) <i class="fas fa-check text-sm"></i> @else <span class="text-sm font-bold">{{ $index + 1 }}</span> @endif
                         </div>
                         <span class="absolute -bottom-7 text-[10px] font-black uppercase tracking-widest {{ $isCompleted || $isActive ? 'text-slate-800' : 'text-slate-400' }}">{{ $step }}</span>
@@ -305,7 +310,6 @@
                                         <i class="fas fa-shopping-bag text-base"></i>
                                     </div>
                                     <h4 class="text-base font-black text-slate-800 tracking-tight">{{ $kategori }}</h4>
-                                    <i class="fas fa-comment-dots text-violet-500 text-base cursor-pointer hover:scale-110 transition-transform" title="Lihat catatan"></i>
                                 </div>
                                 <div class="text-right">
                                     <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Subtotal</span>
@@ -461,23 +465,32 @@
                                 class="w-full mt-2 bg-transparent outline-none text-slate-600 font-semibold text-xs leading-relaxed border-none focus:ring-0 p-0 resize-none"></textarea>
                         </div>
 
-                        <div class="flex items-center justify-between gap-4 pt-4">
-                            <a href="{{ route('wadir.kegiatan.index') }}" class="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 bg-[#007BFF] hover:bg-blue-700 text-white rounded-xl font-bold text-xs transition duration-200 shadow-md">
-                                <i class="fas fa-arrow-left"></i> Kembali
-                            </a>
-                            <button type="submit" class="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 bg-[#198754] hover:bg-green-700 text-white rounded-xl font-bold text-xs transition duration-200 shadow-md">
-                                <i class="fas fa-check-circle"></i> Setujui Usulan
-                            </button>
+                        <div class="flex flex-col sm:flex-row justify-between items-center pt-8 border-t border-slate-100 gap-4">
+                            <div>
+                                <a href="{{ route('wadir.kegiatan.index') }}" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#187CFC] hover:bg-blue-700 text-white rounded-2xl transition font-black text-sm shadow-lg shadow-blue-200 active:scale-95">
+                                    <i class="fas fa-arrow-left"></i> Kembali
+                                </a>
+                            </div>
+                            
+                            <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto justify-end">
+                                <button type="submit" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#187CFC] hover:bg-blue-700 text-white rounded-2xl transition font-black text-sm shadow-lg shadow-blue-200 active:scale-95">
+                                    <i class="fas fa-check-circle"></i> Setujui Usulan
+                                </button>
+                            </div>
                         </div>
                     </form>
                 @else
                     <h3 class="text-2xl font-black text-slate-800 tracking-tight">Panel Persetujuan</h3>
-                    <div class="flex items-center justify-between gap-4 pt-4 w-full">
-                        <a href="{{ route('wadir.kegiatan.index') }}" class="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 bg-[#007BFF] hover:bg-blue-700 text-white rounded-xl font-bold text-xs transition duration-200 shadow-md">
-                            <i class="fas fa-arrow-left"></i> Kembali
-                        </a>
-                        <div class="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 bg-[#A8E6CF] text-[#1D7A46] rounded-xl font-bold text-xs border border-[#8FE0C0] shadow-sm">
-                            <i class="fas fa-check-circle"></i> Telah Disetujui
+                    <div class="flex flex-col sm:flex-row justify-between items-center pt-8 border-t border-slate-100 gap-4 w-full">
+                        <div>
+                            <a href="{{ route('wadir.kegiatan.index') }}" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#187CFC] hover:bg-blue-700 text-white rounded-2xl transition font-black text-sm shadow-lg shadow-blue-200 active:scale-95">
+                                <i class="fas fa-arrow-left"></i> Kembali
+                            </a>
+                        </div>
+                        <div class="w-full sm:w-auto flex justify-end">
+                            <div class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#A8E6CF] text-[#1D7A46] rounded-2xl font-black text-sm border border-[#8FE0C0] shadow-sm shadow-emerald-100">
+                                <i class="fas fa-check-circle"></i> Telah Disetujui
+                            </div>
                         </div>
                     </div>
                 @endif

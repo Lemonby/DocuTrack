@@ -159,4 +159,74 @@ class DashboardTest extends TestCase
         $lpjPending->update(['status_id' => 3]);
         $this->assertEquals('COMPLETED', $lpjPending->deadline_status);
     }
+
+    /**
+     * Memastikan dashboard Admin menyaring data sesuai jurusan jika jurusan diatur dalam session.
+     */
+    #[Test]
+    #[TestDox('Memastikan dashboard Admin menyaring data sesuai jurusan')]
+    public function test_admin_dashboard_filters_by_jurusan(): void
+    {
+        // Kegiatan milik user lain di jurusan yang sama dengan admin
+        $otherUserSameJurusan = User::create([
+            'nama'         => 'Other User Same Jurusan',
+            'email'        => 'other.same@example.com',
+            'password'     => Hash::make('password123'),
+            'nama_jurusan' => 'Teknik Informatika dan Komputer',
+            'status'       => 'Aktif',
+        ]);
+
+        $kegiatanSameJurusan = Kegiatan::create([
+            'nama_kegiatan' => 'Same Jurusan KAK',
+            'prodi_penyelenggara' => 'D4 Teknik Informatika',
+            'pemilik_kegiatan' => 'Other User Same Jurusan',
+            'nim_pelaksana' => '12345678',
+            'user_id' => $otherUserSameJurusan->user_id,
+            'jurusan_penyelenggara' => 'Teknik Informatika dan Komputer',
+            'status_utama_id' => WorkflowService::STATUS_MENUNGGU,
+            'wadir_tujuan' => 1,
+            'posisi_id' => WorkflowService::POSITION_VERIFIKATOR,
+        ]);
+
+        // Kegiatan di jurusan yang berbeda
+        $otherUserDiffJurusan = User::create([
+            'nama'         => 'Other User Diff Jurusan',
+            'email'        => 'other.diff@example.com',
+            'password'     => Hash::make('password123'),
+            'nama_jurusan' => 'Teknik Elektro',
+            'status'       => 'Aktif',
+        ]);
+
+        $kegiatanDiffJurusan = Kegiatan::create([
+            'nama_kegiatan' => 'Different Jurusan KAK',
+            'prodi_penyelenggara' => 'D4 Teknik Elektro',
+            'pemilik_kegiatan' => 'Other User Diff Jurusan',
+            'nim_pelaksana' => '87654321',
+            'user_id' => $otherUserDiffJurusan->user_id,
+            'jurusan_penyelenggara' => 'Teknik Elektro',
+            'status_utama_id' => WorkflowService::STATUS_MENUNGGU,
+            'wadir_tujuan' => 1,
+            'posisi_id' => WorkflowService::POSITION_VERIFIKATOR,
+        ]);
+
+        // Request dashboard admin dengan session jurusan 'Teknik Informatika dan Komputer'
+        $response = $this->withSession([
+            'user_id' => $this->admin->user_id,
+            'role' => 'admin',
+            'jurusan' => 'Teknik Informatika dan Komputer'
+        ])->get('/admin/dashboard');
+
+        $response->assertStatus(200);
+        $stats = $response->viewData('stats');
+        $listKak = $response->viewData('list_kak');
+
+        // Statistik total harusnya hanya menghitung kegiatan di Teknik Informatika dan Komputer
+        // Yaitu $kegiatanSameJurusan (kegiatanDiffJurusan tidak masuk)
+        $this->assertEquals(1, $stats['total']);
+
+        // List KAK harus ada Same Jurusan KAK, tapi Different Jurusan KAK tidak ada
+        $kakNames = collect($listKak)->pluck('nama')->toArray();
+        $this->assertContains('Same Jurusan KAK', $kakNames);
+        $this->assertNotContains('Different Jurusan KAK', $kakNames);
+    }
 }

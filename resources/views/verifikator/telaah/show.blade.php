@@ -25,7 +25,7 @@
     $isMenunggu = in_array(strtolower($status), ['menunggu', 'review', 'menunggu verifikasi']);
 @endphp
 
-<main class="main-content font-poppins p-4 sm:p-6 lg:p-10 -mt-8 md:-mt-20 max-w-7xl mx-auto w-full animate-fade-in bg-slate-50/50">
+<main class="main-content font-poppins p-4 sm:p-6 lg:p-10 -mt-8 md:-mt-20 max-w-7xl mx-auto w-full animate-fade-in">
     
     {{-- Status Header Alert --}}
     @if(strtolower($status) === 'revisi')
@@ -101,18 +101,24 @@
         <div class="mb-14 px-4">
             <div class="relative flex justify-between items-center max-w-4xl mx-auto">
                 <div class="absolute top-1/2 left-0 w-full h-1 bg-slate-100 -translate-y-1/2 z-0"></div>
-                <div class="absolute top-1/2 left-0 {{ in_array(strtolower($status), ['lpj disetujui', 'selesai']) ? 'w-full' : (strtolower($status) === 'revisi' ? 'w-1/3' : 'w-2/3') }} h-1 bg-{{ $statusColor }}-500 -translate-y-1/2 z-0 transition-all duration-1000"></div>
+                @php
+                    $isSelesai = (isset($kegiatan) && $kegiatan->status_utama_id == 8) || strtolower($status) === 'selesai';
+                    $progressColor = $isSelesai ? 'emerald' : $statusColor;
+                    $progressWidth = $isSelesai ? 'w-full' : (strtolower($status) === 'revisi' ? 'w-1/3' : 'w-2/3');
+                @endphp
+                <div class="absolute top-1/2 left-0 {{ $progressWidth }} h-1 bg-{{ $progressColor }}-500 -translate-y-1/2 z-0 transition-all duration-1000"></div>
                 
                 @foreach(['Pengajuan', 'Verifikasi', 'Selesai'] as $index => $step)
                     @php
-                        $isCompleted = in_array(strtolower($status), ['lpj disetujui', 'selesai']) || 
+                        $isCompleted = $isSelesai || 
                                       ($index === 0) || 
                                       ($index === 1 && strtolower($status) !== 'revisi' && strtolower($status) !== 'menunggu');
-                        $isActive = ($index === 1 && (strtolower($status) === 'review' || strtolower($status) === 'menunggu')) ||
+                        $isActive = ($index === 2 && $isSelesai) ||
+                                    ($index === 1 && !$isSelesai && (strtolower($status) === 'review' || strtolower($status) === 'menunggu')) ||
                                     ($index === 0 && strtolower($status) === 'revisi');
                     @endphp
                     <div class="relative z-10 flex flex-col items-center">
-                        <div class="w-10 h-10 rounded-full {{ $isCompleted ? 'bg-'.$statusColor.'-500 text-white shadow-md' : ($isActive ? 'bg-white border-4 border-'.$statusColor.'-500 text-'.$statusColor.'-500 shadow-md' : 'bg-white border-4 border-slate-200 text-slate-300') }} flex items-center justify-center transition-all duration-500">
+                        <div class="w-10 h-10 rounded-full {{ $isCompleted ? 'bg-'.$progressColor.'-500 text-white shadow-md' : ($isActive ? 'bg-white border-4 border-'.$progressColor.'-500 text-'.$progressColor.'-500 shadow-md' : 'bg-white border-4 border-slate-200 text-slate-300') }} flex items-center justify-center transition-all duration-500">
                             @if($isCompleted) <i class="fas fa-check text-sm"></i> @else <span class="text-sm font-bold">{{ $index + 1 }}</span> @endif
                         </div>
                         <span class="absolute -bottom-7 text-[10px] font-black uppercase tracking-widest {{ $isCompleted || $isActive ? 'text-slate-800' : 'text-slate-400' }}">{{ $step }}</span>

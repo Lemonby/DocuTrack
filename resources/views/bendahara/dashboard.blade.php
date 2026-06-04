@@ -197,7 +197,7 @@ window.dataLPJ = @json($list_lpj ?? []);
         else if (['telah direvisi', 'telah diverifikasi'].includes(s)) cls = 'bg-purple-100 text-purple-700 border-purple-200';
         else if (s === 'revisi') cls = 'bg-amber-100 text-amber-700 border-amber-200';
         else if (s === 'ditolak') cls = 'bg-rose-100 text-rose-700 border-rose-200';
-        return `<span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${cls}">${esc(status || '-').replace(/_/g, ' ')}</span>`;
+        return `<span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${cls}">${esc(status || '-').replace(/_/g, ' ')}</span>`;
     }
 
     function initTable({allData, searchId, filterStatusId, resetId, tbodyId, cardsId, showingId, totalId, paginationId, buildRow, buildCard, actionUrl}) {
@@ -263,7 +263,7 @@ window.dataLPJ = @json($list_lpj ?? []);
             <td class="px-6 py-4 text-sm"><div class="font-semibold text-gray-900">${esc(item.nama)}</div><div class="text-xs text-gray-500 mt-0.5">${esc(item.pengusul||'')} (${esc(item.nim||'-')}) &bull; ${esc(item.jurusan||'-')}</div></td>
             <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"><i class="fas fa-calendar-alt text-blue-400 mr-1 text-xs"></i>${fmt(item.tanggal_pengajuan)}</td>
             <td class="px-6 py-4">${statusBadge(item.status)}</td>
-            <td class="px-6 py-4"><a href="${url}/${item.id||0}?from=dashboard" class="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-sm"><i class="fas fa-money-bill-wave text-[8px]"></i>Cairkan</a></td>
+            <td class="px-6 py-4"><a href="${url}/${item.id||0}?from=dashboard" class="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-blue-700 transition-all shadow-sm"><i class="fas fa-money-bill-wave text-[8px]"></i>Cairkan</a></td>
         </tr>`;
     }
     function kakCard(item, no, url) {
@@ -271,7 +271,7 @@ window.dataLPJ = @json($list_lpj ?? []);
             <div class="flex justify-between items-center mb-2 pb-2 border-b border-gray-100"><span class="bg-blue-600 text-white text-xs font-bold px-2 py-0.5 rounded">#${no}</span>${statusBadge(item.status)}</div>
             <p class="font-semibold text-gray-900 text-sm">${esc(item.nama)}</p>
             <p class="text-xs text-gray-500 mt-1">${esc(item.pengusul||'')} &bull; ${fmt(item.tanggal_pengajuan)}</p>
-            <a href="${url}/${item.id||0}?from=dashboard" class="mt-3 w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-sm"><i class="fas fa-money-bill-wave text-[8px]"></i>Detail</a>
+            <a href="${url}/${item.id||0}?from=dashboard" class="mt-3 w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-blue-700 transition-all shadow-sm"><i class="fas fa-money-bill-wave text-[8px]"></i>Detail</a>
         </div>`;
     }
     function lpjRow(item, no, url) {
@@ -280,7 +280,7 @@ window.dataLPJ = @json($list_lpj ?? []);
             <td class="px-6 py-4 text-sm"><div class="font-semibold text-gray-900">${esc(item.nama)}</div><div class="text-xs text-gray-500 mt-0.5">${esc(item.pengusul||'')} (${esc(item.nim||'-')}) &bull; ${esc(item.jurusan||'-')}</div></td>
             <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"><i class="fas fa-calendar-alt text-gray-400 mr-1 text-xs"></i>${fmt(item.tanggal_pengajuan)}</td>
             <td class="px-6 py-4">${statusBadge(item.status)}</td>
-            <td class="px-6 py-4"><a href="${url}/${item.id||0}?from=dashboard" class="inline-flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-sm"><i class="fas fa-file-alt text-[8px]"></i>Validasi</a></td>
+            <td class="px-6 py-4"><a href="${url}/${item.id||0}?from=dashboard" class="inline-flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-sm"><i class="fas fa-file-alt text-[8px]"></i>Validasi</a></td>
         </tr>`;
     }
     function lpjCard(item, no, url) {
@@ -288,7 +288,7 @@ window.dataLPJ = @json($list_lpj ?? []);
             <div class="flex justify-between items-center mb-2 pb-2 border-b border-gray-100"><span class="bg-emerald-600 text-white text-xs font-bold px-2 py-0.5 rounded">#${no}</span>${statusBadge(item.status)}</div>
             <p class="font-semibold text-gray-900 text-sm">${esc(item.nama)}</p>
             <p class="text-xs text-gray-500 mt-1">${esc(item.pengusul||'')} &bull; ${fmt(item.tanggal_pengajuan)}</p>
-            <a href="${url}/${item.id||0}?from=dashboard" class="mt-3 w-full flex items-center justify-center gap-2 bg-emerald-600 text-white py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-sm"><i class="fas fa-file-alt text-[8px]"></i>Validasi LPJ</a>
+            <a href="${url}/${item.id||0}?from=dashboard" class="mt-3 w-full flex items-center justify-center gap-2 bg-emerald-600 text-white py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-sm"><i class="fas fa-file-alt text-[8px]"></i>Validasi LPJ</a>
         </div>`;
     }
 

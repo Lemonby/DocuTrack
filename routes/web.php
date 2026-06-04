@@ -45,6 +45,7 @@ use App\Http\Controllers\SuperAdmin\UserManagementController as SuperAdminUserCo
 use App\Http\Controllers\SuperAdmin\IkuController as SuperAdminIkuController;
 use App\Http\Controllers\SuperAdmin\AkunController as SuperAdminAkunController;
 use App\Http\Controllers\CetakKakController;
+use App\Http\Controllers\CetakLpjController;
 use App\Http\Middleware\CheckRole;
 
 // Authentication required routes
@@ -52,6 +53,7 @@ Route::middleware([CheckRole::class])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/dashboard', [DashboardController::class, 'index']);
     Route::get('/cetak-kak/{id}', [CetakKakController::class, 'cetak'])->name('cetak.kak');
+    Route::get('/cetak-lpj/{id}', [CetakLpjController::class, 'cetak'])->name('cetak.lpj');
 
     // Web Notification API routes
     Route::get('/api/notifikasi', [\App\Http\Controllers\WebNotifikasiController::class, 'index']);

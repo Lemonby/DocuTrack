@@ -21,7 +21,6 @@ class VerifikatorController extends Controller
         $kegiatanList = \App\Models\Kegiatan::with(['statusUtama', 'user'])
             ->where('posisi_id', '>=', \App\Services\WorkflowService::POSITION_VERIFIKATOR)
             ->latest()
-            ->take(5)
             ->get();
 
         $list_usulan = $kegiatanList->map(function ($kegiatan) {

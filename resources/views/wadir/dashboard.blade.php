@@ -123,12 +123,12 @@
         </div>
 
         <!-- Pagination -->
-        <div class="p-3 border-t border-gray-200 bg-gray-50">
-            <div class="flex flex-col gap-3">
-                <div id="pagination-wadir" class="flex gap-1 flex-wrap justify-center"></div>
-                <div class="text-xs text-gray-600 text-center">
-                    Menampilkan <span id="showing-wadir" class="font-semibold text-gray-800">0</span> dari <span id="total-wadir" class="font-semibold text-gray-800">0</span> data
+        <div class="p-4 border-t border-slate-50 bg-slate-50/20">
+            <div class="flex items-center justify-between">
+                <div class="text-xs text-gray-600">
+                    Menampilkan <span id="showing-wadir" class="text-blue-600 font-semibold">0</span> dari <span id="total-wadir" class="text-slate-800 font-semibold">0</span> Data
                 </div>
+                <div id="pagination-wadir" class="flex gap-1"></div>
             </div>
         </div>
     </section>
@@ -323,7 +323,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     
     const dataUsulan = window.dataUsulan || [];
-    const ITEMS_PER_PAGE = 10; 
+    const ITEMS_PER_PAGE = 5; 
     
     class WadirTableManager {
         constructor(data) {
@@ -440,13 +440,13 @@ document.addEventListener('DOMContentLoaded', function() {
                                 ${tgl}
                             </div>
                         </td>
-                        <td class="px-6 py-5 whitespace-nowrap text-[10px] font-black uppercase tracking-wider">
+                        <td class="px-6 py-5 whitespace-nowrap text-[10px] font-bold uppercase tracking-wider">
                             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border ${statusClass}">
                                 <i class="fas ${iconClass}"></i> ${item.status || 'Menunggu'}
                             </span>
                         </td>
                         <td class="px-6 py-5 whitespace-nowrap text-sm font-medium">
-                            <a href="{{ url('/wadir/kegiatan/show') }}/${item.id}" class="bg-blue-600 text-white px-4 py-2 rounded-md text-xs font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-sm flex items-center gap-2 w-max">
+                            <a href="{{ url('/wadir/kegiatan/show') }}/${item.id}" class="bg-blue-600 text-white px-4 py-2 rounded-md text-xs font-bold uppercase tracking-widest hover:bg-blue-700 transition-all shadow-sm flex items-center gap-2 w-max">
                                 <i class="fas fa-eye"></i> Detail
                             </a>
                         </td>
@@ -481,7 +481,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="mobile-card">
                         <div class="mobile-card-header">
                             <span class="mobile-card-number">#${no}</span>
-                            <span class="status-badge border ${statusClass} text-[10px] uppercase font-black">
+                            <span class="status-badge border ${statusClass} text-[10px] uppercase font-bold">
                                 <i class="fas ${iconClass}"></i>
                                 ${item.status || 'Menunggu'}
                             </span>
@@ -518,7 +518,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                         
                         <div class="mobile-card-actions">
-                            <a href="{{ url('/wadir/kegiatan/show') }}/${item.id}" class="mobile-card-btn font-black uppercase tracking-widest text-[10px]">
+                            <a href="{{ url('/wadir/kegiatan/show') }}/${item.id}" class="mobile-card-btn font-bold uppercase tracking-widest text-[10px]">
                                 <i class="fas fa-eye"></i>
                                 Lihat Detail
                             </a>
@@ -551,44 +551,29 @@ document.addEventListener('DOMContentLoaded', function() {
 
             let btns = '';
             // Prev Button
-            btns += `<button onclick="wadirTable.goToPage(${this.currentPage - 1})" ${this.currentPage === 1 ? 'disabled' : ''} class="pagination-buttons"><i class="fas fa-chevron-left"></i></button>`;
+            btns += `<button onclick="wadirTable.goToPage(${this.currentPage - 1})" ${this.currentPage === 1 ? 'disabled' : ''} class="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-400 ${this.currentPage === 1 ? 'opacity-40 cursor-not-allowed' : 'hover:bg-slate-100 transition-colors'}" ${this.currentPage === 1 ? 'disabled' : ''}><i class="fas fa-chevron-left text-[10px]"></i></button>`;
 
             // Page Numbers
-            const maxVisible = 5;
-            let startPage = Math.max(1, this.currentPage - Math.floor(maxVisible / 2));
-            let endPage = Math.min(totalPages, startPage + maxVisible - 1);
-            
-            if (endPage - startPage < maxVisible - 1) {
-                startPage = Math.max(1, endPage - maxVisible + 1);
-            }
-
-            if (startPage > 1) {
-                btns += `<button onclick="wadirTable.goToPage(1)" class="pagination-buttons">1</button>`;
-                if (startPage > 2) btns += `<span class="px-2 text-gray-400">...</span>`;
-            }
-
-            for (let i = startPage; i <= endPage; i++) {
-                const active = i === this.currentPage ? 'active' : '';
-                btns += `<button onclick="wadirTable.goToPage(${i})" class="pagination-buttons ${active}">${i}</button>`;
-            }
-
-            if (endPage < totalPages) {
-                if (endPage < totalPages - 1) btns += `<span class="px-2 text-gray-400">...</span>`;
-                btns += `<button onclick="wadirTable.goToPage(${totalPages})" class="pagination-buttons">${totalPages}</button>`;
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= this.currentPage - 1 && i <= this.currentPage + 1)) {
+                    const activeCls = i === this.currentPage ? 'bg-blue-600 text-white border-blue-600 font-bold shadow-sm' : 'border-slate-200 text-slate-600 hover:bg-slate-100';
+                    btns += `<button onclick="wadirTable.goToPage(${i})" class="w-8 h-8 flex items-center justify-center rounded-lg border ${activeCls} text-[10px] transition-colors">${i}</button>`;
+                } else if (i === this.currentPage - 2 || i === this.currentPage + 2) {
+                    btns += `<span class="w-6 flex items-center justify-center text-slate-300 font-bold text-xs">...</span>`;
+                }
             }
 
             // Next Button
-            btns += `<button onclick="wadirTable.goToPage(${this.currentPage + 1})" ${this.currentPage === totalPages ? 'disabled' : ''} class="pagination-buttons"><i class="fas fa-chevron-right"></i></button>`;
+            btns += `<button onclick="wadirTable.goToPage(${this.currentPage + 1})" ${this.currentPage === totalPages ? 'disabled' : ''} class="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-400 ${this.currentPage === totalPages ? 'opacity-40 cursor-not-allowed' : 'hover:bg-slate-100 transition-colors'}" ${this.currentPage === totalPages ? 'disabled' : ''}><i class="fas fa-chevron-right text-[10px]"></i></button>`;
 
             this.paginationContainer.innerHTML = btns;
         }
 
         goToPage(page) {
             const totalPages = Math.ceil(this.filteredData.length / this.itemsPerPage);
-            if (page >= 1 && page <= totalPages) {
+            if (page >= 1 && page <= totalPages && page !== this.currentPage) {
                 this.currentPage = page;
                 this.render();
-                window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         }
     }

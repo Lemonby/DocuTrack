@@ -10,10 +10,16 @@ class UsulanController extends Controller
     public function index()
     {
         $userId = \Illuminate\Support\Facades\Session::get('user_id') ?? 1;
-        $kegiatanList = \App\Models\Kegiatan::with(['statusUtama', 'user'])
-            ->where('user_id', $userId)
-            ->latest()
-            ->get();
+        $jurusan = \Illuminate\Support\Facades\Session::get('jurusan');
+
+        $query = \App\Models\Kegiatan::with(['statusUtama', 'user']);
+        if (!empty($jurusan)) {
+            $query->where('jurusan_penyelenggara', $jurusan);
+        } else {
+            $query->where('user_id', $userId);
+        }
+
+        $kegiatanList = $query->latest()->get();
 
         $list_usulan = $kegiatanList->map(function ($kegiatan) {
             return [

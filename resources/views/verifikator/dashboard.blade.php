@@ -100,7 +100,7 @@
 window.dataUsulan = @json($list_usulan ?? []);
 
 document.addEventListener('DOMContentLoaded', () => {
-    const ROWS = 10;
+    const ROWS = 5;
     let all = window.dataUsulan || [], filtered = [...all], page = 1;
     const $id = id => document.getElementById(id);
     const searchInput = $id('search-input');

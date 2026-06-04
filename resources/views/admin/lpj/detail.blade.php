@@ -43,7 +43,7 @@
             <div class="absolute right-0 top-0 w-64 h-64 bg-blue-50/30 rounded-full -mr-32 -mt-32 blur-3xl"></div>
             
             <div class="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
-                <div>
+                <div class="flex-1 min-w-0">
                     <div class="flex items-center gap-3 mb-4">
                         <span class="px-3 py-1 rounded-xl bg-{{ $statusColor }}-100 text-{{ $statusColor }}-700 text-[10px] font-black uppercase tracking-widest border border-{{ $statusColor }}-200 shadow-sm">
                             {{ $status }}
@@ -51,11 +51,14 @@
                         <div class="h-4 w-px bg-slate-200 mx-1"></div>
                         <span class="text-slate-400 text-[10px] font-black uppercase tracking-widest">KODE LPJ: #{{ str_pad($id, 5, '0', STR_PAD_LEFT) }}</span>
                     </div>
-                    <h2 class="text-3xl md:text-4xl font-black text-slate-800 tracking-tighter leading-tight">Laporan Pertanggung jawaban</h2>
-                    <p class="text-sm text-slate-500 mt-2 font-medium flex items-center gap-2">
-                        <i class="fas fa-calendar-check text-blue-500"></i>
-                        Kegiatan: <span class="text-blue-600 font-black tracking-tight underline decoration-blue-200 underline-offset-4">{{ $kegiatan_nama }}</span>
-                        <span class="text-slate-300 mx-1">|</span>
+                    <h2 class="text-3xl md:text-4xl font-black text-slate-800 tracking-tighter leading-tight truncate">Laporan Pertanggung jawaban</h2>
+                    <p class="text-sm text-slate-500 mt-2 font-medium flex flex-wrap items-center gap-x-2 gap-y-1">
+                        <span class="flex items-center gap-1.5">
+                            <i class="fas fa-calendar-check text-blue-500"></i>
+                            <span>Kegiatan:</span>
+                        </span>
+                        <span class="text-blue-600 font-black tracking-tight underline decoration-blue-200 underline-offset-4 break-words">{{ $kegiatan_nama }}</span>
+                        <span class="text-slate-300 hidden sm:inline">|</span>
                         <span class="text-slate-500">{{ $prodi ?? 'Program Studi' }}</span>
                     </p>
                 </div>
@@ -64,14 +67,14 @@
                     $backUrl = ($from === 'dashboard') ? route('admin.dashboard') : route('admin.lpj.index');
                     $backText = ($from === 'dashboard') ? 'Kembali ke Dashboard' : 'Kembali ke Antrian';
                 @endphp
-                <div class="flex items-center gap-3 w-full md:w-auto">
+                <div class="flex-shrink-0 flex items-center gap-3 w-full md:w-auto">
                     <a href="{{ $backUrl }}" class="flex-1 md:flex-none inline-flex items-center justify-center gap-3 px-8 py-4 bg-white hover:bg-slate-50 text-slate-600 rounded-2xl transition-all font-black text-[10px] uppercase tracking-widest border border-slate-200 shadow-xl shadow-slate-100/50 active:scale-95">
                         <i class="fas fa-arrow-left"></i> {{ $backText }}
                     </a>
                     @if(in_array(strtolower($status), ['setuju', 'disetujui', 'selesai']))
-                    <button type="button" class="flex-1 md:flex-none inline-flex items-center justify-center gap-3 px-8 py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl transition-all font-black text-[10px] uppercase tracking-widest border border-emerald-500 shadow-xl shadow-emerald-100 active:scale-95">
+                    <a href="{{ route('cetak.lpj', $id) }}" target="_blank" class="flex-1 md:flex-none inline-flex items-center justify-center gap-3 px-8 py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl transition-all font-black text-[10px] uppercase tracking-widest border border-emerald-500 shadow-xl shadow-emerald-100 active:scale-95">
                         <i class="fas fa-print"></i> Cetak LPJ
-                    </button>
+                    </a>
                     @endif
                 </div>
             </div>
@@ -580,13 +583,17 @@
                                                                 @endif
                                                             </button>
                                                         </div>
+                                                    </td>
+                                                </tr>
 
-                                                        <div id="feedback-{{ $item['id'] ?? $index }}" class="hidden mt-4 p-4 bg-slate-50 rounded-2xl border border-slate-200 shadow-inner animate-fade-in text-left">
+                                                <tr id="tr-feedback-{{ $item['id'] ?? $index }}" class="hidden bg-slate-50/50">
+                                                    <td colspan="10" class="px-6 py-4">
+                                                        <div id="feedback-{{ $item['id'] ?? $index }}" class="p-5 bg-slate-50 rounded-2xl border border-slate-200 shadow-inner animate-fade-in text-left">
                                                             <div class="flex items-center gap-2 mb-3">
                                                                 <i class="fas fa-pen-nib text-[10px] text-blue-600"></i>
                                                                 <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest">Catatan Perbaikan dari Bendahara</label>
                                                             </div>
-                                                            <div class="w-full p-3 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 shadow-sm leading-relaxed">
+                                                            <div class="w-full p-4 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 shadow-sm leading-relaxed">
                                                                 {{ $item['catatan_item'] ?? 'Tidak ada catatan perbaikan untuk item ini.' }}
                                                             </div>
                                                         </div>
@@ -683,7 +690,7 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 function toggleFeedback(id) {
-    const el = document.getElementById(`feedback-${id}`);
+    const el = document.getElementById(`tr-feedback-${id}`);
     if (el) {
         el.classList.toggle('hidden');
     }

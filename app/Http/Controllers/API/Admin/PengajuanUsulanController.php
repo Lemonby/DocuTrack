@@ -73,4 +73,48 @@ class PengajuanUsulanController extends Controller
 
         return response()->json(['success' => true, 'message' => 'Usulan berhasil dihapus.']);
     }
+
+    public function update(Request $request, int $id): JsonResponse
+    {
+        try {
+            $kegiatan = $this->kegiatanService->updateKegiatan(
+                $id,
+                $request->all(),
+                $request->user()->user_id
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Revisi usulan berhasil disimpan dan diajukan ulang.',
+                'data' => new KegiatanDetailResource($kegiatan),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal memperbarui usulan: ' . $e->getMessage(),
+            ], 422);
+        }
+    }
+
+    public function selesai(Request $request, int $id): JsonResponse
+    {
+        $kegiatan = Kegiatan::findOrFail($id);
+        $kegiatan->update([
+            'status_utama_id' => 8, // Selesai
+        ]);
+
+        // Add progress history entry for status 8 (Selesai)
+        \App\Models\ProgressHistory::create([
+            'kegiatan_id' => $kegiatan->kegiatan_id,
+            'status_id' => 8,
+            'changed_by_user_id' => $request->user()->user_id,
+            'created_at' => now(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Kegiatan telah berhasil dinyatakan Selesai!',
+            'data' => new KegiatanDetailResource($kegiatan->fresh()),
+        ]);
+    }
 }

@@ -63,13 +63,13 @@
         </div>
 
         <div class="p-3 sm:p-4 mt-4 border-t border-gray-200 bg-gray-50 rounded-lg">
-            <div class="flex flex-col gap-3">
-                <div id="pagination-buttons" class="flex gap-1 flex-wrap justify-center"></div>
-                <div class="text-xs sm:text-sm text-gray-600 text-center">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div class="text-xs sm:text-sm text-gray-600 text-center sm:text-left">
                     Menampilkan <span id="showing-start" class="font-semibold text-gray-800">0</span> s.d.
                     <span id="showing-end" class="font-semibold text-gray-800">0</span> dari
                     <span id="total-records" class="font-semibold text-gray-800">0</span> data
                 </div>
+                <div id="pagination-buttons" class="flex gap-1 flex-wrap justify-center"></div>
             </div>
         </div>
     </section>
@@ -82,7 +82,7 @@ window.lpjData = @json($list_lpj ?? []);
 
 document.addEventListener('DOMContentLoaded', () => {
     const allData = window.lpjData || [];
-    const ROWS = 10;
+    const ROWS = 5;
     let filtered = [...allData], page = 1;
 
     const searchInput = document.getElementById('search-input');

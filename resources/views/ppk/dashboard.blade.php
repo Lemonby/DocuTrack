@@ -16,7 +16,7 @@
                     </div>
                     <div>
                         <h3 class="text-4xl font-black mb-1 leading-none">{{ $stats['total'] }}</h3>
-                        <p class="text-[10px] font-black uppercase tracking-widest opacity-80">Total Usulan</p>
+                        <p class="text-xs font-bold uppercase tracking-widest opacity-80">Total Usulan</p>
                     </div>
                 </div>
             </div>
@@ -29,7 +29,7 @@
                     </div>
                     <div>
                         <h3 class="text-4xl font-black mb-1 leading-none">{{ $stats['disetujui'] }}</h3>
-                        <p class="text-[10px] font-black uppercase tracking-widest opacity-80">Disetujui</p>
+                        <p class="text-xs font-bold uppercase tracking-widest opacity-80">Disetujui</p>
                     </div>
                 </div>
             </div>
@@ -42,7 +42,7 @@
                     </div>
                     <div>
                         <h3 class="text-4xl font-black mb-1 leading-none">{{ $stats['menunggu'] }}</h3>
-                        <p class="text-[10px] font-black uppercase tracking-widest opacity-70">Menunggu</p>
+                        <p class="text-xs font-bold uppercase tracking-widest opacity-70">Menunggu</p>
                     </div>
                 </div>
             </div>
@@ -53,19 +53,19 @@
     <section class="bg-white rounded-2xl shadow-sm overflow-hidden mb-8 border border-slate-100">
         <div class="p-5 border-b border-slate-50 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 bg-slate-50/50">
             <div>
-                <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2">
+                <h3 class="text-base font-semibold text-gray-800 flex items-center gap-2">
                     <i class="fas fa-clipboard-list text-blue-600"></i> Antrian Persetujuan
                 </h3>
-                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-tight mt-1 italic">Verifikasi usulan kegiatan yang masuk</p>
+                <p class="text-xs text-slate-400 mt-1 italic">Verifikasi usulan kegiatan yang masuk</p>
             </div>
             
             <div class="flex flex-col sm:flex-row gap-2">
                 <div class="relative group">
                     <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 text-xs"></i>
                     <input type="text" id="search-input" placeholder="Cari kegiatan..."
-                           class="pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                           class="pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition-all">
                 </div>
-                <select id="filter-status" class="px-4 py-2 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-600 outline-none focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer">
+                <select id="filter-status" class="px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-600 outline-none focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer">
                     <option value="">Status</option>
                     <option value="menunggu">Menunggu</option>
                     <option value="disetujui">Disetujui</option>
@@ -77,11 +77,11 @@
             <table class="w-full">
                 <thead class="bg-slate-50 border-b border-slate-100">
                     <tr>
-                        <th class="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">No</th>
-                        <th class="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Kegiatan & Pengusul</th>
-                        <th class="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Tgl. Masuk</th>
-                        <th class="px-6 py-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
-                        <th class="px-6 py-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">Aksi</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">No</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Kegiatan & Pengusul</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Tgl. Masuk</th>
+                        <th class="px-6 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">Aksi</th>
                     </tr>
                 </thead>
                 <tbody id="table-body" class="divide-y divide-slate-100"></tbody>
@@ -90,8 +90,8 @@
 
         <div class="p-4 border-t border-slate-50 bg-slate-50/20">
             <div class="flex items-center justify-between">
-                <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                    <span id="showing" class="text-blue-600">0</span> / <span id="total" class="text-slate-800">0</span> Data
+                <div class="text-xs text-gray-600">
+                    Menampilkan <span id="showing" class="text-blue-600 font-semibold">0</span> dari <span id="total" class="text-slate-800 font-semibold">0</span> Data
                 </div>
                 <div id="pagination" class="flex gap-1"></div>
             </div>
@@ -119,7 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
             'menunggu':  'bg-blue-100 text-blue-700 border-blue-200',
         };
         const cls = m[(status||'').toLowerCase()] || 'bg-slate-100 text-slate-500 border-slate-200';
-        return `<span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${cls}">${esc(status||'Menunggu')}</span>`;
+        return `<span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${cls}">${esc(status||'Menunggu')}</span>`;
     }
 
     function apply() {
@@ -135,19 +135,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function render() {
         const start = (page-1)*ROWS, data = filtered.slice(start, start+ROWS), tp = Math.ceil(filtered.length/ROWS);
-        const empty = `<tr><td colspan="5" class="py-14 text-center text-[10px] font-black text-slate-300 uppercase tracking-widest">Tidak ada antrian</td></tr>`;
+        const empty = `<tr><td colspan="5" class="py-14 text-center text-xs text-gray-500"><i class="fas fa-inbox text-3xl text-gray-300 block mb-2"></i>Tidak ada antrian</td></tr>`;
 
         $id('table-body').innerHTML = data.length===0 ? empty : data.map((it,idx) => `
             <tr class="hover:bg-slate-50 transition-colors">
-                <td class="px-6 py-5 text-xs font-black text-slate-400">${start+idx+1}.</td>
+                <td class="px-6 py-5 text-sm text-gray-600">${start+idx+1}.</td>
                 <td class="px-6 py-5">
-                    <div class="text-xs font-black text-slate-800 uppercase tracking-tight">${esc(it.nama||'Tanpa Judul')}</div>
-                    <div class="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-widest">${esc(it.pengusul||'')} &bull; ${esc(it.prodi||'-')}</div>
+                    <div class="font-semibold text-gray-900">${esc(it.nama||'Tanpa Judul')}</div>
+                    <div class="text-xs text-gray-500 mt-0.5">${esc(it.pengusul||'')} (${esc(it.nim||'-')}) &bull; ${esc(it.prodi||'-')}</div>
                 </td>
-                <td class="px-6 py-5 text-[10px] font-bold text-slate-500 uppercase"><i class="far fa-calendar-alt text-blue-400 mr-2"></i>${fmt(it.tanggal_pengajuan)}</td>
+                <td class="px-6 py-5 text-sm text-gray-600 whitespace-nowrap"><i class="fas fa-calendar-alt text-gray-400 mr-1 text-xs"></i>${fmt(it.tanggal_pengajuan)}</td>
                 <td class="px-6 py-5 text-center">${badge(it.status)}</td>
                 <td class="px-6 py-5 text-center">
-                    <a href="/ppk/kegiatan/show/${it.id||0}" class="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-sm active:scale-95">
+                    <a href="/ppk/kegiatan/show/${it.id||0}" class="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-blue-700 transition-all shadow-sm active:scale-95">
                         <i class="fas fa-eye text-[8px]"></i> Detail
                     </a>
                 </td>
@@ -160,7 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (tp<=1) { pg.innerHTML=''; return; }
         let h = `<button class="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-400 ${page===1?'opacity-40 cursor-not-allowed':'hover:bg-slate-100 transition-colors'}" onclick="goPage(${page-1})" ${page===1?'disabled':''}><i class="fas fa-chevron-left text-[10px]"></i></button>`;
         for (let i=1;i<=tp;i++) {
-            if(i===1||i===tp||(i>=page-1&&i<=page+1)) h+=`<button class="w-8 h-8 flex items-center justify-center rounded-lg border ${i===page?'bg-blue-600 text-white border-blue-600 font-black shadow-sm':'border-slate-200 text-slate-600 hover:bg-slate-100'} text-[10px] transition-colors" onclick="goPage(${i})">${i}</button>`;
+            if(i===1||i===tp||(i>=page-1&&i<=page+1)) h+=`<button class="w-8 h-8 flex items-center justify-center rounded-lg border ${i===page?'bg-blue-600 text-white border-blue-600 font-bold shadow-sm':'border-slate-200 text-slate-600 hover:bg-slate-100'} text-[10px] transition-colors" onclick="goPage(${i})">${i}</button>`;
             else if(i===page-2||i===page+2) h+=`<span class="w-6 flex items-center justify-center text-slate-300 font-bold text-xs">...</span>`;
         }
         h+=`<button class="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-400 ${page===tp?'opacity-40 cursor-not-allowed':'hover:bg-slate-100 transition-colors'}" onclick="goPage(${page+1})" ${page===tp?'disabled':''}><i class="fas fa-chevron-right text-[10px]"></i></button>`;

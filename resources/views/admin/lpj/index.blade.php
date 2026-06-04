@@ -113,7 +113,7 @@ window.lpjData = @json($list_lpj ?? []);
 
 document.addEventListener('DOMContentLoaded', () => {
     const allData = window.lpjData || [];
-    const ROWS_PER_PAGE = 10;
+    const ROWS_PER_PAGE = 5;
     let filteredData = [...allData];
     let currentPage = 1;
 

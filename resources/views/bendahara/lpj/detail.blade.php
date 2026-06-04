@@ -65,7 +65,7 @@
             <div class="absolute right-0 top-0 w-64 h-64 bg-blue-50/30 rounded-full -mr-32 -mt-32 blur-3xl"></div>
             
             <div class="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
-                <div>
+                <div class="flex-1 min-w-0">
                     <div class="flex items-center gap-3 mb-4">
                         <span class="px-3 py-1 rounded-xl bg-{{ $statusColor }}-100 text-{{ $statusColor }}-700 text-[10px] font-black uppercase tracking-widest border border-{{ $statusColor }}-200 shadow-sm">
                             {{ $status }}
@@ -73,10 +73,13 @@
                         <div class="h-4 w-px bg-slate-200 mx-1"></div>
                         <span class="text-slate-400 text-[10px] font-black uppercase tracking-widest">KODE LPJ: #{{ str_pad($id, 5, '0', STR_PAD_LEFT) }}</span>
                     </div>
-                    <h2 class="text-3xl md:text-4xl font-black text-slate-800 tracking-tighter leading-tight">Validasi Pertanggung jawaban</h2>
-                    <p class="text-sm text-slate-500 mt-2 font-medium flex items-center gap-2">
-                        <i class="fas fa-calendar-check text-blue-500"></i>
-                        Kegiatan: <span class="text-blue-600 font-black tracking-tight underline decoration-blue-200 underline-offset-4">{{ $kegiatan_data['nama_kegiatan'] }}</span>
+                    <h2 class="text-3xl md:text-4xl font-black text-slate-800 tracking-tighter leading-tight truncate">Validasi Pertanggung jawaban</h2>
+                    <p class="text-sm text-slate-500 mt-2 font-medium flex flex-wrap items-center gap-x-2 gap-y-1">
+                        <span class="flex items-center gap-1.5">
+                            <i class="fas fa-calendar-check text-blue-500"></i>
+                            <span>Kegiatan:</span>
+                        </span>
+                        <span class="text-blue-600 font-black tracking-tight underline decoration-blue-200 underline-offset-4 break-words">{{ $kegiatan_data['nama_kegiatan'] }}</span>
                     </p>
                 </div>
                 
@@ -84,7 +87,7 @@
                     $backUrl = ($from === 'dashboard') ? route('bendahara.dashboard') : route('bendahara.lpj.index');
                     $backText = ($from === 'dashboard') ? 'Kembali ke Dashboard' : 'Kembali ke Antrian';
                 @endphp
-                <div class="flex items-center gap-3 w-full md:w-auto">
+                <div class="flex-shrink-0 flex items-center gap-3 w-full md:w-auto">
                     <a href="{{ $backUrl }}" class="flex-1 md:flex-none inline-flex items-center justify-center gap-3 px-8 py-4 bg-white hover:bg-slate-50 text-slate-600 rounded-2xl transition-all font-black text-[10px] uppercase tracking-widest border border-slate-200 shadow-xl shadow-slate-100/50 active:scale-95">
                         <i class="fas fa-arrow-left"></i> {{ $backText }}
                     </a>

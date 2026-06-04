@@ -42,7 +42,7 @@
     }
 @endphp
 
-<main class="main-content font-poppins p-4 sm:p-6 lg:p-10 -mt-8 md:-mt-20 max-w-7xl mx-auto w-full animate-fade-in bg-slate-50/50">
+<main class="main-content font-poppins p-4 sm:p-6 lg:p-10 -mt-8 md:-mt-20 max-w-7xl mx-auto w-full animate-fade-in">
 
     {{-- Alert Status --}}
     @if(strtolower($status??'') === 'revisi')
@@ -101,18 +101,21 @@
             <div class="relative flex justify-between items-center max-w-4xl mx-auto">
                 <div class="absolute top-1/2 left-0 w-full h-1 bg-slate-100 -translate-y-1/2 z-0"></div>
                 @php
+                    $isSelesai = (isset($kegiatan) && $kegiatan->status_utama_id == 8) || strtolower($status ?? '') === 'selesai';
+                    $progressColor = $isSelesai ? 'emerald' : $statusColor;
                     $s = strtolower($status ?? '');
-                    $progressWidth = in_array($s, ['dana diberikan', 'disetujui', 'selesai']) ? '100%' : (($s === 'menunggu' || $s === 'review') ? '50%' : '75%');
+                    $progressWidth = $isSelesai ? '100%' : (($s === 'menunggu' || $s === 'review') ? '50%' : '75%');
                 @endphp
-                <div class="absolute top-1/2 left-0 h-1 bg-{{ $statusColor }}-500 -translate-y-1/2 z-0 transition-all duration-1000" style="width: {{ $progressWidth }}"></div>
+                <div class="absolute top-1/2 left-0 h-1 bg-{{ $progressColor }}-500 -translate-y-1/2 z-0 transition-all duration-1000" style="width: {{ $progressWidth }}"></div>
                 
                 @foreach(['Pengajuan', 'Verifikasi', 'Selesai'] as $index => $step)
                     @php
-                        $isCompleted = in_array($s, ['dana diberikan', 'disetujui', 'selesai']) || ($index === 0) || ($index === 1 && $s !== 'menunggu' && $s !== 'review');
-                        $isActive = ($index === 1 && ($s === 'review' || $s === 'menunggu')) || ($index === 2 && in_array($s, ['dana diberikan', 'disetujui', 'selesai']));
+                        $isCompleted = $isSelesai || ($index === 0) || ($index === 1 && $s !== 'menunggu' && $s !== 'review');
+                        $isActive = ($index === 2 && $isSelesai) ||
+                                    ($index === 1 && !$isSelesai && ($s === 'review' || $s === 'menunggu'));
                     @endphp
                     <div class="relative z-10 flex flex-col items-center">
-                        <div class="w-10 h-10 rounded-full {{ $isCompleted ? 'bg-'.$statusColor.'-500 text-white shadow-md' : ($isActive ? 'bg-white border-4 border-'.$statusColor.'-500 text-'.$statusColor.'-500 shadow-md' : 'bg-white border-4 border-slate-200 text-slate-300') }} flex items-center justify-center transition-all duration-500">
+                        <div class="w-10 h-10 rounded-full {{ $isCompleted ? 'bg-'.$progressColor.'-500 text-white shadow-md' : ($isActive ? 'bg-white border-4 border-'.$progressColor.'-500 text-'.$progressColor.'-500 shadow-md' : 'bg-white border-4 border-slate-200 text-slate-300') }} flex items-center justify-center transition-all duration-500">
                             @if($isCompleted) <i class="fas fa-check text-sm"></i> @else <span class="text-sm font-bold">{{ $index + 1 }}</span> @endif
                         </div>
                         <span class="absolute -bottom-7 text-[10px] font-black uppercase tracking-widest whitespace-nowrap {{ $isCompleted || $isActive ? 'text-slate-800' : 'text-slate-400' }}">{{ $step }}</span>
@@ -121,11 +124,8 @@
             </div>
         </div>
 
-        {{-- Main Layout Grid --}}
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-10 mt-16">
-            
-            {{-- Left Column: KAK Data --}}
-            <div class="lg:col-span-2 space-y-10">
+        {{-- main content layout matching the screenshots --}}
+        <div class="space-y-12 mt-16 max-w-5xl mx-auto">
                 
                 {{-- KERANGKA ACUAN KERJA (KAK) SECTION --}}
                 <div class="space-y-6">
@@ -274,8 +274,10 @@
 
             </div>
 
-            {{-- Right Column: Budget Summary & History --}}
-            <div class="space-y-10">
+            {{-- STATUS ANGGARAN & PENCAIRAN SECTION --}}
+            <div class="space-y-6 pt-6">
+                <h3 class="text-2xl font-black text-slate-800 tracking-tight">Status Anggaran & Realisasi</h3>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 
                 <!-- Budget Summary Card -->
                 <div class="bg-slate-900 rounded-[2.5rem] shadow-2xl shadow-slate-300 overflow-hidden relative group">
@@ -320,7 +322,8 @@
                     </div>
                 </div>
 
-                <!-- LPJ Status Card -->
+                <div class="space-y-6">
+                    <!-- LPJ Status Card -->
                 <div class="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm relative overflow-hidden group">
                     <div class="absolute -right-4 -top-4 w-16 h-16 bg-slate-50 rounded-full group-hover:scale-150 transition-transform duration-700"></div>
                     <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-2">
@@ -379,6 +382,7 @@
                 @endif
             </div>
         </div>
+    </div>
 
         {{-- RINCIAN ANGGARAN BIAYA (RAB) SECTION --}}
         <div class="mt-20 pt-16 border-t border-slate-100">
@@ -564,6 +568,15 @@
             </div>
         </div>
         @endif
+
+        {{-- BOTTOM ACTIONS SECTION --}}
+        <div class="flex flex-wrap justify-between items-center pt-10 border-t border-slate-100 gap-4 mt-12">
+            <a href="{{ route('bendahara.riwayat.index') }}" class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#187CFC] hover:bg-blue-700 text-white rounded-2xl transition font-black text-sm shadow-lg shadow-blue-200">
+                <i class="fas fa-arrow-left"></i> Kembali
+            </a>
+        </div>
+
+    </div> {{-- End of max-w-5xl mx-auto --}}
 
     </section>
 </main>

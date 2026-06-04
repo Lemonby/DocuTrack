@@ -10,15 +10,28 @@ class LpjController extends Controller
     public function index()
     {
         $userId = \Illuminate\Support\Facades\Session::get('user_id') ?? 1;
-        $kegiatanList = \App\Models\Kegiatan::with(['statusUtama', 'user', 'lpj'])
-            ->where('user_id', $userId)
-            ->whereIn('status_utama_id', [\App\Services\WorkflowService::STATUS_DANA_DIBERIKAN, 6])
-            ->latest()
-            ->get();
+        $jurusan = \Illuminate\Support\Facades\Session::get('jurusan');
+
+        $query = \App\Models\Kegiatan::with(['statusUtama', 'user', 'lpj'])
+            ->whereIn('status_utama_id', [
+                \App\Services\WorkflowService::STATUS_DANA_DIBERIKAN,
+                6,
+                8
+            ]);
+
+        if (!empty($jurusan)) {
+            $query->where('jurusan_penyelenggara', $jurusan);
+        } else {
+            $query->where('user_id', $userId);
+        }
+
+        $kegiatanList = $query->latest()->get();
 
         $list_lpj = $kegiatanList->map(function ($kegiatan) {
             $statusLabel = 'menunggu_upload';
-            if ($kegiatan->lpj) {
+            if ($kegiatan->status_utama_id == 8) {
+                $statusLabel = 'selesai';
+            } elseif ($kegiatan->lpj) {
                 if ($kegiatan->lpj->status_id == 1) {
                     $statusLabel = $kegiatan->lpj->submitted_at ? 'menunggu' : 'menunggu_upload';
                 } elseif ($kegiatan->lpj->status_id == 2) {
@@ -27,6 +40,8 @@ class LpjController extends Controller
                     $statusLabel = 'disetujui';
                 } elseif ($kegiatan->lpj->status_id == 4) {
                     $statusLabel = 'ditolak';
+                } elseif ($kegiatan->lpj->status_id == 8) {
+                    $statusLabel = 'selesai';
                 }
             }
 
@@ -50,7 +65,9 @@ class LpjController extends Controller
         $kegiatan = (new \App\Services\KegiatanService())->getDetailLengkap($id);
         
         $status = 'menunggu_upload';
-        if ($kegiatan->lpj) {
+        if ($kegiatan->status_utama_id == 8) {
+            $status = 'selesai';
+        } elseif ($kegiatan->lpj) {
             if ($kegiatan->lpj->status_id == 1) {
                 $status = $kegiatan->lpj->submitted_at ? 'menunggu' : 'menunggu_upload';
             } elseif ($kegiatan->lpj->status_id == 2) {
@@ -59,6 +76,8 @@ class LpjController extends Controller
                 $status = 'disetujui';
             } elseif ($kegiatan->lpj->status_id == 4) {
                 $status = 'ditolak';
+            } elseif ($kegiatan->lpj->status_id == 8) {
+                $status = 'selesai';
             }
         }
         

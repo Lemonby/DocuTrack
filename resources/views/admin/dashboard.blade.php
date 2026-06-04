@@ -487,7 +487,7 @@ window.dataLPJ = @json($list_lpj ?? []);
             <td class="px-6 py-4">${statusBadge(item.status)}</td>
             <td class="px-6 py-4">
                 <a href="${url}/${item.id || 0}?from=dashboard" class="inline-flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-sm active:scale-95">
-                    <i class="fas fa-file-alt text-[8px]"></i> Rincian LPJ
+                    <i class="fas fa-file-alt text-[8px]"></i> Rincian
                 </a>
             </td>
         </tr>`;

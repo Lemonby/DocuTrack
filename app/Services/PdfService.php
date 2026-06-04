@@ -58,6 +58,9 @@ class PdfService
 
         // 3. Generate PDF
         try {
+            // Increase PCRE backtrack limit to prevent mPDF crash on large HTML/base64 strings
+            @ini_set('pcre.backtrack_limit', '10000000');
+            
             $mpdf = new \Mpdf\Mpdf($mpdfConfig);
             
             // Set Metadata

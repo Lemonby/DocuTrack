@@ -53,13 +53,13 @@
         </div>
 
         <div class="p-3 sm:p-4 mt-4 border-t border-gray-200 bg-gray-50 rounded-lg">
-            <div class="flex flex-col gap-3">
-                <div id="pagination-buttons" class="flex gap-1 flex-wrap justify-center"></div>
-                <div class="text-xs sm:text-sm text-gray-600 text-center">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div class="text-xs sm:text-sm text-gray-600 text-center sm:text-left">
                     Menampilkan <span id="showing-start" class="font-semibold text-gray-800">0</span> s.d.
                     <span id="showing-end" class="font-semibold text-gray-800">0</span> dari
                     <span id="total-records" class="font-semibold text-gray-800">0</span> data
                 </div>
+                <div id="pagination-buttons" class="flex gap-1 flex-wrap justify-center"></div>
             </div>
         </div>
     </section>
@@ -72,7 +72,7 @@ window.riwayatData = @json($list_riwayat ?? []);
 
 document.addEventListener('DOMContentLoaded', () => {
     const allData = window.riwayatData || [];
-    const ROWS = 10;
+    const ROWS = 5;
     let filtered = [...allData], page = 1;
 
     const searchInput = document.getElementById('search-input');
@@ -87,7 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function badge(status) {
         const s = (status||'').toLowerCase();
         let cls = 'bg-slate-100 text-slate-600 border-slate-200';
-        if(['dana diberikan','disetujui','selesai'].includes(s)) cls='bg-emerald-100 text-emerald-700 border-emerald-200';
+        if(['dana diberikan','disetujui','selesai','lpj disetujui'].includes(s)) cls='bg-emerald-100 text-emerald-700 border-emerald-200';
         else if(s==='revisi') cls='bg-amber-100 text-amber-700 border-amber-200';
         else if(s==='ditolak') cls='bg-rose-100 text-rose-700 border-rose-200';
         return `<span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${cls}">${esc(status||'-')}</span>`;
@@ -98,7 +98,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const st = (filterStatus?.value||'').toLowerCase();
         filtered = allData.filter(item => {
             const txt = ((item.nama||'')+(item.pengusul||'')+(item.jurusan||'')).toLowerCase();
-            const stMatch = !st||(item.status||'').toLowerCase()===st;
+            const itemStatus = (item.status||'').toLowerCase();
+            const stMatch = !st || itemStatus === st || (st === 'disetujui' && (itemStatus === 'lpj disetujui' || itemStatus === 'selesai'));
             return (!s||txt.includes(s))&&stMatch;
         });
         page=1; render();

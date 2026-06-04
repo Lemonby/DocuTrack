@@ -325,22 +325,34 @@ class KegiatanService
         
         $role = $role ?? 'admin';
 
+        if (!$jurusan) {
+            if (auth()->check()) {
+                $jurusan = auth()->user()->nama_jurusan;
+            } else {
+                $jurusan = \Illuminate\Support\Facades\Session::get('jurusan');
+            }
+        }
+
         return match (strtolower($role)) {
-            'admin' => $this->getAdminDashboardStats(),
+            'admin' => $this->getAdminDashboardStats($jurusan),
             'verifikator' => $this->getVerifikatorDashboardStats(),
             'ppk' => $this->getPpkDashboardStats(),
             'wadir' => $this->getWadirDashboardStats(),
             'bendahara' => $this->getBendaharaDashboardStats(),
-            default => $this->getAdminDashboardStats(),
+            default => $this->getAdminDashboardStats($jurusan),
         };
     }
 
     /**
      * Admin Dashboard Statistics.
      */
-    public function getAdminDashboardStats(): array
+    public function getAdminDashboardStats(?string $jurusan = null): array
     {
         $query = Kegiatan::query();
+
+        if (!empty($jurusan)) {
+            $query->where('jurusan_penyelenggara', $jurusan);
+        }
 
         return [
             'total' => (clone $query)->count(),
@@ -380,8 +392,10 @@ class KegiatanService
 
         $menungguCount = (clone $query)->where('posisi_id', 3)->count();
         $disetujuiCount = (clone $query)->where(function ($q) {
-            $q->where('posisi_id', '>', 3)
-              ->orWhereIn('status_utama_id', [5, 6, 8]);
+            $q->where(function ($sub) {
+                $sub->where('posisi_id', '>', 3)
+                    ->whereNotNull('bukti_mak');
+            })->orWhereIn('status_utama_id', [5, 6, 8]);
         })->count();
 
         return [
@@ -400,8 +414,10 @@ class KegiatanService
 
         $menungguCount = (clone $query)->where('posisi_id', 4)->count();
         $disetujuiCount = (clone $query)->where(function ($q) {
-            $q->where('posisi_id', '>', 4)
-              ->orWhereIn('status_utama_id', [5, 6, 8]);
+            $q->where(function ($sub) {
+                $sub->where('posisi_id', '>', 4)
+                    ->whereNotNull('bukti_mak');
+            })->orWhereIn('status_utama_id', [5, 6, 8]);
         })->count();
 
         return [
