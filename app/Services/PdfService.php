@@ -71,6 +71,13 @@ class PdfService
 
             $mpdf->WriteHTML($html);
             
+            if (app()->environment('testing') && $mode === 'I') {
+                $pdfContent = $mpdf->Output($filename, 'S');
+                return response($pdfContent)
+                    ->header('Content-Type', 'application/pdf')
+                    ->header('Content-Disposition', 'inline; filename="' . $filename . '"');
+            }
+
             return $mpdf->Output($filename, $mode);
             
         } catch (Exception $e) {

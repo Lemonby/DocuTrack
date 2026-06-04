@@ -49,8 +49,8 @@ class Lpj extends Model
         }
 
         return match (true) {
-            $this->tenggat_lpj < now()->toDateString() => 'OVERDUE',
-            $this->tenggat_lpj == now()->toDateString() => 'DUE_TODAY',
+            $this->tenggat_lpj?->toDateString() < now()->toDateString() => 'OVERDUE',
+            $this->tenggat_lpj?->toDateString() == now()->toDateString() => 'DUE_TODAY',
             default => 'PENDING',
         };
     }
