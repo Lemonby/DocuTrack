@@ -157,36 +157,113 @@ document.addEventListener('DOMContentLoaded', () => {
         const activeStepElement = document.getElementById(`form-tahap-${stepNumber}`);
         if (!activeStepElement) return false;
 
-        activeStepElement.querySelectorAll('.border-red-500').forEach(el => el.classList.remove('border-red-500'));
-        activeStepElement.querySelectorAll('.ring-red-500').forEach(el => el.classList.remove('ring-red-500', 'ring-2'));
+        // 1. Clear all existing error-msg elements and red borders/rings
+        activeStepElement.querySelectorAll('.error-msg').forEach(el => el.remove());
+        activeStepElement.querySelectorAll('.border-red-500').forEach(el => {
+            el.classList.remove('border-red-500', 'focus:border-red-500');
+            el.classList.add('border-gray-300', 'focus:border-blue-600');
+        });
+        activeStepElement.querySelectorAll('.focus\\:ring-red-200').forEach(el => {
+            el.classList.remove('focus:ring-red-200');
+        });
 
-        const inputs = activeStepElement.querySelectorAll('input[required], textarea[required], select[required]');
+        // If step is 4, validate the RAB data
+        if (stepNumber === 4) {
+            let totalItems = 0;
+            let hasInvalidItem = false;
+            let errorMessage = '';
+
+            for (const category in budgetData) {
+                totalItems += budgetData[category].length;
+                for (const item of budgetData[category]) {
+                    const uraian = (item.uraian || '').trim();
+                    const harga = parseFloat(item.harga) || 0;
+                    if (!uraian) {
+                        hasInvalidItem = true;
+                        errorMessage = `Setiap item belanja pada kategori '${category}' harus memiliki uraian yang jelas.`;
+                        break;
+                    }
+                    if (harga <= 0) {
+                        hasInvalidItem = true;
+                        errorMessage = `Harga untuk item '${uraian}' pada kategori '${category}' harus lebih besar dari 0.`;
+                        break;
+                    }
+                }
+                if (hasInvalidItem) break;
+            }
+
+            if (totalItems === 0) {
+                errorMessage = 'Rincian Anggaran Biaya (RAB) minimal harus memiliki 1 item belanja yang valid.';
+            }
+
+            if (errorMessage) {
+                const grandTotalContainer = activeStepElement.querySelector('.grand-total-container');
+                if (grandTotalContainer) {
+                    const errorBox = document.createElement('div');
+                    errorBox.className = 'error-msg w-full bg-red-50 border border-red-300 text-red-700 p-4 rounded-xl mb-6 shadow-sm animate-fade-in flex items-center gap-3';
+                    errorBox.innerHTML = `<i class="fas fa-exclamation-circle text-red-500 text-lg"></i> <span class="text-sm font-semibold">${errorMessage}</span>`;
+                    grandTotalContainer.insertAdjacentElement('beforebegin', errorBox);
+                    errorBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                return false;
+            }
+            return true;
+        }
+
+        // 2. Find inputs to validate
+        const inputs = activeStepElement.querySelectorAll('input, select, textarea');
         let firstErrorElement = null;
 
         inputs.forEach(input => {
-            if (input.value.trim() === '') {
+            // Skip disabled/readonly inputs unless it's prodi (which might be disabled initially but is required)
+            if (input.readOnly || (input.disabled && input.id !== 'prodi')) return;
+
+            const isRequired = input.getAttribute('data-required') === 'true' || input.hasAttribute('required');
+            const val = (input.value || '').trim();
+            let hasError = false;
+            let errorMsg = '';
+
+            if (isRequired && val === '') {
+                hasError = true;
+                errorMsg = input.getAttribute('data-msg-required') || 'Bidang ini wajib diisi.';
+            } else if (input.getAttribute('data-max-length')) {
+                const maxLen = parseInt(input.getAttribute('data-max-length'));
+                if (val.length > maxLen) {
+                    hasError = true;
+                    errorMsg = input.getAttribute('data-msg-max') || `Panjang maksimal ${maxLen} karakter.`;
+                }
+            }
+
+            if (hasError) {
                 isValid = false;
-                const inputBorderEl = input.tagName === 'SELECT' ? (input.closest('.select-wrapper') || input) : input;
-                inputBorderEl.classList.add('border-red-500');
-                if (input.tagName === 'SELECT') inputBorderEl.classList.add('ring-2', 'ring-red-500');
                 
-                if (!firstErrorElement) firstErrorElement = input;
+                // Style input border
+                input.classList.remove('border-gray-300', 'focus:border-blue-600');
+                input.classList.add('border-red-500', 'focus:border-red-500');
+                if (input.classList.contains('focus:ring-2')) {
+                    input.classList.add('focus:ring-red-200');
+                }
+
+                // Create error span
+                const errorSpan = document.createElement('span');
+                errorSpan.className = 'error-msg text-red-500 text-xs mt-1 block font-medium';
+                errorSpan.textContent = errorMsg;
+
+                // Find the appropriate container to append the error span below
+                const container = input.closest('.relative:not(.select-wrapper)') || input.parentElement;
+                container.appendChild(errorSpan);
+
+                if (!firstErrorElement) {
+                    firstErrorElement = input;
+                }
             }
         });
 
-        if (!isValid) {
-            // Menggunakan SweetAlert untuk notifikasi error
-            Swal.fire({
-                title: 'Form Belum Lengkap',
-                text: 'Harap isi semua bidang yang wajib diisi (ditandai merah) sebelum melanjutkan.',
-                icon: 'error',
-                confirmButtonColor: '#3B82F6'
-            });
-            if (firstErrorElement) {
-                firstErrorElement.focus();
-                firstErrorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
+        if (!isValid && firstErrorElement) {
+            firstErrorElement.focus();
+            firstErrorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
+
         return isValid;
     }
     

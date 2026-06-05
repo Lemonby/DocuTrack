@@ -47,13 +47,14 @@ use App\Http\Controllers\SuperAdmin\AkunController as SuperAdminAkunController;
 use App\Http\Controllers\CetakKakController;
 use App\Http\Controllers\CetakLpjController;
 use App\Http\Middleware\CheckRole;
+use App\Http\Middleware\CheckDepartmentAccess;
 
 // Authentication required routes
 Route::middleware([CheckRole::class])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/dashboard', [DashboardController::class, 'index']);
-    Route::get('/cetak-kak/{id}', [CetakKakController::class, 'cetak'])->name('cetak.kak');
-    Route::get('/cetak-lpj/{id}', [CetakLpjController::class, 'cetak'])->name('cetak.lpj');
+    Route::get('/cetak-kak/{id}', [CetakKakController::class, 'cetak'])->name('cetak.kak')->middleware(CheckDepartmentAccess::class);
+    Route::get('/cetak-lpj/{id}', [CetakLpjController::class, 'cetak'])->name('cetak.lpj')->middleware(CheckDepartmentAccess::class);
 
     // Web Notification API routes
     Route::get('/api/notifikasi', [\App\Http\Controllers\WebNotifikasiController::class, 'index']);
@@ -61,7 +62,7 @@ Route::middleware([CheckRole::class])->group(function () {
     Route::post('/api/notifikasi/baca-semua', [\App\Http\Controllers\WebNotifikasiController::class, 'markAllAsRead']);
 
     // Admin routes
-    Route::prefix('admin')->group(function () {
+    Route::prefix('admin')->middleware([CheckRole::class . ':admin', CheckDepartmentAccess::class])->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'adminDashboard'])->name('admin.dashboard');
 
         // Usulan (Pengajuan KAK)
@@ -89,7 +90,7 @@ Route::middleware([CheckRole::class])->group(function () {
     });
 
     // ─── BENDAHARA ROUTES ────────────────────────────────────────────
-    Route::prefix('bendahara')->group(function () {
+    Route::prefix('bendahara')->middleware(CheckRole::class . ':bendahara')->group(function () {
         Route::get('/dashboard', [BendaharaDashboardController::class, 'index'])->name('bendahara.dashboard');
 
         // Pencairan Dana
@@ -113,7 +114,7 @@ Route::middleware([CheckRole::class])->group(function () {
     });
 
     // ─── VERIFIKATOR ROUTES ──────────────────────────────────────────
-    Route::prefix('verifikator')->group(function () {
+    Route::prefix('verifikator')->middleware(CheckRole::class . ':verifikator')->group(function () {
         Route::get('/dashboard', [VerifikatorController::class, 'dashboard'])->name('verifikator.dashboard');
 
         // Telaah
@@ -134,7 +135,7 @@ Route::middleware([CheckRole::class])->group(function () {
     });
 
     // ─── PPK ROUTES ────────────────────────────────────────────────
-    Route::prefix('ppk')->group(function () {
+    Route::prefix('ppk')->middleware(CheckRole::class . ':ppk')->group(function () {
         Route::get('/dashboard', [PpkController::class, 'dashboard'])->name('ppk.dashboard');
 
         // Kegiatan
@@ -155,7 +156,7 @@ Route::middleware([CheckRole::class])->group(function () {
     });
 
     // ─── WADIR ROUTES ──────────────────────────────────────────────
-    Route::prefix('wadir')->group(function () {
+    Route::prefix('wadir')->middleware(CheckRole::class . ':wadir')->group(function () {
         Route::get('/dashboard', [WadirController::class, 'dashboard'])->name('wadir.dashboard');
         Route::get('/kegiatan', [WadirKegiatanController::class, 'index'])->name('wadir.kegiatan.index');
         Route::get('/kegiatan/show/{id}', [WadirKegiatanController::class, 'show'])->name('wadir.kegiatan.show');
@@ -169,7 +170,7 @@ Route::middleware([CheckRole::class])->group(function () {
     });
 
     // ─── DIREKTUR ROUTES ───────────────────────────────────────────
-    Route::prefix('direktur')->group(function () {
+    Route::prefix('direktur')->middleware(CheckRole::class . ':direktur')->group(function () {
         Route::get('/dashboard', [DirekturController::class, 'dashboard'])->name('direktur.dashboard');
         Route::get('/dashboard/api/dana-per-jurusan', [DirekturController::class, 'getDanaPerJurusan'])->name('direktur.dashboard.api.dana');
         Route::get('/monitoring', [DirekturMonitoringController::class, 'index'])->name('direktur.monitoring.index');
@@ -181,10 +182,14 @@ Route::middleware([CheckRole::class])->group(function () {
     });
 
     // ─── SUPERADMIN ROUTES ─────────────────────────────────────────
-    Route::prefix('superadmin')->group(function () {
+    Route::prefix('superadmin')->middleware(CheckRole::class . ':superadmin')->group(function () {
         Route::get('/dashboard', [SuperAdminController::class, 'dashboard'])->name('superadmin.dashboard');
         Route::get('/get-ai-analysis', [SuperAdminController::class, 'getAiAnalysis'])->name('superadmin.ai.analysis');
         Route::get('/kelola-akun', [SuperAdminUserController::class, 'index'])->name('superadmin.users.index');
+        Route::post('/kelola-akun/store', [SuperAdminUserController::class, 'store'])->name('superadmin.users.store');
+        Route::post('/kelola-akun/update', [SuperAdminUserController::class, 'update'])->name('superadmin.users.update');
+        Route::delete('/kelola-akun/destroy/{id}', [SuperAdminUserController::class, 'destroy'])->name('superadmin.users.destroy');
+        Route::patch('/kelola-akun/toggle-status/{id}', [SuperAdminUserController::class, 'toggleStatus'])->name('superadmin.users.toggle-status');
         Route::get('/buat-iku', [SuperAdminIkuController::class, 'index'])->name('superadmin.iku.index');
         Route::get('/monitoring', [SuperAdminController::class, 'monitoring'])->name('superadmin.monitoring');
         Route::get('/akun', [SuperAdminAkunController::class, 'index'])->name('superadmin.akun.index');

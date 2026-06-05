@@ -95,7 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!jurusanSelect || !prodiSelect) return;
 
-        jurusanSelect.addEventListener('change', function() {
+        jurusanSelect.addEventListener('change', function () {
             const selectedJurusan = this.value;
 
             // Kosongkan pilihan prodi saat ini
@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 prodiSelect.classList.add('bg-white', 'text-gray-800', 'cursor-pointer');
 
                 // Isi dropdown dengan prodi yang sesuai
-                dataProdiPNJ[selectedJurusan].forEach(function(prodi) {
+                dataProdiPNJ[selectedJurusan].forEach(function (prodi) {
                     const option = document.createElement("option");
                     option.value = prodi;
                     option.text = prodi;
@@ -200,30 +200,113 @@ document.addEventListener('DOMContentLoaded', () => {
         const activeStepElement = document.getElementById(`form-tahap-${stepNumber}`);
         if (!activeStepElement) return false;
 
-        activeStepElement.querySelectorAll('.border-red-500').forEach(el => el.classList.remove('border-red-500'));
-        activeStepElement.querySelectorAll('.ring-red-500').forEach(el => el.classList.remove('ring-red-500', 'ring-2'));
+        // 1. Clear all existing error-msg elements and red borders/rings
+        activeStepElement.querySelectorAll('.error-msg').forEach(el => el.remove());
+        activeStepElement.querySelectorAll('.border-red-500').forEach(el => {
+            el.classList.remove('border-red-500', 'focus:border-red-500');
+            el.classList.add('border-gray-300', 'focus:border-blue-600');
+        });
+        activeStepElement.querySelectorAll('.focus\\:ring-red-200').forEach(el => {
+            el.classList.remove('focus:ring-red-200');
+        });
 
-        const inputs = activeStepElement.querySelectorAll('input[required], textarea[required], select[required]');
+        // If step is 4, validate the RAB data
+        if (stepNumber === 4) {
+            let totalItems = 0;
+            let hasInvalidItem = false;
+            let errorMessage = '';
+
+            for (const category in budgetData) {
+                totalItems += budgetData[category].length;
+                for (const item of budgetData[category]) {
+                    const uraian = (item.uraian || '').trim();
+                    const harga = parseFloat(item.harga) || 0;
+                    if (!uraian) {
+                        hasInvalidItem = true;
+                        errorMessage = `Setiap item belanja pada kategori '${category}' harus memiliki uraian yang jelas.`;
+                        break;
+                    }
+                    if (harga <= 0) {
+                        hasInvalidItem = true;
+                        errorMessage = `Harga untuk item '${uraian}' pada kategori '${category}' harus lebih besar dari 0.`;
+                        break;
+                    }
+                }
+                if (hasInvalidItem) break;
+            }
+
+            if (totalItems === 0) {
+                errorMessage = 'Rincian Anggaran Biaya (RAB) minimal harus memiliki 1 item belanja yang valid.';
+            }
+
+            if (errorMessage) {
+                const grandTotalContainer = activeStepElement.querySelector('.grand-total-container');
+                if (grandTotalContainer) {
+                    const errorBox = document.createElement('div');
+                    errorBox.className = 'error-msg w-full bg-red-50 border border-red-300 text-red-700 p-4 rounded-xl mb-6 shadow-sm animate-fade-in flex items-center gap-3';
+                    errorBox.innerHTML = `<i class="fas fa-exclamation-circle text-red-500 text-lg"></i> <span class="text-sm font-semibold">${errorMessage}</span>`;
+                    grandTotalContainer.insertAdjacentElement('beforebegin', errorBox);
+                    errorBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                return false;
+            }
+            return true;
+        }
+
+        // 2. Find inputs to validate
+        const inputs = activeStepElement.querySelectorAll('input, select, textarea');
         let firstErrorElement = null;
 
         inputs.forEach(input => {
-            if (input.value.trim() === '') {
-                isValid = false;
-                const inputBorderEl = input.tagName === 'SELECT' ? (input.closest('.select-wrapper') || input) : input;
-                inputBorderEl.classList.add('border-red-500');
-                if (input.tagName === 'SELECT') inputBorderEl.classList.add('ring-2', 'ring-red-500');
+            // Skip disabled/readonly inputs unless it's prodi (which might be disabled initially but is required)
+            if (input.readOnly || (input.disabled && input.id !== 'prodi')) return;
 
-                if (!firstErrorElement) firstErrorElement = input;
+            const isRequired = input.getAttribute('data-required') === 'true' || input.hasAttribute('required');
+            const val = (input.value || '').trim();
+            let hasError = false;
+            let errorMsg = '';
+
+            if (isRequired && val === '') {
+                hasError = true;
+                errorMsg = input.getAttribute('data-msg-required') || 'Bidang ini wajib diisi.';
+            } else if (input.getAttribute('data-max-length')) {
+                const maxLen = parseInt(input.getAttribute('data-max-length'));
+                if (val.length > maxLen) {
+                    hasError = true;
+                    errorMsg = input.getAttribute('data-msg-max') || `Panjang maksimal ${maxLen} karakter.`;
+                }
+            }
+
+            if (hasError) {
+                isValid = false;
+
+                // Style input border
+                input.classList.remove('border-gray-300', 'focus:border-blue-600');
+                input.classList.add('border-red-500', 'focus:border-red-500');
+                if (input.classList.contains('focus:ring-2')) {
+                    input.classList.add('focus:ring-red-200');
+                }
+
+                // Create error span
+                const errorSpan = document.createElement('span');
+                errorSpan.className = 'error-msg text-red-500 text-xs mt-1 block font-medium';
+                errorSpan.textContent = errorMsg;
+
+                // Find the appropriate container to append the error span below
+                const container = input.closest('.relative:not(.select-wrapper)') || input.parentElement;
+                container.appendChild(errorSpan);
+
+                if (!firstErrorElement) {
+                    firstErrorElement = input;
+                }
             }
         });
 
-        if (!isValid) {
-            alert('Harap isi semua bidang yang wajib diisi (ditandai merah) sebelum melanjutkan.');
-            if (firstErrorElement) {
-                firstErrorElement.focus();
-                firstErrorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
+        if (!isValid && firstErrorElement) {
+            firstErrorElement.focus();
+            firstErrorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
+
         return isValid;
     }
 
@@ -378,7 +461,7 @@ document.addEventListener('DOMContentLoaded', () => {
     tambahTahapanBtn?.addEventListener('click', () => addRepeaterRow(tahapanContainer, tahapanTemplateHTML, updateTahapanNumbers));
     tambahIndikatorBtn?.addEventListener('click', () => addRepeaterRow(indikatorContainer, indikatorTemplateHTML));
 
-    kakFormElement?.addEventListener('click', function(event) {
+    kakFormElement?.addEventListener('click', function (event) {
         const removeBtn = event.target.closest('.remove-row-btn');
         if (removeBtn) {
             event.preventDefault();
@@ -407,7 +490,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Update color on change
-        select.addEventListener('change', function() {
+        select.addEventListener('change', function () {
             if (!this.value || this.value === '') {
                 this.style.color = '#9ca3af'; // Gray
             } else {
@@ -517,9 +600,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!rabContent) return;
         if (!activeCategory || !budgetData[activeCategory]) { rabContent.innerHTML = '<div class="p-10 text-center text-gray-500 bg-gray-50 rounded-lg italic">Pilih atau buat kategori, lalu klik "Tambah baris".</div>'; calculateTotals(); return; }
         const items = budgetData[activeCategory]; const iC = getIconForCategory(activeCategory); let trHTML = '';
-        
-        if (items.length > 0) { 
-            items.forEach(i => { 
+
+        if (items.length > 0) {
+            items.forEach(i => {
                 // Using vol1, sat1, vol2, sat2
                 trHTML += `<tr data-item-id="${i.id}" class="animate-reveal" style="animation-duration: 0.3s;">
                     <td><input type="text" class="uraian w-full p-2 border border-gray-200 rounded-md text-sm text-gray-800 bg-white" value="${i.uraian || ''}" placeholder="Uraian"></td>
@@ -531,10 +614,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td><input type="number" min="0" class="harga w-28 p-2 border border-gray-200 rounded-md text-sm text-gray-800 bg-white" value="${i.harga || 0}" placeholder="0"></td>
                     <td class="total text-sm font-semibold text-gray-800 whitespace-nowrap px-2"></td>
                     <td class="action-icons text-center"><button type="button" class="delete-row-btn text-gray-400 hover:text-red-500 cursor-pointer p-1 rounded hover:bg-red-100" title="Hapus Baris"><i class="fas fa-trash-alt pointer-events-none"></i></button></td>
-                </tr>`; 
-            }); 
-        } else { 
-            trHTML = '<tr><td colspan="9"><div class="p-6 text-center text-gray-500 bg-gray-50 rounded-lg italic">Klik "Tambah baris".</div></td></tr>'; 
+                </tr>`;
+            });
+        } else {
+            trHTML = '<tr><td colspan="9"><div class="p-6 text-center text-gray-500 bg-gray-50 rounded-lg italic">Klik "Tambah baris".</div></td></tr>';
         }
 
         // Updated Table Header with 2 Volumes/Units
@@ -567,41 +650,41 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="subtotal text-sm font-semibold text-gray-600">Subtotal Kategori: <span id="subtotal-display" class="text-gray-900"></span></div>
                 <div class="footer-actions flex items-center gap-4"><button type="button" class="btn-primary inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-center text-white rounded-lg transition-all bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-sm hover:shadow-md" id="add-row-btn"><i class="fas fa-plus"></i> Tambah baris</button></div>
             </footer>
-        </div>`; 
+        </div>`;
         calculateTotals();
     }
 
     function calculateTotals() {
         let grandTotal = 0; let activeSub = 0;
-        for (const cn in budgetData) { 
-            let catTotal = 0; 
-            budgetData[cn].forEach(i => { 
+        for (const cn in budgetData) {
+            let catTotal = 0;
+            budgetData[cn].forEach(i => {
                 const v1 = parseFloat(i.vol1) || 0;
                 const v2 = parseFloat(i.vol2) || 1; // Default vol2 to 1 if empty so it doesn't zero out results
                 const p = parseFloat(i.harga) || 0;
-                catTotal += v1 * v2 * p; 
-            }); 
-            if (cn === activeCategory) activeSub = catTotal; 
-            grandTotal += catTotal; 
+                catTotal += v1 * v2 * p;
+            });
+            if (cn === activeCategory) activeSub = catTotal;
+            grandTotal += catTotal;
         }
         const format = (v) => (typeof formatRupiah === 'function') ? formatRupiah(v) : `RP ${v.toLocaleString('id-ID')}`;
         const subD = document.getElementById('subtotal-display'); if (subD) subD.textContent = format(activeSub);
         const subH = document.getElementById('subtotal-header'); if (subH) subH.textContent = `Subtotal: ${format(activeSub)}`;
         if (grandTotalDisplay) grandTotalDisplay.textContent = format(grandTotal);
-        const curRC = document.getElementById('rab-content'); 
-        if (curRC) { 
-            curRC.querySelectorAll('#rab-table-body tr[data-item-id]').forEach(r => { 
-                const v1I = r.querySelector('.vol1'); 
-                const v2I = r.querySelector('.vol2'); 
-                const hI = r.querySelector('.harga'); 
-                const tC = r.querySelector('.total'); 
-                if (v1I && v2I && hI && tC) { 
-                    const v1 = parseFloat(v1I.value) || 0; 
+        const curRC = document.getElementById('rab-content');
+        if (curRC) {
+            curRC.querySelectorAll('#rab-table-body tr[data-item-id]').forEach(r => {
+                const v1I = r.querySelector('.vol1');
+                const v2I = r.querySelector('.vol2');
+                const hI = r.querySelector('.harga');
+                const tC = r.querySelector('.total');
+                if (v1I && v2I && hI && tC) {
+                    const v1 = parseFloat(v1I.value) || 0;
                     const v2 = parseFloat(v2I.value) || 1; // Default logic here too for display
-                    const h = parseFloat(hI.value) || 0; 
-                    tC.textContent = format(v1 * v2 * h); 
-                } 
-            }); 
+                    const h = parseFloat(hI.value) || 0;
+                    tC.textContent = format(v1 * v2 * h);
+                }
+            });
         }
     }
 
@@ -614,26 +697,26 @@ document.addEventListener('DOMContentLoaded', () => {
         newCategoryNameInputRAB.addEventListener('keypress', (e) => { if (e.key === 'Enter') createCategoryBtnRAB.click(); });
         rabContent.addEventListener('click', (e) => { if (e.target.closest('#add-row-btn')) { if (!activeCategory) { alert("Pilih atau buat kategori dulu."); return; } budgetData[activeCategory].push({ id: Date.now(), uraian: '', rincian: '', vol1: 1, sat1: '', vol2: 1, sat2: '', harga: 0 }); renderRabContent(); } if (e.target.closest('.delete-row-btn')) { const r = e.target.closest('tr'); if (!r || !r.dataset.itemId) return; const id = parseInt(r.dataset.itemId); budgetData[activeCategory] = budgetData[activeCategory].filter(i => i.id !== id); renderRabContent(); } });
         // Updated Event Listener for mapped inputs
-        rabContent.addEventListener('input', (e) => { 
-            const t = e.target; 
-            const r = t.closest('tr'); 
-            if (!r || !r.dataset.itemId) return; 
-            const id = parseInt(r.dataset.itemId); 
-            
+        rabContent.addEventListener('input', (e) => {
+            const t = e.target;
+            const r = t.closest('tr');
+            if (!r || !r.dataset.itemId) return;
+            const id = parseInt(r.dataset.itemId);
+
             // Mapping classes to data properties
-            const pM = { 'uraian': 'uraian', 'rincian': 'rincian', 'vol1': 'vol1', 'sat1': 'sat1', 'vol2': 'vol2', 'sat2': 'sat2', 'harga': 'harga' }; 
-            const p = Object.keys(pM).find(k => t.classList.contains(k)); 
-            
+            const pM = { 'uraian': 'uraian', 'rincian': 'rincian', 'vol1': 'vol1', 'sat1': 'sat1', 'vol2': 'vol2', 'sat2': 'sat2', 'harga': 'harga' };
+            const p = Object.keys(pM).find(k => t.classList.contains(k));
+
             const i = budgetData[activeCategory]?.find(item => item.id === id);
-            if (i && p) { 
+            if (i && p) {
                 // Handle numbers vs text
                 if (t.type === 'number') {
                     i[p] = parseFloat(t.value); // Keep empty or 0 logic inside calc
                 } else {
                     i[p] = t.value;
                 }
-                calculateTotals(); 
-            } 
+                calculateTotals();
+            }
         });
     }
 
@@ -671,7 +754,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             const bulanSelect = row.querySelector('select[name="indikator_bulan[]"]');
                             const namaInput = row.querySelector('input[name="indikator_nama[]"]');
                             const targetInput = row.querySelector('input[name="indikator_target[]"]');
-                            
+
                             if (bulanSelect) {
                                 bulanSelect.value = bulan;
                                 bulanSelect.setAttribute('filled', 'true');
@@ -699,13 +782,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (window.initialBudgetData && typeof window.initialBudgetData === 'object') {
             // Merge initial data into budgetData
             budgetData = { ...budgetData, ...window.initialBudgetData };
-            
+
             // Set active category to first available
             const keys = Object.keys(budgetData);
             if (keys.length > 0) {
                 activeCategory = keys[0];
             }
-            
+
             renderRabSidebar();
             renderRabContent();
             calculateTotals();

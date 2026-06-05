@@ -27,6 +27,22 @@
         </div>
     @endif
 
+    @if($errors->any())
+        <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-r-xl shadow-sm">
+            <div class="flex items-start gap-3">
+                <i class="fas fa-exclamation-circle text-red-500 mt-1"></i>
+                <div>
+                    <h3 class="text-red-800 font-bold text-sm">Terdapat kesalahan pengisian form</h3>
+                    <ul class="list-disc list-inside text-xs text-red-700 mt-1 space-y-1">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            </div>
+        </div>
+    @endif
+
     <section class="bg-white rounded-xl sm:rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
         
         <div class="px-6 sm:px-10 py-8 border-b border-slate-50 bg-gradient-to-br from-white to-slate-50/50 flex justify-between items-center">
@@ -63,12 +79,12 @@
                         <div class="space-y-2">
                             <label class="block text-xs font-bold text-slate-700">Nama Lengkap <span class="text-rose-500">*</span></label>
                             <input type="text" name="penanggung_jawab" value="{{ $detail_data['penanggung_jawab'] ?? '' }}"
-                                class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 outline-none transition-all font-medium text-sm" required>
+                                class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 outline-none transition-all font-medium text-sm">
                         </div>
                         <div class="space-y-2">
                             <label class="block text-xs font-bold text-slate-700">NIM / NIP <span class="text-rose-500">*</span></label>
                             <input type="text" name="nim_nip_pj" value="{{ $detail_data['nim_nip_pj'] ?? '' }}"
-                                class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 outline-none transition-all font-mono text-sm" required>
+                                class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 outline-none transition-all font-mono text-sm">
                         </div>
                     </div>
                 </div>
@@ -85,12 +101,12 @@
                         <div class="space-y-2">
                             <label class="block text-xs font-bold text-slate-700">Tanggal Mulai <span class="text-rose-500">*</span></label>
                             <input type="date" name="tanggal_mulai" value="{{ $detail_data['tanggal_mulai'] ?? '' }}"
-                                class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 outline-none transition-all text-sm" required>
+                                class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 outline-none transition-all text-sm">
                         </div>
                         <div class="space-y-2">
                             <label class="block text-xs font-bold text-slate-700">Tanggal Selesai <span class="text-rose-500">*</span></label>
                             <input type="date" name="tanggal_selesai" value="{{ $detail_data['tanggal_selesai'] ?? '' }}"
-                                class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 outline-none transition-all text-sm" required>
+                                class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 outline-none transition-all text-sm">
                         </div>
                     </div>
                 </div>

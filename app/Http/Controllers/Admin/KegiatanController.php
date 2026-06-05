@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Http\Requests\Admin\SubmitRincianRequest;
 
 class KegiatanController extends Controller
 {
@@ -47,7 +48,7 @@ class KegiatanController extends Controller
         return view('admin.kegiatan.detail', compact('id', 'status', 'detail_data'));
     }
 
-    public function storeRincian(Request $request)
+    public function storeRincian(SubmitRincianRequest $request)
     {
         if ($request->has('kegiatan_id')) {
             $file = $request->file('surat_pengantar');

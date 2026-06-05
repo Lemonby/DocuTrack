@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Http\Requests\Admin\StoreLpjRequest;
 
 class LpjController extends Controller
 {
@@ -149,24 +150,8 @@ class LpjController extends Controller
         ));
     }
 
-    public function store(Request $request)
+    public function store(StoreLpjRequest $request)
     {
-        $request->validate([
-            'kegiatan_id' => 'required|exists:kegiatans,kegiatan_id',
-            'uraian' => 'nullable|array',
-            'rincian' => 'nullable|array',
-            'vol1' => 'nullable|array',
-            'sat1' => 'nullable|array',
-            'vol2' => 'nullable|array',
-            'sat2' => 'nullable|array',
-            'harga' => 'nullable|array',
-            'realisasi' => 'nullable|array',
-            'bukti' => 'nullable|array',
-            'lpj_item_id' => 'nullable|array',
-            'realisasi_tanggal_mulai' => 'required|date',
-            'realisasi_tanggal_selesai' => 'required|date|after_or_equal:realisasi_tanggal_mulai',
-        ]);
-
         $kegiatan = \App\Models\Kegiatan::with(['kak.rabs.kategori', 'lpj'])->findOrFail($request->kegiatan_id);
 
         $lpj = $kegiatan->lpj;

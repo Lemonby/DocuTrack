@@ -36,6 +36,24 @@
         </div>
     @endif
 
+    @if($errors->any())
+        <div class="bg-red-50 border-l-4 border-red-500 p-6 mb-8 rounded-r-3xl shadow-sm animate-slide-up">
+            <div class="flex items-start gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-red-100 flex items-center justify-center flex-shrink-0 text-red-600 border border-red-200">
+                    <i class="fas fa-exclamation-circle text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-red-800 font-black text-xs uppercase tracking-widest mb-1">Terdapat kesalahan pengisian form</h3>
+                    <ul class="list-disc list-inside text-xs text-red-700 mt-1 space-y-1">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            </div>
+        </div>
+    @endif
+
     <section class="bg-white rounded-[2.5rem] shadow-2xl shadow-slate-200/60 border border-slate-100 overflow-hidden mb-10">
         
         <!-- Premium Header -->
@@ -292,8 +310,7 @@
                                                    name="realisasi_tanggal_mulai" 
                                                    id="realisasi_tanggal_mulai" 
                                                    value="{{ $realisasi_tanggal_mulai ?? \Carbon\Carbon::parse($tanggal_mulai)->format('Y-m-d') }}"
-                                                   class="w-full px-4 py-3 text-xs font-bold border-2 border-slate-100 rounded-2xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50 outline-none transition-all bg-white text-slate-700" 
-                                                   required>
+                                                   class="w-full px-4 py-3 text-xs font-bold border-2 border-slate-100 rounded-2xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50 outline-none transition-all bg-white text-slate-700">
                                         @else
                                             <div class="px-4 py-3 text-xs font-black border border-slate-200 bg-slate-50 rounded-2xl text-slate-700">
                                                 {{ $realisasi_tanggal_mulai ? \Carbon\Carbon::parse($realisasi_tanggal_mulai)->format('d F Y') : '-' }}
@@ -307,8 +324,7 @@
                                                    name="realisasi_tanggal_selesai" 
                                                    id="realisasi_tanggal_selesai" 
                                                    value="{{ $realisasi_tanggal_selesai ?? \Carbon\Carbon::parse($tanggal_selesai)->format('Y-m-d') }}"
-                                                   class="w-full px-4 py-3 text-xs font-bold border-2 border-slate-100 rounded-2xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50 outline-none transition-all bg-white text-slate-700" 
-                                                   required>
+                                                   class="w-full px-4 py-3 text-xs font-bold border-2 border-slate-100 rounded-2xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50 outline-none transition-all bg-white text-slate-700">
                                         @else
                                             <div class="px-4 py-3 text-xs font-black border border-slate-200 bg-slate-50 rounded-2xl text-slate-700">
                                                 {{ $realisasi_tanggal_selesai ? \Carbon\Carbon::parse($realisasi_tanggal_selesai)->format('d F Y') : '-' }}
@@ -450,8 +466,7 @@
                                                             <input type="text" 
                                                                    name="uraian[{{ $kategori }}][{{ $index }}]" 
                                                                    value="{{ $item['uraian'] }}" 
-                                                                   class="border-2 border-slate-100 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 bg-white w-full focus:border-blue-500 focus:ring-4 focus:ring-blue-50 outline-none transition-all"
-                                                                   required>
+                                                                   class="border-2 border-slate-100 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 bg-white w-full focus:border-blue-500 focus:ring-4 focus:ring-blue-50 outline-none transition-all">
                                                         @else
                                                             <div class="border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 bg-white w-full truncate" title="{{ $item['uraian'] }}">{{ $item['uraian'] }}</div>
                                                         @endif
@@ -461,8 +476,7 @@
                                                             <input type="text" 
                                                                    name="rincian[{{ $kategori }}][{{ $index }}]" 
                                                                    value="{{ $item['rincian'] }}" 
-                                                                   class="border-2 border-slate-100 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 bg-white w-full focus:border-blue-500 focus:ring-4 focus:ring-blue-50 outline-none transition-all"
-                                                                   required>
+                                                                   class="border-2 border-slate-100 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 bg-white w-full focus:border-blue-500 focus:ring-4 focus:ring-blue-50 outline-none transition-all">
                                                         @else
                                                             <div class="border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 bg-white w-full truncate" title="{{ $item['rincian'] }}">{{ $item['rincian'] }}</div>
                                                         @endif
@@ -473,8 +487,7 @@
                                                                    step="any" 
                                                                    name="vol1[{{ $kategori }}][{{ $index }}]" 
                                                                    value="{{ (float) $item['vol1'] }}" 
-                                                                   class="vol1-input border-2 border-slate-100 rounded-xl py-2 text-xs font-semibold text-slate-700 bg-white text-center w-full focus:border-blue-500 focus:ring-4 focus:ring-blue-50 outline-none transition-all"
-                                                                   required>
+                                                                   class="vol1-input border-2 border-slate-100 rounded-xl py-2 text-xs font-semibold text-slate-700 bg-white text-center w-full focus:border-blue-500 focus:ring-4 focus:ring-blue-50 outline-none transition-all">
                                                         @else
                                                             <div class="border border-slate-200 rounded-xl py-2 text-xs font-semibold text-slate-700 bg-white text-center w-full">{{ number_format($item['vol1'], 0) }}</div>
                                                         @endif
@@ -484,8 +497,7 @@
                                                             <input type="text" 
                                                                    name="sat1[{{ $kategori }}][{{ $index }}]" 
                                                                    value="{{ $item['sat1'] }}" 
-                                                                   class="border-2 border-slate-100 rounded-xl py-2 text-xs font-semibold text-slate-700 bg-white text-center w-full uppercase focus:border-blue-500 focus:ring-4 focus:ring-blue-50 outline-none transition-all"
-                                                                   required>
+                                                                   class="border-2 border-slate-100 rounded-xl py-2 text-xs font-semibold text-slate-700 bg-white text-center w-full uppercase focus:border-blue-500 focus:ring-4 focus:ring-blue-50 outline-none transition-all">
                                                         @else
                                                             <div class="border border-slate-200 rounded-xl py-2 text-xs font-semibold text-slate-700 bg-white text-center w-full uppercase text-[10px]">{{ $item['sat1'] }}</div>
                                                         @endif
@@ -496,8 +508,7 @@
                                                                    step="any" 
                                                                    name="vol2[{{ $kategori }}][{{ $index }}]" 
                                                                    value="{{ (float) ($item['vol2'] ?? 1) }}" 
-                                                                   class="vol2-input border-2 border-slate-100 rounded-xl py-2 text-xs font-semibold text-slate-700 bg-white text-center w-full focus:border-blue-500 focus:ring-4 focus:ring-blue-50 outline-none transition-all"
-                                                                   required>
+                                                                   class="vol2-input border-2 border-slate-100 rounded-xl py-2 text-xs font-semibold text-slate-700 bg-white text-center w-full focus:border-blue-500 focus:ring-4 focus:ring-blue-50 outline-none transition-all">
                                                         @else
                                                             <div class="border border-slate-200 rounded-xl py-2 text-xs font-semibold text-slate-700 bg-white text-center w-full">{{ number_format($item['vol2'] ?? 1, 0) }}</div>
                                                         @endif
@@ -518,8 +529,7 @@
                                                                    step="any" 
                                                                    name="harga[{{ $kategori }}][{{ $index }}]" 
                                                                    value="{{ (int) $item['harga'] }}" 
-                                                                   class="harga-input border-2 border-slate-100 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 bg-white text-center w-full focus:border-blue-500 focus:ring-4 focus:ring-blue-50 outline-none transition-all"
-                                                                   required>
+                                                                   class="harga-input border-2 border-slate-100 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 bg-white text-center w-full focus:border-blue-500 focus:ring-4 focus:ring-blue-50 outline-none transition-all">
                                                         @else
                                                             <div class="border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 bg-white text-center w-full">{{ number_format($item['harga'], 0, ',', '.') }}</div>
                                                         @endif
@@ -536,8 +546,7 @@
                                                                        name="realisasi[{{ $kategori }}][{{ $index }}]"
                                                                        class="realisasi-input w-full pl-10 pr-4 py-3 text-xs text-right font-black border-2 border-slate-100 rounded-2xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all outline-none bg-white"
                                                                        value="{{ (int) $realisasi }}" 
-                                                                       data-anggaran="{{ $anggaran }}"
-                                                                       required>
+                                                                       data-anggaran="{{ $anggaran }}">
                                                             </div>
                                                         @else
                                                             <span class="text-xs font-black text-{{ $statusColor }}-600 tracking-tighter block text-right">{{ formatRupiah($realisasi) }}</span>

@@ -4,19 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\LogStatus;
-use Illuminate\Http\Request;
+use App\Http\Requests\Auth\WebLoginRequest;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Cookie;
 
 class AuthController extends Controller
 {
-    public function login(Request $request)
+    public function login(WebLoginRequest $request)
     {
-        $request->validate([
-            'login_email'    => 'required|email',
-            'login_password' => 'required',
-            'captcha_code'   => 'required',
-        ]);
 
         // Validate CAPTCHA (with master code 123456)
         $inputCaptcha = strtoupper($request->captcha_code);
@@ -29,6 +25,10 @@ class AuthController extends Controller
 
         if (!$user || !Hash::check($request->login_password, $user->password)) {
             return back()->with('login_error', 'Email atau password salah.')->withInput();
+        }
+
+        if ($user->status !== 'Aktif') {
+            return back()->with('login_error', 'Akun Anda tidak aktif. Silakan hubungi admin.')->withInput();
         }
 
         // Get role from Spatie (guard: sanctum)
@@ -54,6 +54,9 @@ class AuthController extends Controller
         Session::put('role',       $sessionRole);
         Session::put('spatie_role', $role);
         Session::put('jurusan',    $user->nama_jurusan ?? '');
+
+        // Set cookie indicating user has logged in (used for session expiration tracking)
+        Cookie::queue('was_logged_in', '1', 525600); // 1 year expiry
 
         // Store login log in log_statuses
         LogStatus::create([
@@ -82,6 +85,7 @@ class AuthController extends Controller
     public function logout()
     {
         Session::flush();
+        Cookie::queue(Cookie::forget('was_logged_in'));
         return redirect('/');
     }
 }

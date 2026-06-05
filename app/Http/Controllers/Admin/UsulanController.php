@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Http\Requests\Admin\StoreUsulanRequest;
 
 class UsulanController extends Controller
 {
@@ -193,7 +194,7 @@ class UsulanController extends Controller
         return view('admin.usulan.edit', compact('id', 'status', 'iku_data', 'rab_data', 'kegiatan_data', 'tahapan_pelaksanaan', 'indikator_keberhasilan', 'catatan_revisi', 'kegiatan', 'all_ikus'));
     }
 
-    public function store(Request $request)
+    public function store(StoreUsulanRequest $request)
     {
         $userId = \Illuminate\Support\Facades\Session::get('user_id') ?? 1;
         try {
@@ -205,7 +206,7 @@ class UsulanController extends Controller
         }
     }
 
-    public function update(Request $request, $id)
+    public function update(StoreUsulanRequest $request, $id)
     {
         $userId = \Illuminate\Support\Facades\Session::get('user_id') ?? 1;
         try {

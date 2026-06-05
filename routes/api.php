@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Middleware\CheckDepartmentAccess;
 
 // --- Controller Imports ---
 use App\Http\Controllers\API\AuthController;
@@ -108,7 +109,7 @@ Route::prefix('v1')->group(function () {
         // ===============================
         // ADMIN
         // ===============================
-        Route::middleware('role:Admin')->prefix('admin')->group(function () {
+        Route::middleware(['role:Admin', CheckDepartmentAccess::class])->prefix('admin')->group(function () {
             Route::get('/dashboard', [AdminDashboard::class, 'index']);
             Route::get('/akun', [AdminAkun::class, 'show']);
             Route::put('/akun', [AdminAkun::class, 'update']);

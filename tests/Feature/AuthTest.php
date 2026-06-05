@@ -237,13 +237,12 @@ class AuthTest extends TestCase
         $middleware = new \App\Http\Middleware\CheckRole();
         
         // Meminta agar hanya role 'admin' yang bisa lewat
-        $response = $middleware->handle($request, function () {
+        $this->expectException(\Symfony\Component\HttpKernel\Exception\HttpException::class);
+        $this->expectExceptionMessage('Forbidden / Unauthorized Access');
+        
+        $middleware->handle($request, function () {
             $this->fail('Middleware should not pass the request.');
         }, 'admin');
-        
-        $this->assertEquals(302, $response->getStatusCode());
-        $this->assertEquals(url('/dashboard'), $response->headers->get('Location'));
-        $this->assertEquals('Akses ditolak.', session('error'));
     }
 
     /**
@@ -449,6 +448,57 @@ class AuthTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertViewIs('admin.lpj.index');
+    }
+
+    /**
+     * Test admin cannot access kegiatan detail of another department.
+     */
+    #[Test]
+    #[TestDox('Memastikan admin tidak bisa mengakses detail kegiatan milik jurusan lain (Cross-Department Blocked)')]
+    public function test_admin_cannot_access_other_department_kegiatan(): void
+    {
+        // 0. Create a TIK admin user
+        $adminTIK = User::create([
+            'nama'         => 'Admin TIK',
+            'email'        => 'admintik_test@example.com',
+            'password'     => Hash::make('password123'),
+            'nama_jurusan' => 'Teknik Informatika dan Komputer',
+            'status'       => 'Aktif',
+        ]);
+        $adminTIK->assignRole('Admin');
+
+        // 1. Create a Kegiatan belonging to TIK
+        $kegiatanTIK = \App\Models\Kegiatan::create([
+            'nama_kegiatan' => 'Kegiatan TIK Test',
+            'prodi_penyelenggara' => 'D4 Teknik Informatika',
+            'pemilik_kegiatan' => 'Admin TI',
+            'nim_pelaksana' => '12345678',
+            'user_id' => $adminTIK->user_id,
+            'jurusan_penyelenggara' => 'Teknik Informatika dan Komputer',
+            'status_utama_id' => 1,
+            'wadir_tujuan' => 1,
+            'posisi_id' => 1,
+        ]);
+
+        // 2. Create an admin user for Teknik Elektro
+        $adminElektro = User::create([
+            'nama'         => 'Admin Elektro',
+            'email'        => 'adminelektro_test@example.com',
+            'password'     => Hash::make('password123'),
+            'nama_jurusan' => 'Teknik Elektro',
+            'status'       => 'Aktif',
+        ]);
+        $adminElektro->assignRole('Admin');
+
+        // 3. Request details of the TIK kegiatan using the Teknik Elektro admin session
+        $response = $this->withSession([
+            'user_id' => $adminElektro->user_id,
+            'role' => 'admin',
+            'jurusan' => 'Teknik Elektro'
+        ])->get("/admin/pengajuan-kegiatan/show/{$kegiatanTIK->kegiatan_id}");
+
+        // 4. Assert 403 Forbidden access
+        $response->assertStatus(403);
     }
 }
 

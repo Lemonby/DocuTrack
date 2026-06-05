@@ -20,4 +20,14 @@ class ReviseRequest extends FormRequest
             'field_comments.*.komentar' => ['required_with:field_comments', 'string'],
         ];
     }
+
+    public function messages(): array
+    {
+        return [
+            'komentar.required' => 'Komentar revisi wajib diisi.',
+            'komentar.min' => 'Komentar revisi minimal 5 karakter.',
+            'field_comments.*.target_kolom.required_with' => 'Target kolom revisi wajib diisi.',
+            'field_comments.*.komentar.required_with' => 'Komentar pada field revisi wajib diisi.',
+        ];
+    }
 }

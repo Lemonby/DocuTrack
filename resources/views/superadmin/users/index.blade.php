@@ -166,6 +166,10 @@
                         @endforeach
                     </select>
                 </div>
+                <div class="space-y-2">
+                    <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Password</label>
+                    <input type="password" name="password" required placeholder="Masukkan password user..." class="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:border-blue-500 transition-all outline-none">
+                </div>
                 <div class="pt-4 flex justify-end gap-3">
                     <button type="button" class="close-modal px-6 py-3 bg-white border border-slate-200 text-slate-600 rounded-xl text-xs font-bold hover:bg-slate-50 transition-all">Cancel</button>
                     <button type="submit" class="px-8 py-3 bg-blue-600 text-white rounded-xl text-xs font-bold hover:bg-blue-700 shadow-lg shadow-blue-100 transition-all">Create User</button>
@@ -216,6 +220,10 @@
                             <option value="{{ $jurusan }}">{{ $jurusan }}</option>
                         @endforeach
                     </select>
+                </div>
+                <div class="space-y-2">
+                    <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Password (Kosongkan jika tidak ingin diubah)</label>
+                    <input type="password" name="password" placeholder="Masukkan password baru..." class="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:border-blue-500 transition-all outline-none">
                 </div>
                 <div class="pt-4 flex justify-end gap-3">
                     <button type="button" class="close-modal px-6 py-3 bg-white border border-slate-200 text-slate-600 rounded-xl text-xs font-bold hover:bg-slate-50 transition-all">Cancel</button>
@@ -272,6 +280,7 @@
 </style>
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     window.dataUsers = @json($list_users);
 </script>
@@ -521,12 +530,46 @@ document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('.status-toggle').forEach(tg => {
             tg.addEventListener('change', function() {
                 const id = this.dataset.id;
-                const user = dataUsers.find(u => u.id == id);
-                if (user) {
-                    user.status = this.checked ? 'Aktif' : 'Non-Aktif';
-                    showNotif(`${user.nama} is now ${user.status}`);
-                    render();
-                }
+                const checkbox = this;
+                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+                fetch(`/superadmin/kelola-akun/toggle-status/${id}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        const user = dataUsers.find(u => u.id == id);
+                        if (user) {
+                            user.status = data.status;
+                            showNotif(data.message);
+                            render();
+                        }
+                    } else {
+                        checkbox.checked = !checkbox.checked;
+                        Swal.fire({
+                            title: 'Error',
+                            text: data.message || 'Gagal mengubah status.',
+                            icon: 'error',
+                            confirmButtonText: 'Tutup'
+                        });
+                    }
+                })
+                .catch(err => {
+                    checkbox.checked = !checkbox.checked;
+                    console.error(err);
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Terjadi kesalahan jaringan.',
+                        icon: 'error',
+                        confirmButtonText: 'Tutup'
+                    });
+                });
             });
         });
 
@@ -556,46 +599,195 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.getElementById('form-add-user').addEventListener('submit', function(e) {
         e.preventDefault();
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+        
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
         const formData = new FormData(this);
-        const newUser = {
-            id: Date.now(),
+        const data = {
             nama: formData.get('nama'),
             email: formData.get('email'),
             role: formData.get('role'),
             jurusan: formData.get('jurusan'),
-            status: 'Aktif',
-            last_login: 'Just now',
-            join_date: 'Oct 2023'
+            password: formData.get('password')
         };
-        dataUsers.unshift(newUser);
-        modalAdd.classList.add('hidden');
-        this.reset();
-        applyFilters();
-        showNotif('New user account created successfully');
+
+        fetch('/superadmin/kelola-akun/store', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+            },
+            body: JSON.stringify(data)
+        })
+        .then(res => res.json())
+        .then(resData => {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+
+            if (resData.success) {
+                const newUser = {
+                    ...resData.user,
+                    last_login: 'Just now',
+                    join_date: 'Oct 2023'
+                };
+                dataUsers.unshift(newUser);
+                modalAdd.classList.add('hidden');
+                this.reset();
+                applyFilters();
+                
+                Swal.fire({
+                    title: 'User Dibuat',
+                    text: 'User baru berhasil disimpan ke database.',
+                    icon: 'success',
+                    confirmButtonText: 'Selesai'
+                });
+            } else {
+                let errMsg = resData.message || 'Gagal membuat user.';
+                if (resData.errors) {
+                    errMsg = Object.values(resData.errors).flat().join('<br>');
+                }
+                Swal.fire({
+                    title: 'Validasi Gagal',
+                    html: errMsg,
+                    icon: 'error',
+                    confirmButtonText: 'Tutup'
+                });
+            }
+        })
+        .catch(err => {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+            console.error(err);
+            Swal.fire({
+                title: 'Error',
+                text: 'Terjadi kesalahan sistem atau jaringan.',
+                icon: 'error',
+                confirmButtonText: 'Tutup'
+            });
+        });
     });
 
     document.getElementById('form-edit-user').addEventListener('submit', function(e) {
         e.preventDefault();
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+        
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
         const formData = new FormData(this);
-        const id = formData.get('id');
-        const index = dataUsers.findIndex(u => u.id == id);
-        if (index !== -1) {
-            dataUsers[index].nama = formData.get('nama');
-            dataUsers[index].email = formData.get('email');
-            dataUsers[index].role = formData.get('role');
-            dataUsers[index].jurusan = formData.get('jurusan');
-        }
-        modalEdit.classList.add('hidden');
-        applyFilters();
-        showNotif('User profile updated successfully');
+        const data = {
+            id: formData.get('id'),
+            nama: formData.get('nama'),
+            email: formData.get('email'),
+            role: formData.get('role'),
+            jurusan: formData.get('jurusan'),
+            password: formData.get('password')
+        };
+
+        fetch('/superadmin/kelola-akun/update', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+            },
+            body: JSON.stringify(data)
+        })
+        .then(res => res.json())
+        .then(resData => {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+
+            if (resData.success) {
+                const index = dataUsers.findIndex(u => u.id == data.id);
+                if (index !== -1) {
+                    dataUsers[index].nama = resData.user.nama;
+                    dataUsers[index].email = resData.user.email;
+                    dataUsers[index].role = resData.user.role;
+                    dataUsers[index].jurusan = resData.user.jurusan;
+                }
+                modalEdit.classList.add('hidden');
+                this.reset();
+                applyFilters();
+                showNotif(resData.message);
+            } else {
+                let errMsg = resData.message || 'Gagal memperbarui profil.';
+                if (resData.errors) {
+                    errMsg = Object.values(resData.errors).flat().join('<br>');
+                }
+                Swal.fire({
+                    title: 'Validasi Gagal',
+                    html: errMsg,
+                    icon: 'error',
+                    confirmButtonText: 'Tutup'
+                });
+            }
+        })
+        .catch(err => {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+            console.error(err);
+            Swal.fire({
+                title: 'Error',
+                text: 'Terjadi kesalahan sistem atau jaringan.',
+                icon: 'error',
+                confirmButtonText: 'Tutup'
+            });
+        });
     });
 
     document.getElementById('confirm-delete-btn').addEventListener('click', function() {
         if (deleteId) {
-            dataUsers = dataUsers.filter(u => u.id != deleteId);
-            modalDelete.classList.add('hidden');
-            applyFilters();
-            showNotif('User account deleted permanently');
+            const submitBtn = this;
+            const originalText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+            fetch(`/superadmin/kelola-akun/destroy/${deleteId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                }
+            })
+            .then(res => res.json())
+            .then(resData => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+
+                if (resData.success) {
+                    dataUsers = dataUsers.filter(u => u.id != deleteId);
+                    modalDelete.classList.add('hidden');
+                    applyFilters();
+                    showNotif(resData.message);
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: resData.message || 'Gagal menghapus user.',
+                        icon: 'error',
+                        confirmButtonText: 'Tutup'
+                    });
+                }
+            })
+            .catch(err => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+                console.error(err);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Terjadi kesalahan sistem atau jaringan.',
+                    icon: 'error',
+                    confirmButtonText: 'Tutup'
+                });
+            });
         }
     });
 

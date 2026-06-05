@@ -12,7 +12,8 @@ class DatabaseSeeder extends Seeder
             MasterDataSeeder::class,
             RolePermissionSeeder::class,
             UserSeeder::class,
-            AcademicActivitiesSeeder::class,
+            // inactivate academic activities
+            // AcademicActivitiesSeeder::class,
         ]);
     }
 }

@@ -33,6 +33,22 @@
     </div>
     @endif
 
+    @if($errors->any())
+    <div class="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg shadow-sm">
+        <div class="flex items-start">
+            <i class="fas fa-exclamation-circle text-red-500 mr-3 mt-1"></i>
+            <div>
+                <p class="text-red-700 font-bold mb-2">Terdapat kesalahan pengisian form:</p>
+                <ul class="list-disc list-inside text-sm text-red-600 space-y-1">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        </div>
+    </div>
+    @endif
+
     <section id="form-section">
         <form id="kak-form-element" action="{{ url('/admin/pengajuan-usulan/update', $id) }}" method="POST" enctype="multipart/form-data">
             @csrf
@@ -83,25 +99,36 @@
 
                                 <div class="relative">
                                     <label for="nama_pengusul_step1" class="block text-sm font-medium text-gray-700 mb-2">Nama Pengusul</label>
-                                    <input type="text" id="nama_pengusul_step1" name="nama_pengusul_step1" required
+                                    <input type="text" id="nama_pengusul_step1" name="nama_pengusul_step1"
                                         value="{{ $kegiatan_data['nama_pengusul'] ?? '' }}"
+                                        data-required="true"
+                                        data-msg-required="Nama pengusul wajib diisi."
+                                        data-msg-max="Nama pengusul maksimal 150 karakter."
+                                        data-max-length="150"
                                         class="block w-full px-4 py-3.5 text-sm text-gray-800 bg-white rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:border-blue-600 focus:ring-blue-600"
                                         placeholder="Masukkan nama pengusul">
                                 </div>
-
+ 
                                 <div class="relative">
                                     <label for="nim_nip" class="block text-sm font-medium text-gray-700 mb-2">NIM/NIP</label>
-                                    <input type="text" id="nim_nip" name="nim_nip" required
+                                    <input type="text" id="nim_nip" name="nim_nip"
                                         value="{{ $kegiatan_data['nim_nip'] ?? '' }}"
+                                        data-required="true"
+                                        data-msg-required="NIM/NIP wajib diisi."
+                                        data-msg-max="NIM/NIP maksimal 20 karakter."
+                                        data-max-length="20"
                                         class="block w-full px-4 py-3.5 text-sm text-gray-800 bg-white rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:border-blue-600 focus:ring-blue-600"
                                         placeholder="Masukkan NIM atau NIP">
                                 </div>
-
+ 
                                 <div class="relative">
                                     <label for="jurusan" class="block text-sm font-medium text-gray-700 mb-2">Jurusan</label>
-                                    <div class="relative">
+                                    <div class="relative select-wrapper">
                                         @php $jrs = $kegiatan_data['jurusan'] ?? ''; @endphp
-                                        <select id="jurusan" name="jurusan" required class="block w-full px-4 py-3.5 pr-10 text-sm text-gray-800 bg-white rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-2 focus:border-blue-600 focus:ring-blue-600 cursor-pointer">
+                                        <select id="jurusan" name="jurusan"
+                                            data-required="true"
+                                            data-msg-required="Jurusan wajib diisi."
+                                            class="block w-full px-4 py-3.5 pr-10 text-sm text-gray-800 bg-white rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-2 focus:border-blue-600 focus:ring-blue-600 cursor-pointer">
                                             <option value="" disabled class="text-gray-500" {{ !$jrs ? 'selected' : '' }}>Pilih Jurusan</option>
                                             <option value="Teknik Sipil" {{ $jrs == 'Teknik Sipil' ? 'selected' : '' }}>Teknik Sipil</option>
                                             <option value="Teknik Mesin" {{ $jrs == 'Teknik Mesin' ? 'selected' : '' }}>Teknik Mesin</option>
@@ -117,12 +144,15 @@
                                         </div>
                                     </div>
                                 </div>
-
+ 
                                 <div class="relative">
                                     <label for="prodi" class="block text-sm font-medium text-gray-700 mb-2">Prodi</label>
-                                    <div class="relative">
+                                    <div class="relative select-wrapper">
                                         @php $prd = $kegiatan_data['prodi'] ?? ''; @endphp
-                                        <select id="prodi" name="prodi" required {{ $prd ? '' : 'disabled' }} class="block w-full px-4 py-3.5 pr-10 text-sm text-gray-800 bg-white rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-2 focus:border-blue-600 focus:ring-blue-600 disabled:bg-gray-100 disabled:text-gray-400 cursor-pointer">
+                                        <select id="prodi" name="prodi" {{ $prd ? '' : 'disabled' }}
+                                            data-required="true"
+                                            data-msg-required="Prodi wajib diisi."
+                                            class="block w-full px-4 py-3.5 pr-10 text-sm text-gray-800 bg-white rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-2 focus:border-blue-600 focus:ring-blue-600 disabled:bg-gray-100 disabled:text-gray-400 cursor-pointer">
                                             <option value="" disabled class="text-gray-500" {{ !$prd ? 'selected' : '' }}>Pilih Jurusan Terlebih Dahulu</option>
                                             @if($prd)
                                             <option value="{{ $prd }}" selected>{{ $prd }}</option>
@@ -133,20 +163,27 @@
                                         </div>
                                     </div>
                                 </div>
-
+ 
                                 <div class="relative">
                                     <label for="nama_kegiatan_step1" class="block text-sm font-medium text-gray-700 mb-2">Nama Kegiatan</label>
-                                    <input type="text" id="nama_kegiatan_step1" name="nama_kegiatan_step1" required
+                                    <input type="text" id="nama_kegiatan_step1" name="nama_kegiatan_step1"
                                         value="{{ $kegiatan_data['nama_kegiatan'] ?? '' }}"
+                                        data-required="true"
+                                        data-msg-required="Nama kegiatan wajib diisi."
+                                        data-msg-max="Nama kegiatan maksimal 255 karakter."
+                                        data-max-length="255"
                                         class="block w-full px-4 py-3.5 text-sm text-gray-800 bg-white rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:border-blue-600 focus:ring-blue-600"
                                         placeholder="Masukkan nama kegiatan">
                                 </div>
-
+ 
                                 <div class="md:col-span-2 relative">
                                     <label for="wadir_tujuan" class="block text-sm font-medium text-gray-700 mb-2">Wadir Tujuan</label>
-                                    <div class="relative">
+                                    <div class="relative select-wrapper">
                                         @php $wadir = $kegiatan_data['wadir_tujuan'] ?? ''; @endphp
-                                        <select id="wadir_tujuan" name="wadir_tujuan" required class="block w-full px-4 py-3.5 pr-10 text-sm text-gray-800 bg-white rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-2 focus:border-blue-600 focus:ring-blue-600 cursor-pointer">
+                                        <select id="wadir_tujuan" name="wadir_tujuan"
+                                            data-required="true"
+                                            data-msg-required="Wadir tujuan wajib diisi."
+                                            class="block w-full px-4 py-3.5 pr-10 text-sm text-gray-800 bg-white rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-2 focus:border-blue-600 focus:ring-blue-600 cursor-pointer">
                                             <option value="" {{ !$wadir ? 'selected' : '' }}>Pilih Wadir Tujuan</option>
                                             <option value="1" {{ str_contains($wadir, '1') ? 'selected' : '' }}>Wadir 1 - Akademik</option>
                                             <option value="2" {{ str_contains($wadir, '2') ? 'selected' : '' }}>Wadir 2 - Umum & Keuangan</option>
@@ -188,13 +225,17 @@
                             </div>
                             <div class="md:col-span-2 relative">
                                 <label for="gambaran_umum_kak" class="block text-sm font-medium text-gray-700 mb-2">Gambaran Umum</label>
-                                <textarea id="gambaran_umum_kak" name="gambaran_umum" rows="5" required
+                                <textarea id="gambaran_umum_kak" name="gambaran_umum" rows="5"
+                                    data-required="true"
+                                    data-msg-required="Gambaran umum wajib diisi."
                                     class="block w-full px-4 py-3.5 text-sm text-gray-800 bg-white rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:border-blue-600 focus:ring-blue-600"
                                     placeholder="Jelaskan gambaran umum kegiatan ini...">{{ $kegiatan_data['gambaran_umum'] ?? '' }}</textarea>
                             </div>
                             <div class="md:col-span-2 relative">
                                 <label for="penerima_manfaat" class="block text-sm font-medium text-gray-700 mb-2">Penerima Manfaat</label>
-                                <textarea id="penerima_manfaat" name="penerima_manfaat" rows="3" required
+                                <textarea id="penerima_manfaat" name="penerima_manfaat" rows="3"
+                                    data-required="true"
+                                    data-msg-required="Penerima manfaat wajib diisi."
                                     class="block w-full px-4 py-3.5 text-sm text-gray-800 bg-white rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:border-blue-600 focus:ring-blue-600"
                                     placeholder="Siapa yang mendapat manfaat dari kegiatan ini?">{{ $kegiatan_data['penerima_manfaat'] ?? '' }}</textarea>
                             </div>
@@ -209,14 +250,16 @@
                         </div>
                     </section>
                 </div>
-
+ 
                 {{-- TAHAP 3: IKU & Renstra --}}
                 <div id="form-tahap-3" class="form-step">
                     <div class="bg-white rounded-lg shadow-lg p-4 md:p-10">
                         <h2 class="text-xl md:text-2xl font-bold text-gray-800 mb-6">Indikator Kinerja Utama & Renstra</h2>
                         <div class="mb-6">
                             <label for="metode_pelaksanaan_kak" class="block text-sm font-medium text-gray-700 mb-2">Metode Pelaksanaan</label>
-                            <textarea id="metode_pelaksanaan_kak" name="metode_pelaksanaan" rows="4" required
+                            <textarea id="metode_pelaksanaan_kak" name="metode_pelaksanaan" rows="4"
+                                data-required="true"
+                                data-msg-required="Metode pelaksanaan wajib diisi."
                                 class="block w-full px-4 py-3.5 text-sm text-gray-800 bg-white rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:border-blue-600 focus:ring-blue-600"
                                 placeholder="Jelaskan metode pelaksanaan kegiatan...">{{ $kegiatan_data['metode_pelaksanaan'] ?? '' }}</textarea>
                         </div>
