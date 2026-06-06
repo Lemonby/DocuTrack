@@ -106,18 +106,19 @@ class IntegritasTest extends TestCase
         $kegiatan->load(['kak.ikus', 'lpj']);
         $scores = $this->spkService->calculateScores($kegiatan);
 
-        // 6. Validasi nilai matematika masing-masing kriteria
-        // C1 (Durasi): Selisih 0 hari -> Skor 100
-        $this->assertEquals(100.0, $scores['c1']);
-        // C2 (Anggaran): Penyerapan 98% -> Skor 100
-        $this->assertEquals(100.0, $scores['c2']);
-        // C3 (IKU): Mendukung 2 IKU -> Skor 60
-        $this->assertEquals(60.0, $scores['c3']);
-        // C4 (Ketepatan LPJ): Diajukan sebelum tenggat -> Skor 100
-        $this->assertEquals(100.0, $scores['c4']);
+        // 6. Validasi nilai matematika masing-masing kriteria (skala desimal 0.0 - 1.0)
+        // C1 (Durasi): Selisih 0 hari -> Skor 1.0
+        $this->assertEquals(1.0, $scores['c1']);
+        // C2 (Anggaran): Penyerapan 98% -> Skor 1.0
+        $this->assertEquals(1.0, $scores['c2']);
+        // C3 (IKU): Mendukung 2 IKU -> Skor 1.0
+        $this->assertEquals(1.0, $scores['c3']);
+        // C4 (Ketepatan LPJ): Diajukan sebelum tenggat -> Skor 1.0
+        $this->assertEquals(1.0, $scores['c4']);
 
-        // Skor MAUT Akhir = (0.25 * 100) + (0.25 * 100) + (0.25 * 60) + (0.25 * 100) = 25 + 25 + 15 + 25 = 90.00
-        $this->assertEquals(90.0, $scores['final_score']);
+        // Skor MAUT Akhir = (0.25 * 1.0) + (0.25 * 1.0) + (0.25 * 1.0) + (0.25 * 1.0) = 1.0
+        // Karena hanya ada 1 kegiatan di jurusan ini, min/max akan sama sehingga normalisasinya menghasilkan utilitas 1.0 untuk semua kriteria
+        $this->assertEquals(1.0, $scores['final_score']);
     }
 
     /**
@@ -143,30 +144,54 @@ class IntegritasTest extends TestCase
             'status' => 'Aktif',
         ]);
 
-        // 2. Buat Kegiatan & LPJ Sempurna untuk Jurusan TI (Estimasi MAUT: 100)
-        $kegiatanTi = Kegiatan::create([
-            'nama_kegiatan' => 'Kegiatan TI', 'prodi_penyelenggara' => 'TI', 'pemilik_kegiatan' => 'Dosen TI',
+        // 2. Buat Kegiatan & LPJ Sempurna untuk Jurusan TI (2 kegiatan identik dan sempurna agar rata-rata = 1.0)
+        $kegiatanTi1 = Kegiatan::create([
+            'nama_kegiatan' => 'Kegiatan TI 1', 'prodi_penyelenggara' => 'TI', 'pemilik_kegiatan' => 'Dosen TI',
             'user_id' => $userTi->user_id, 'jurusan_penyelenggara' => 'Teknik Informatika dan Komputer',
             'tanggal_mulai' => '2026-06-01', 'tanggal_selesai' => '2026-06-02', 'jumlah_dicairkan' => 5000000.00,
             'wadir_tujuan' => 1,
         ]);
         Lpj::create([
-            'kegiatan_id' => $kegiatanTi->kegiatan_id, 'grand_total_realisasi' => 5000000.00,
+            'kegiatan_id' => $kegiatanTi1->kegiatan_id, 'grand_total_realisasi' => 5000000.00,
             'submitted_at' => '2026-06-10', 'tenggat_lpj' => '2026-06-15',
             'realisasi_tanggal_mulai' => '2026-06-01', 'realisasi_tanggal_selesai' => '2026-06-02',
         ]);
 
-        // 3. Buat Kegiatan & LPJ Kurang Baik untuk Jurusan Elektro (Pencairan 5jt, Realisasi 1jt -> serapan 20% -> C2 = 10)
-        $kegiatanEl = Kegiatan::create([
-            'nama_kegiatan' => 'Kegiatan El', 'prodi_penyelenggara' => 'Elektro', 'pemilik_kegiatan' => 'Dosen El',
+        $kegiatanTi2 = Kegiatan::create([
+            'nama_kegiatan' => 'Kegiatan TI 2', 'prodi_penyelenggara' => 'TI', 'pemilik_kegiatan' => 'Dosen TI',
+            'user_id' => $userTi->user_id, 'jurusan_penyelenggara' => 'Teknik Informatika dan Komputer',
+            'tanggal_mulai' => '2026-06-01', 'tanggal_selesai' => '2026-06-02', 'jumlah_dicairkan' => 5000000.00,
+            'wadir_tujuan' => 1,
+        ]);
+        Lpj::create([
+            'kegiatan_id' => $kegiatanTi2->kegiatan_id, 'grand_total_realisasi' => 5000000.00,
+            'submitted_at' => '2026-06-10', 'tenggat_lpj' => '2026-06-15',
+            'realisasi_tanggal_mulai' => '2026-06-01', 'realisasi_tanggal_selesai' => '2026-06-02',
+        ]);
+
+        // 3. Buat Kegiatan & LPJ untuk Jurusan Elektro (1 kegiatan sempurna, 1 kegiatan kurang baik agar rata-rata = 0.5)
+        $kegiatanEl1 = Kegiatan::create([
+            'nama_kegiatan' => 'Kegiatan El 1', 'prodi_penyelenggara' => 'Elektro', 'pemilik_kegiatan' => 'Dosen El',
             'user_id' => $userElektro->user_id, 'jurusan_penyelenggara' => 'Teknik Elektro',
             'tanggal_mulai' => '2026-06-01', 'tanggal_selesai' => '2026-06-02', 'jumlah_dicairkan' => 5000000.00,
             'wadir_tujuan' => 1,
         ]);
         Lpj::create([
-            'kegiatan_id' => $kegiatanEl->kegiatan_id, 'grand_total_realisasi' => 1000000.00,
+            'kegiatan_id' => $kegiatanEl1->kegiatan_id, 'grand_total_realisasi' => 5000000.00,
             'submitted_at' => '2026-06-10', 'tenggat_lpj' => '2026-06-15',
             'realisasi_tanggal_mulai' => '2026-06-01', 'realisasi_tanggal_selesai' => '2026-06-02',
+        ]);
+
+        $kegiatanEl2 = Kegiatan::create([
+            'nama_kegiatan' => 'Kegiatan El 2', 'prodi_penyelenggara' => 'Elektro', 'pemilik_kegiatan' => 'Dosen El',
+            'user_id' => $userElektro->user_id, 'jurusan_penyelenggara' => 'Teknik Elektro',
+            'tanggal_mulai' => '2026-06-01', 'tanggal_selesai' => '2026-06-02', 'jumlah_dicairkan' => 5000000.00,
+            'wadir_tujuan' => 1,
+        ]);
+        Lpj::create([
+            'kegiatan_id' => $kegiatanEl2->kegiatan_id, 'grand_total_realisasi' => 1000000.00, // serapan 20%
+            'submitted_at' => '2026-06-25', 'tenggat_lpj' => '2026-06-15', // terlambat
+            'realisasi_tanggal_mulai' => '2026-06-01', 'realisasi_tanggal_selesai' => '2026-06-10', // terlambat pelaksanaan
         ]);
 
         // 4. Ambil Peringkat dari Service

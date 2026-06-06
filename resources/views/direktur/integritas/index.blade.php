@@ -188,10 +188,10 @@
                                 <div class="relative w-32 h-32 flex items-center justify-center">
                                     <svg class="w-full h-full rotate-[-90deg]">
                                         <circle cx="64" cy="64" r="56" stroke="currentColor" stroke-width="8" fill="transparent" class="text-white/5"></circle>
-                                        <circle cx="64" cy="64" r="56" stroke="currentColor" stroke-width="8" fill="transparent" stroke-dasharray="351.8" stroke-dashoffset="{{ 351.8 * (1 - $selectedRankData['average_score']/100) }}" class="text-blue-500 transition-all duration-1000"></circle>
+                                        <circle cx="64" cy="64" r="56" stroke="currentColor" stroke-width="8" fill="transparent" stroke-dasharray="351.8" stroke-dashoffset="{{ 351.8 * (1 - $selectedRankData['average_score']) }}" class="text-blue-500 transition-all duration-1000"></circle>
                                     </svg>
                                     <div class="absolute flex flex-col items-center">
-                                        <span class="text-2xl font-black">{{ number_format($selectedRankData['average_score'], 1) }}</span>
+                                        <span class="text-2xl font-black">{{ number_format($selectedRankData['average_score'], 2) }}</span>
                                         <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">MAUT</span>
                                     </div>
                                 </div>
@@ -261,11 +261,11 @@
                                         $sc = $keg->spk_scores;
                                         // Tentukan badge warna skor MAUT
                                         $badgeColor = 'bg-red-50 text-red-600 border-red-100';
-                                        if($keg->final_score >= 80) {
+                                        if($keg->final_score >= 0.8) {
                                             $badgeColor = 'bg-emerald-50 text-emerald-600 border-emerald-100';
-                                        } elseif($keg->final_score >= 60) {
+                                        } elseif($keg->final_score >= 0.6) {
                                             $badgeColor = 'bg-blue-50 text-blue-600 border-blue-100';
-                                        } elseif($keg->final_score >= 40) {
+                                        } elseif($keg->final_score >= 0.4) {
                                             $badgeColor = 'bg-amber-50 text-amber-600 border-amber-100';
                                         }
                                     @endphp
@@ -283,7 +283,7 @@
                                             $diff = abs($planned - $real);
                                         @endphp
                                         <td class="py-4 px-3 text-center">
-                                            <div class="font-black text-slate-800 text-sm">{{ number_format($sc['c1'], 0) }}</div>
+                                            <div class="font-black text-slate-800 text-sm">{{ number_format($sc['c1'], 2) }}</div>
                                             <span class="text-[9px] text-slate-400 font-medium block mt-0.5 whitespace-nowrap">
                                                 Plan: {{ $planned }}d | Real: {{ $real }}d ({{ $diff === 0 ? 'Tepat' : '±'.$diff.'d' }})
                                             </span>
@@ -296,7 +296,7 @@
                                             $rate = $dicairkan > 0 ? ($realisasi / $dicairkan) * 100 : 0;
                                         @endphp
                                         <td class="py-4 px-3 text-center">
-                                            <div class="font-black text-slate-800 text-sm">{{ number_format($sc['c2'], 0) }}</div>
+                                            <div class="font-black text-slate-800 text-sm">{{ number_format($sc['c2'], 2) }}</div>
                                             <span class="text-[9px] text-slate-400 font-medium block mt-0.5 whitespace-nowrap">
                                                 Serapan: {{ number_format($rate, 1) }}%
                                             </span>
@@ -307,7 +307,7 @@
                                             $ikus = $keg->kak ? $keg->kak->ikus->count() : 0;
                                         @endphp
                                         <td class="py-4 px-3 text-center">
-                                            <div class="font-black text-slate-800 text-sm">{{ number_format($sc['c3'], 0) }}</div>
+                                            <div class="font-black text-slate-800 text-sm">{{ number_format($sc['c3'], 2) }}</div>
                                             <span class="text-[9px] text-slate-400 font-medium block mt-0.5 whitespace-nowrap">
                                                 Dukung {{ $ikus }} IKU
                                             </span>
@@ -321,7 +321,7 @@
                                             $diffTelat = $isTelat ? $dl->diffInDays($sub) : 0;
                                         @endphp
                                         <td class="py-4 px-3 text-center">
-                                            <div class="font-black text-slate-800 text-sm">{{ number_format($sc['c4'], 0) }}</div>
+                                            <div class="font-black text-slate-800 text-sm">{{ number_format($sc['c4'], 2) }}</div>
                                             <span class="text-[9px] text-slate-400 font-medium block mt-0.5 whitespace-nowrap">
                                                 @if($isTelat)
                                                     Telat {{ $diffTelat }} hari
@@ -411,12 +411,12 @@ document.addEventListener('DOMContentLoaded', () => {
                             color: '#475569'
                         },
                         ticks: {
-                            backdropColor: 'transparent',
-                            font: { size: 9 },
-                            color: '#94a3b8'
-                        },
-                        suggestedMin: 0,
-                        suggestedMax: 100
+                                                            backdropColor: 'transparent',
+                                                            font: { size: 9 },
+                                                            color: '#94a3b8'
+                                                        },
+                                                        suggestedMin: 0,
+                                                        suggestedMax: 1
                     }
                 }
             }
