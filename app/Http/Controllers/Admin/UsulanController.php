@@ -216,22 +216,4 @@ class UsulanController extends Controller
             return back()->withInput()->with('error_message', 'Gagal memperbarui usulan: ' . $e->getMessage());
         }
     }
-
-    public function selesai($id)
-    {
-        $kegiatan = \App\Models\Kegiatan::findOrFail($id);
-        $kegiatan->update([
-            'status_utama_id' => 8, // Selesai
-        ]);
-
-        // Add progress history entry for status 8 (Selesai)
-        \App\Models\ProgressHistory::create([
-            'kegiatan_id' => $kegiatan->kegiatan_id,
-            'status_id' => 8,
-            'changed_by_user_id' => \Illuminate\Support\Facades\Session::get('user_id') ?? 1,
-            'created_at' => now(),
-        ]);
-
-        return redirect()->back()->with('success_message', 'Kegiatan telah berhasil dinyatakan Selesai!');
-    }
 }

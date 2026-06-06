@@ -44,6 +44,20 @@
 
 <main class="main-content font-poppins p-4 sm:p-6 lg:p-10 -mt-8 md:-mt-20 max-w-7xl mx-auto w-full animate-fade-in">
 
+    @if(session('success_message'))
+        <div class="bg-emerald-50 border-l-4 border-emerald-500 p-4 mb-8 rounded-r-2xl shadow-sm animate-slide-up">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-check text-emerald-600"></i>
+                </div>
+                <div>
+                    <h3 class="text-emerald-800 font-black text-sm">Berhasil</h3>
+                    <p class="text-emerald-700 text-xs mt-1 leading-relaxed">{{ session('success_message') }}</p>
+                </div>
+            </div>
+        </div>
+    @endif
+
     {{-- Alert Status --}}
     @if(strtolower($status??'') === 'revisi')
         <div class="bg-amber-50 border-l-4 border-amber-500 p-4 mb-8 rounded-r-2xl shadow-sm animate-slide-up">
@@ -90,9 +104,11 @@
                 <a href="{{ route('bendahara.riwayat.index') }}" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl transition font-bold text-sm border border-slate-200 shadow-sm active:scale-95">
                     <i class="fas fa-arrow-left"></i> Kembali
                 </a>
-                <button class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-slate-800 text-white rounded-xl transition font-bold text-sm shadow-lg shadow-slate-200 hover:bg-slate-900 active:scale-95">
-                    <i class="fas fa-print"></i> Cetak Bukti
-                </button>
+                @if(isset($kegiatan->lpj))
+                <a href="{{ route('cetak.lpj', $id) }}" target="_blank" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition font-bold text-sm shadow-lg shadow-emerald-200 hover:shadow-emerald-300 active:scale-95">
+                    <i class="fas fa-print"></i> Cetak LPJ
+                </a>
+                @endif
             </div>
         </div>
 
@@ -548,16 +564,16 @@
                 <i class="fas fa-fingerprint text-{{ $statusColor }}-500"></i>
                 Kode Mata Anggaran Kegiatan (MAK)
             </h3>
-            <div class="relative max-w-2xl">
-                <div class="flex items-center gap-6 p-8 bg-{{ $statusColor }}-50 rounded-[2rem] border-2 border-{{ $statusColor }}-200 shadow-sm animate-fade-in group hover:shadow-xl hover:shadow-{{ $statusColor }}-100/50 transition-all duration-500">
-                    <div class="w-16 h-16 rounded-[1.5rem] bg-{{ $statusColor }}-100 flex items-center justify-center text-{{ $statusColor }}-600 shadow-inner group-hover:scale-110 transition-transform">
+            <div class="relative w-fit max-w-full">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-6 p-6 sm:p-8 bg-{{ $statusColor }}-50 rounded-[2rem] border-2 border-{{ $statusColor }}-200 shadow-sm animate-fade-in group hover:shadow-xl hover:shadow-{{ $statusColor }}-100/50 transition-all duration-500">
+                    <div class="w-16 h-16 rounded-[1.5rem] bg-{{ $statusColor }}-100 flex items-center justify-center text-{{ $statusColor }}-600 shadow-inner group-hover:scale-110 transition-transform flex-shrink-0">
                         <i class="fas fa-key text-2xl"></i>
                     </div>
-                    <div class="flex-1">
+                    <div class="flex-1 min-w-0">
                         <span class="block text-[10px] font-black text-{{ $statusColor }}-600 uppercase tracking-[0.3em] mb-2">KODE ANGGARAN TERVERIFIKASI</span>
-                        <span class="text-2xl font-mono font-black text-slate-800 tracking-wider">{{ $kode_mak }}</span>
+                        <span class="text-xl sm:text-2xl font-mono font-black text-slate-800 tracking-wider break-all">{{ $kode_mak }}</span>
                     </div>
-                    <div class="hidden md:flex items-center gap-2 px-4 py-2 bg-white rounded-xl text-{{ $statusColor }}-600 text-[10px] font-black uppercase tracking-widest border border-{{ $statusColor }}-200 shadow-sm">
+                    <div class="flex items-center gap-2 px-4 py-2 bg-white rounded-xl text-{{ $statusColor }}-600 text-[10px] font-black uppercase tracking-widest border border-{{ $statusColor }}-200 shadow-sm flex-shrink-0">
                         <i class="fas fa-check-circle"></i> Aktif
                     </div>
                 </div>
@@ -571,9 +587,17 @@
 
         {{-- BOTTOM ACTIONS SECTION --}}
         <div class="flex flex-wrap justify-between items-center pt-10 border-t border-slate-100 gap-4 mt-12">
-            <a href="{{ route('bendahara.riwayat.index') }}" class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#187CFC] hover:bg-blue-700 text-white rounded-2xl transition font-black text-sm shadow-lg shadow-blue-200">
+            <a href="{{ route('bendahara.riwayat.index') }}" class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#187CFC] hover:bg-blue-700 text-white rounded-2xl transition font-black text-sm shadow-lg shadow-blue-200 shadow-sm active:scale-95">
                 <i class="fas fa-arrow-left"></i> Kembali
             </a>
+            @if(isset($kegiatan) && (int) $kegiatan->status_utama_id === 6)
+            <form action="{{ route('bendahara.riwayat.selesai', $id) }}" method="POST" class="inline">
+                @csrf
+                <button type="submit" class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl transition font-black text-sm shadow-lg shadow-emerald-200 hover:shadow-emerald-300 active:scale-95">
+                    <i class="fas fa-check-double"></i> Kegiatan Selesai
+                </button>
+            </form>
+            @endif
         </div>
 
     </div> {{-- End of max-w-5xl mx-auto --}}

@@ -71,7 +71,6 @@ Route::middleware([CheckRole::class])->group(function () {
         Route::get('/pengajuan-usulan/edit/{id}', [UsulanController::class, 'edit'])->name('admin.usulan.edit');
         Route::post('/pengajuan-usulan/store', [UsulanController::class, 'store'])->name('admin.usulan.store');
         Route::put('/pengajuan-usulan/update/{id}', [UsulanController::class, 'update'])->name('admin.usulan.update');
-        Route::post('/pengajuan-usulan/selesai/{id}', [UsulanController::class, 'selesai'])->name('admin.usulan.selesai');
 
         // Kegiatan (KAK List)
         Route::get('/pengajuan-kegiatan', [KegiatanController::class, 'index'])->name('admin.kegiatan.index');
@@ -106,6 +105,7 @@ Route::middleware([CheckRole::class])->group(function () {
         // Riwayat Verifikasi
         Route::get('/riwayat', [RiwayatController::class, 'index'])->name('bendahara.riwayat.index');
         Route::get('/riwayat/show/{id}', [RiwayatController::class, 'detail'])->name('bendahara.riwayat.detail');
+        Route::post('/riwayat/selesai/{id}', [RiwayatController::class, 'selesai'])->name('bendahara.riwayat.selesai');
 
         // Akun
         Route::get('/akun', [BendaharaAkunController::class, 'index'])->name('bendahara.akun.index');

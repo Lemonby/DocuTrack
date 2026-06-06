@@ -250,6 +250,19 @@ class LpjController extends Controller
             'status_id' => 1, // Menunggu Verifikasi
         ]);
 
+        // Create log status for Admin (actor) who submits the LPJ
+        \App\Models\LogStatus::create([
+            'user_id' => $kegiatan->user_id,
+            'tipe_log' => 'SUBMISSION',
+            'id_referensi' => $kegiatan->kegiatan_id,
+            'status' => 'DIBACA',
+            'konten_json' => [
+                'judul' => 'LPJ Berhasil Dikirim',
+                'pesan' => "Laporan pertanggungjawaban kegiatan \"{$kegiatan->nama_kegiatan}\" berhasil dikirim ke Bendahara.",
+                'link' => "/admin/pengajuan-lpj"
+            ]
+        ]);
+
         return redirect()->route('admin.lpj.index')->with('success', 'LPJ berhasil diajukan ke Bendahara.');
     }
 }

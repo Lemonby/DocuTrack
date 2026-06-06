@@ -4,14 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\LogStatus;
-use App\Http\Requests\Auth\WebLoginRequest;
+use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Cookie;
 
 class AuthController extends Controller
 {
-    public function login(WebLoginRequest $request)
+    public function login(LoginRequest $request)
     {
 
         // Validate CAPTCHA (with master code 123456)
@@ -21,9 +21,9 @@ class AuthController extends Controller
         }
 
         // Find user by email
-        $user = User::where('email', $request->login_email)->first();
+        $user = User::where('email', $request->email)->first();
 
-        if (!$user || !Hash::check($request->login_password, $user->password)) {
+        if (!$user || !Hash::check($request->password, $user->password)) {
             return back()->with('login_error', 'Email atau password salah.')->withInput();
         }
 

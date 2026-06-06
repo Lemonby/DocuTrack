@@ -212,6 +212,22 @@ class LpjController extends Controller
                     ]
                 ]);
 
+                // Create log status for the actor (Bendahara)
+                $actorUserId = \Illuminate\Support\Facades\Session::get('user_id') ?? 1;
+                if ($actorUserId && $actorUserId !== $kegiatan->user_id) {
+                    \App\Models\LogStatus::create([
+                        'user_id' => $actorUserId,
+                        'tipe_log' => 'APPROVAL',
+                        'id_referensi' => $kegiatan->kegiatan_id,
+                        'status' => 'DIBACA',
+                        'konten_json' => [
+                            'judul' => 'Persetujuan LPJ Berhasil',
+                            'pesan' => "Anda telah menyetujui LPJ untuk kegiatan \"{$kegiatan->nama_kegiatan}\".",
+                            'link' => "/bendahara/lpj/show/{$kegiatan->kegiatan_id}"
+                        ]
+                    ]);
+                }
+
             } elseif ($action === 'revise') {
                 $lpj->update([
                     'status_id' => 2, // Revisi
@@ -231,6 +247,22 @@ class LpjController extends Controller
                         'link' => "/admin/pengajuan-lpj"
                     ]
                 ]);
+
+                // Create log status for the actor (Bendahara)
+                $actorUserId = \Illuminate\Support\Facades\Session::get('user_id') ?? 1;
+                if ($actorUserId && $actorUserId !== $kegiatan->user_id) {
+                    \App\Models\LogStatus::create([
+                        'user_id' => $actorUserId,
+                        'tipe_log' => 'REVISION',
+                        'id_referensi' => $kegiatan->kegiatan_id,
+                        'status' => 'DIBACA',
+                        'konten_json' => [
+                            'judul' => 'Revisi LPJ Berhasil Dikirim',
+                            'pesan' => "Permintaan revisi LPJ untuk kegiatan \"{$kegiatan->nama_kegiatan}\" berhasil dikirim. Catatan: {$notes}",
+                            'link' => "/bendahara/lpj/show/{$kegiatan->kegiatan_id}"
+                        ]
+                    ]);
+                }
             }
         });
 

@@ -12,7 +12,7 @@ class MonitoringController extends Controller
 {
     public function index()
     {
-        $tahapan_all = ['Pengajuan', 'Verifikasi', 'ACC WD', 'ACC PPK', 'Dana Cair', 'LPJ'];
+        $tahapan_all = ['Pengajuan', 'Verifikasi', 'ACC PPK', 'ACC WD', 'Dana Cair', 'LPJ'];
         
         $kegiatanList = Kegiatan::with(['statusUtama', 'user'])
             ->latest()

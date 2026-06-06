@@ -91,6 +91,34 @@ class PencairanService
                 ['tenggat_lpj' => $tenggatLpj, 'status_id' => 1]
             );
 
+            // Create notification log in log_statuses for the owner
+            \App\Models\LogStatus::create([
+                'user_id' => $kegiatan->user_id,
+                'tipe_log' => 'APPROVAL',
+                'id_referensi' => $kegiatanId,
+                'status' => 'BELUM_DIBACA',
+                'konten_json' => [
+                    'judul' => 'Dana Kegiatan Cair',
+                    'pesan' => "Dana untuk kegiatan \"{$kegiatan->nama_kegiatan}\" telah dicairkan oleh Bendahara. Silakan upload LPJ sebelum tenggat waktu.",
+                    'link' => "/admin/pengajuan-lpj"
+                ]
+            ]);
+
+            // Create notification log in log_statuses for the actor (Bendahara)
+            if ($userId && $userId !== $kegiatan->user_id) {
+                \App\Models\LogStatus::create([
+                    'user_id' => $userId,
+                    'tipe_log' => 'APPROVAL',
+                    'id_referensi' => $kegiatanId,
+                    'status' => 'DIBACA',
+                    'konten_json' => [
+                        'judul' => 'Pencairan Dana Berhasil',
+                        'pesan' => "Dana untuk kegiatan \"{$kegiatan->nama_kegiatan}\" berhasil dicairkan.",
+                        'link' => "/bendahara/pencairan-dana/show/{$kegiatanId}"
+                    ]
+                ]);
+            }
+
             return $kegiatan->fresh();
         });
     }

@@ -139,7 +139,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             </span>
                         </td>
                         <td class="px-4 lg:px-6 py-4 lg:py-5 whitespace-nowrap text-sm font-medium">
-                            <a href="{{ url('/wadir/kegiatan') }}/${item.id}" class="bg-blue-600 text-white px-3 lg:px-4 py-1.5 lg:py-2 rounded-md text-xs font-medium hover:bg-blue-700 transition-colors inline-flex items-center gap-2">
+                            <a href="{{ url('/wadir/kegiatan/show') }}/${item.id}" class="bg-blue-600 text-white px-3 lg:px-4 py-1.5 lg:py-2 rounded-md text-xs font-medium hover:bg-blue-700 transition-colors inline-flex items-center gap-2">
                                 <i class="fas fa-eye"></i> Detail
                             </a>
                         </td>
@@ -168,7 +168,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <div><i class="fas fa-user w-4"></i> ${item.pengusul}</div>
                             <div><i class="fas fa-calendar-check w-4"></i> ${item.tgl}</div>
                         </div>
-                        <a href="{{ url('/wadir/kegiatan') }}/${item.id}" class="w-full bg-blue-600 text-white py-2 rounded-md text-xs font-medium text-center block">Detail</a>
+                        <a href="{{ url('/wadir/kegiatan/show') }}/${item.id}" class="w-full bg-blue-600 text-white py-2 rounded-md text-xs font-medium text-center block">Detail</a>
                     </div>`;
                 }).join('');
             }

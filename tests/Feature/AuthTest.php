@@ -65,12 +65,12 @@ class AuthTest extends TestCase
     public function test_login_validation_errors(): void
     {
         $response = $this->post('/login', [
-            'login_email'    => '',
-            'login_password' => '',
+            'email'    => '',
+            'password' => '',
             'captcha_code'   => '',
         ]);
 
-        $response->assertSessionHasErrors(['login_email', 'login_password', 'captcha_code']);
+        $response->assertSessionHasErrors(['email', 'password', 'captcha_code']);
     }
 
     /**
@@ -92,8 +92,8 @@ class AuthTest extends TestCase
 
         // Mengirimkan request login dengan captcha yang salah (bukan master code '123456' dan bukan dari session)
         $response = $this->post('/login', [
-            'login_email'    => 'test@example.com',
-            'login_password' => 'password123',
+            'email'    => 'test@example.com',
+            'password' => 'password123',
             'captcha_code'   => 'WRONG_CAPTncfsdfcsdj',
         ]);
 
@@ -121,8 +121,8 @@ class AuthTest extends TestCase
 
         // Mengirimkan request dengan captcha master '123456' tapi password salah
         $response = $this->post('/login', [
-            'login_email'    => 'test@example.com',
-            'login_password' => 'wrong_password',
+            'email'    => 'test@example.com',
+            'password' => 'wrong_password',
             'captcha_code'   => '123456',
         ]);
 
@@ -150,8 +150,8 @@ class AuthTest extends TestCase
 
         // Kirim request login
         $response = $this->post('/login', [
-            'login_email'    => 'admin@example.com',
-            'login_password' => 'password123',
+            'email'    => 'admin@example.com',
+            'password' => 'password123',
             'captcha_code'   => '123456', // Menggunakan master captcha
         ]);
 
@@ -185,8 +185,8 @@ class AuthTest extends TestCase
 
         // Login duluan agar session terisi
         $this->post('/login', [
-            'login_email'    => 'test@example.com',
-            'login_password' => 'password123',
+            'email'    => 'test@example.com',
+            'password' => 'password123',
             'captcha_code'   => '123456',
         ]);
 
@@ -288,8 +288,8 @@ class AuthTest extends TestCase
 
         // Kirim request login
         $response = $this->post('/login', [
-            'login_email'    => 'loguser@example.com',
-            'login_password' => 'password123',
+            'email'    => 'loguser@example.com',
+            'password' => 'password123',
             'captcha_code'   => '123456',
         ]);
 

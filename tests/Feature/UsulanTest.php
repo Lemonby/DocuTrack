@@ -255,7 +255,7 @@ class UsulanTest extends TestCase
         // 7. Assert an APPROVAL notification log is added to log_statuses for the owner
         $this->assertDatabaseHas('log_statuses', [
             'user_id' => $admin->user_id,
-            'tipe_log' => 'APPROVAL',
+            'tipe_log' => 'APPROVED',
             'status' => 'BELUM_DIBACA',
             'id_referensi' => $kegiatan->kegiatan_id
         ]);

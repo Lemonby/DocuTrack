@@ -113,4 +113,35 @@ class RiwayatController extends Controller
             'metode_pencairan', 'kode_mak', 'riwayat_pencairan', 'iku_data', 'kegiatan'
         ));
     }
+
+    public function selesai($id)
+    {
+        $kegiatan = Kegiatan::findOrFail($id);
+        $kegiatan->update([
+            'status_utama_id' => WorkflowService::STATUS_SELESAI, // 8
+        ]);
+
+        // Add progress history entry for status 8 (Selesai)
+        \App\Models\ProgressHistory::create([
+            'kegiatan_id' => $kegiatan->kegiatan_id,
+            'status_id' => WorkflowService::STATUS_SELESAI, // 8
+            'changed_by_user_id' => \Illuminate\Support\Facades\Session::get('user_id') ?? 1,
+            'created_at' => now(),
+        ]);
+
+        // Create log status for Admin (actor) who completes the kegiatan
+        \App\Models\LogStatus::create([
+            'user_id' => $kegiatan->user_id,
+            'tipe_log' => 'APPROVAL',
+            'id_referensi' => $kegiatan->kegiatan_id,
+            'status' => 'DIBACA',
+            'konten_json' => [
+                'judul' => 'Kegiatan Selesai',
+                'pesan' => "Kegiatan \"{$kegiatan->nama_kegiatan}\" telah dinyatakan Selesai.",
+                'link' => "/admin/pengajuan-kegiatan"
+            ]
+        ]);
+
+        return redirect()->back()->with('success_message', 'Kegiatan telah berhasil dinyatakan Selesai!');
+    }
 }

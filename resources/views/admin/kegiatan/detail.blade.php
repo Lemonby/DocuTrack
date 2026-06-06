@@ -28,18 +28,9 @@
     @endif
 
     @if($errors->any())
-        <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-r-xl shadow-sm">
-            <div class="flex items-start gap-3">
-                <i class="fas fa-exclamation-circle text-red-500 mt-1"></i>
-                <div>
-                    <h3 class="text-red-800 font-bold text-sm">Terdapat kesalahan pengisian form</h3>
-                    <ul class="list-disc list-inside text-xs text-red-700 mt-1 space-y-1">
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            </div>
+        <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-r-xl shadow-sm flex items-center gap-3">
+            <i class="fas fa-exclamation-circle text-red-500"></i>
+            <p class="text-red-800 font-bold text-sm">Terdapat kesalahan pada form. Periksa field yang ditandai merah di bawah.</p>
         </div>
     @endif
 
@@ -78,13 +69,27 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="space-y-2">
                             <label class="block text-xs font-bold text-slate-700">Nama Lengkap <span class="text-rose-500">*</span></label>
-                            <input type="text" name="penanggung_jawab" value="{{ $detail_data['penanggung_jawab'] ?? '' }}"
-                                class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 outline-none transition-all font-medium text-sm">
+                            <input type="text" name="penanggung_jawab"
+                                value="{{ old('penanggung_jawab', $detail_data['penanggung_jawab'] ?? '') }}"
+                                class="w-full px-4 py-3 bg-slate-50 border rounded-xl focus:ring-4 outline-none transition-all font-medium text-sm
+                                    {{ $errors->has('penanggung_jawab') ? 'border-red-400 bg-red-50 focus:border-red-500 focus:ring-red-50/50' : 'border-slate-200 focus:border-blue-500 focus:ring-blue-50/50' }}">
+                            @error('penanggung_jawab')
+                                <p class="flex items-center gap-1.5 text-xs text-red-600 font-semibold mt-1">
+                                    <i class="fas fa-exclamation-circle text-[10px]"></i> {{ $message }}
+                                </p>
+                            @enderror
                         </div>
                         <div class="space-y-2">
                             <label class="block text-xs font-bold text-slate-700">NIM / NIP <span class="text-rose-500">*</span></label>
-                            <input type="text" name="nim_nip_pj" value="{{ $detail_data['nim_nip_pj'] ?? '' }}"
-                                class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 outline-none transition-all font-mono text-sm">
+                            <input type="text" name="nim_nip_pj"
+                                value="{{ old('nim_nip_pj', $detail_data['nim_nip_pj'] ?? '') }}"
+                                class="w-full px-4 py-3 bg-slate-50 border rounded-xl focus:ring-4 outline-none transition-all font-mono text-sm
+                                    {{ $errors->has('nim_nip_pj') ? 'border-red-400 bg-red-50 focus:border-red-500 focus:ring-red-50/50' : 'border-slate-200 focus:border-blue-500 focus:ring-blue-50/50' }}">
+                            @error('nim_nip_pj')
+                                <p class="flex items-center gap-1.5 text-xs text-red-600 font-semibold mt-1">
+                                    <i class="fas fa-exclamation-circle text-[10px]"></i> {{ $message }}
+                                </p>
+                            @enderror
                         </div>
                     </div>
                 </div>
@@ -100,13 +105,27 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="space-y-2">
                             <label class="block text-xs font-bold text-slate-700">Tanggal Mulai <span class="text-rose-500">*</span></label>
-                            <input type="date" name="tanggal_mulai" value="{{ $detail_data['tanggal_mulai'] ?? '' }}"
-                                class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 outline-none transition-all text-sm">
+                            <input type="date" name="tanggal_mulai"
+                                value="{{ old('tanggal_mulai', $detail_data['tanggal_mulai'] ?? '') }}"
+                                class="w-full px-4 py-3 bg-slate-50 border rounded-xl focus:ring-4 outline-none transition-all text-sm
+                                    {{ $errors->has('tanggal_mulai') ? 'border-red-400 bg-red-50 focus:border-red-500 focus:ring-red-50/50' : 'border-slate-200 focus:border-blue-500 focus:ring-blue-50/50' }}">
+                            @error('tanggal_mulai')
+                                <p class="flex items-center gap-1.5 text-xs text-red-600 font-semibold mt-1">
+                                    <i class="fas fa-exclamation-circle text-[10px]"></i> {{ $message }}
+                                </p>
+                            @enderror
                         </div>
                         <div class="space-y-2">
                             <label class="block text-xs font-bold text-slate-700">Tanggal Selesai <span class="text-rose-500">*</span></label>
-                            <input type="date" name="tanggal_selesai" value="{{ $detail_data['tanggal_selesai'] ?? '' }}"
-                                class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 outline-none transition-all text-sm">
+                            <input type="date" name="tanggal_selesai"
+                                value="{{ old('tanggal_selesai', $detail_data['tanggal_selesai'] ?? '') }}"
+                                class="w-full px-4 py-3 bg-slate-50 border rounded-xl focus:ring-4 outline-none transition-all text-sm
+                                    {{ $errors->has('tanggal_selesai') ? 'border-red-400 bg-red-50 focus:border-red-500 focus:ring-red-50/50' : 'border-slate-200 focus:border-blue-500 focus:ring-blue-50/50' }}">
+                            @error('tanggal_selesai')
+                                <p class="flex items-center gap-1.5 text-xs text-red-600 font-semibold mt-1">
+                                    <i class="fas fa-exclamation-circle text-[10px]"></i> {{ $message }}
+                                </p>
+                            @enderror
                         </div>
                     </div>
                 </div>
@@ -119,10 +138,12 @@
                         <i class="fas fa-file-upload"></i> 
                         <span>Dokumen Pendukung</span>
                     </h3>
-                    <div class="p-8 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50 hover:bg-white hover:border-blue-400 transition-all cursor-pointer group relative" id="dropzone">
+                    <div class="p-8 border-2 border-dashed rounded-2xl bg-slate-50 hover:bg-white transition-all cursor-pointer group relative
+                        {{ $errors->has('surat_pengantar') ? 'border-red-400 hover:border-red-500' : 'border-slate-200 hover:border-blue-400' }}" id="dropzone">
                         <input type="file" name="surat_pengantar" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
                         <div class="flex flex-col items-center justify-center gap-3">
-                            <div class="w-12 h-12 rounded-full bg-white shadow-sm flex items-center justify-center text-blue-500 group-hover:scale-110 transition-transform">
+                            <div class="w-12 h-12 rounded-full bg-white shadow-sm flex items-center justify-center group-hover:scale-110 transition-transform
+                                {{ $errors->has('surat_pengantar') ? 'text-red-500' : 'text-blue-500' }}">
                                 <i class="fas fa-cloud-upload-alt text-xl"></i>
                             </div>
                             <div class="text-center">
@@ -131,6 +152,11 @@
                             </div>
                         </div>
                     </div>
+                    @error('surat_pengantar')
+                        <p class="flex items-center gap-1.5 text-xs text-red-600 font-semibold mt-2">
+                            <i class="fas fa-exclamation-circle text-[10px]"></i> {{ $message }}
+                        </p>
+                    @enderror
                 </div>
             </div>
 

@@ -38,8 +38,8 @@ class KegiatanController extends Controller
         $status = $kegiatan->statusUtama->nama_status_usulan ?? 'Menunggu';
 
         $detail_data = [
-            'penanggung_jawab' => $kegiatan->nama_pj ?? '-',
-            'nim_nip_pj' => $kegiatan->nip ?? '-',
+            'penanggung_jawab' => $kegiatan->nama_pj ?? '',
+            'nim_nip_pj' => $kegiatan->nip ?? '',
             'tanggal_mulai' => $kegiatan->tanggal_mulai ? $kegiatan->tanggal_mulai->format('Y-m-d') : null,
             'tanggal_selesai' => $kegiatan->tanggal_selesai ? $kegiatan->tanggal_selesai->format('Y-m-d') : null,
             'surat_pengantar' => $kegiatan->surat_pengantar ?? null

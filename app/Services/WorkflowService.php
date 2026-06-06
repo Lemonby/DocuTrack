@@ -100,7 +100,7 @@ class WorkflowService
             $roleName = $this->getPositionName($currentPosition);
             LogStatus::create([
                 'user_id' => $kegiatan->user_id,
-                'tipe_log' => 'APPROVAL',
+                'tipe_log' => 'APPROVED',
                 'id_referensi' => $kegiatanId,
                 'status' => 'BELUM_DIBACA',
                 'konten_json' => [
@@ -109,6 +109,28 @@ class WorkflowService
                     'link' => "/admin/pengajuan-kegiatan"
                 ]
             ]);
+
+            // Create log status for the actor (Verifikator/PPK/Wadir)
+            $actorUserId = \Illuminate\Support\Facades\Session::get('user_id') ?? auth()->id();
+            if ($actorUserId && $actorUserId !== $kegiatan->user_id) {
+                $actorLink = match($currentPosition) {
+                    self::POSITION_VERIFIKATOR => "/verifikator/telaah/show/{$kegiatanId}",
+                    self::POSITION_PPK => "/ppk/kegiatan/show/{$kegiatanId}",
+                    self::POSITION_WADIR => "/wadir/kegiatan/show/{$kegiatanId}",
+                    default => '#'
+                };
+                LogStatus::create([
+                    'user_id' => $actorUserId,
+                    'tipe_log' => 'APPROVAL',
+                    'id_referensi' => $kegiatanId,
+                    'status' => 'DIBACA',
+                    'konten_json' => [
+                        'judul' => 'Persetujuan Berhasil',
+                        'pesan' => "Anda telah menyetujui usulan \"{$kegiatan->nama_kegiatan}\" sebagai {$roleName}.",
+                        'link' => $actorLink
+                    ]
+                ]);
+            }
 
             return true;
         });
@@ -149,6 +171,28 @@ class WorkflowService
                     'link' => "/admin/pengajuan-kegiatan"
                 ]
             ]);
+
+            // Create log status for the actor (Verifikator/PPK/Wadir)
+            $actorUserId = \Illuminate\Support\Facades\Session::get('user_id') ?? auth()->id();
+            if ($actorUserId && $actorUserId !== $kegiatan->user_id) {
+                $actorLink = match($currentPosition) {
+                    self::POSITION_VERIFIKATOR => "/verifikator/telaah/show/{$kegiatanId}",
+                    self::POSITION_PPK => "/ppk/kegiatan/show/{$kegiatanId}",
+                    self::POSITION_WADIR => "/wadir/kegiatan/show/{$kegiatanId}",
+                    default => '#'
+                };
+                LogStatus::create([
+                    'user_id' => $actorUserId,
+                    'tipe_log' => 'REJECTION',
+                    'id_referensi' => $kegiatanId,
+                    'status' => 'DIBACA',
+                    'konten_json' => [
+                        'judul' => 'Penolakan Berhasil',
+                        'pesan' => "Anda telah menolak usulan \"{$kegiatan->nama_kegiatan}\" sebagai {$roleName}.",
+                        'link' => $actorLink
+                    ]
+                ]);
+            }
 
             return true;
         });
@@ -199,6 +243,28 @@ class WorkflowService
                     'link' => "/admin/pengajuan-kegiatan"
                 ]
             ]);
+
+            // Create activity log for the verifikator/reviewer who requested the revision
+            $actorUserId = \Illuminate\Support\Facades\Session::get('user_id') ?? auth()->id();
+            if ($actorUserId && $actorUserId !== $kegiatan->user_id) {
+                $actorLink = match($currentPosition) {
+                    self::POSITION_VERIFIKATOR => "/verifikator/telaah/show/{$kegiatanId}",
+                    self::POSITION_PPK => "/ppk/kegiatan/show/{$kegiatanId}",
+                    self::POSITION_WADIR => "/wadir/kegiatan/show/{$kegiatanId}",
+                    default => '#'
+                };
+                LogStatus::create([
+                    'user_id' => $actorUserId,
+                    'tipe_log' => 'REVISION',
+                    'id_referensi' => $kegiatanId,
+                    'status' => 'DIBACA',
+                    'konten_json' => [
+                        'judul' => 'Revisi KAK Berhasil Dikirim',
+                        'pesan' => "Permintaan revisi untuk usulan \"{$kegiatan->nama_kegiatan}\" berhasil dikirim. Catatan: {$comments}",
+                        'link' => $actorLink
+                    ]
+                ]);
+            }
 
             return true;
         });

@@ -82,14 +82,6 @@
                     <i class="fas fa-print"></i> Cetak KAK
                 </a>
                 @endif
-                @if(strtolower($status) === 'lpj disetujui')
-                <form action="{{ route('admin.usulan.selesai', $id) }}" method="POST" class="inline flex-1 sm:flex-none">
-                    @csrf
-                    <button type="submit" class="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition font-bold text-sm shadow-lg shadow-emerald-200">
-                        <i class="fas fa-check-double"></i> Kegiatan Selesai
-                    </button>
-                </form>
-                @endif
             </div>
         </div>
 
