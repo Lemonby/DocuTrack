@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Rab extends Model
 {
     protected $primaryKey = 'rab_item_id';
+
     public $timestamps = false;
 
     protected $fillable = [

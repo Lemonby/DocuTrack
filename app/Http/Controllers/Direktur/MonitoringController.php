@@ -13,6 +13,7 @@ class MonitoringController extends Controller
     public function index()
     {
         $list_jurusan = Jurusan::orderBy('nama_jurusan')->pluck('nama_jurusan')->toArray();
+
         return view('direktur.monitoring.index', compact('list_jurusan'));
     }
 
@@ -31,9 +32,9 @@ class MonitoringController extends Controller
 
         if ($search) {
             $query->where(function ($q) use ($search) {
-                $q->where('nama_kegiatan', 'like', '%' . $search . '%')
-                    ->orWhere('pemilik_kegiatan', 'like', '%' . $search . '%')
-                    ->orWhere('nim_pelaksana', 'like', '%' . $search . '%');
+                $q->where('nama_kegiatan', 'like', '%'.$search.'%')
+                    ->orWhere('pemilik_kegiatan', 'like', '%'.$search.'%')
+                    ->orWhere('nim_pelaksana', 'like', '%'.$search.'%');
             });
         }
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Core\Database;
 use mysqli;
 use RuntimeException;
 use Throwable;
@@ -12,7 +13,7 @@ use Throwable;
  * VerifikatorModel - Verifikator Management Model
  *
  * @category Model
- * @package  DocuTrack
+ *
  * @version  2.0.0 - Refactored to remove constructor trap
  */
 class VerifikatorModel
@@ -23,6 +24,7 @@ class VerifikatorModel
     {
         if ($db instanceof mysqli) {
             $this->db = $db;
+
             return;
         }
 
@@ -32,9 +34,9 @@ class VerifikatorModel
         } else {
             // Last resort: get from Database singleton
             try {
-                $this->db = \App\Core\Database::getInstance()->getConnection();
+                $this->db = Database::getInstance()->getConnection();
             } catch (\Exception $e) {
-                throw new \Exception("Database connection not provided to VerifikatorModel. " . $e->getMessage());
+                throw new \Exception('Database connection not provided to VerifikatorModel. '.$e->getMessage());
             }
         }
     }
@@ -44,7 +46,7 @@ class VerifikatorModel
      */
     public function getDashboardStats()
     {
-        $query = "SELECT
+        $query = 'SELECT
                     COUNT(*) as total,
                     SUM(CASE
                         WHEN status_utama_id IN (3, 7, 8) AND status_utama_id != 4 AND bukti_ak IS NOT NULL THEN 1
@@ -58,18 +60,20 @@ class VerifikatorModel
                         WHEN posisiId = 2 THEN 1
                         ELSE 0
                     END) as pending
-                FROM tbl_kegiatan";
+                FROM tbl_kegiatan';
 
         $result = mysqli_query($this->db, $query);
         if ($result) {
             $data = mysqli_fetch_assoc($result);
+
             return [
                 'total' => $data['total'],
                 'disetujui' => $data['disetujui'],
                 'ditolak' => $data['ditolak'],
-                'pending' => $data['pending']
+                'pending' => $data['pending'],
             ];
         }
+
         return ['total' => 0, 'disetujui' => 0, 'ditolak' => 0, 'pending' => 0];
     }
 
@@ -78,7 +82,7 @@ class VerifikatorModel
      */
     public function getDashboardKAK()
     {
-        $query = "SELECT
+        $query = 'SELECT
                     k.kegiatanId as id,
                     k.namaKegiatan as nama,
                     k.pemilikKegiatan as nama_mahasiswa,
@@ -91,7 +95,7 @@ class VerifikatorModel
                 FROM tbl_kegiatan k
                 LEFT JOIN tbl_status_utamas s ON k.status_utama_id = s.statusId
                 WHERE k.posisiId = 2
-                ORDER BY k.createdAt DESC";
+                ORDER BY k.createdAt DESC';
 
         $result = mysqli_query($this->db, $query);
         $data = [];
@@ -115,11 +119,11 @@ class VerifikatorModel
      */
     public function getIndikatorByKAK($kakId)
     {
-        $query = "SELECT bulan, indikatorKeberhasilan as nama, targetPersen as target 
+        $query = 'SELECT bulan, indikatorKeberhasilan as nama, targetPersen as target 
                   FROM tbl_indikator_kak 
-                  WHERE kakId = ?";
+                  WHERE kakId = ?';
         $stmt = mysqli_prepare($this->db, $query);
-        mysqli_stmt_bind_param($stmt, "i", $kakId);
+        mysqli_stmt_bind_param($stmt, 'i', $kakId);
         mysqli_stmt_execute($stmt);
         $result = mysqli_stmt_get_result($stmt);
 
@@ -127,6 +131,7 @@ class VerifikatorModel
         while ($row = mysqli_fetch_assoc($result)) {
             $data[] = $row;
         }
+
         return $data;
     }
 
@@ -135,9 +140,9 @@ class VerifikatorModel
      */
     public function getTahapanByKAK($kakId)
     {
-        $query = "SELECT namaTahapan FROM tbl_tahapan_pelaksanaan WHERE kakId = ? ORDER BY tahapanId ASC";
+        $query = 'SELECT namaTahapan FROM tbl_tahapan_pelaksanaan WHERE kakId = ? ORDER BY tahapanId ASC';
         $stmt = mysqli_prepare($this->db, $query);
-        mysqli_stmt_bind_param($stmt, "i", $kakId);
+        mysqli_stmt_bind_param($stmt, 'i', $kakId);
         mysqli_stmt_execute($stmt);
         $result = mysqli_stmt_get_result($stmt);
 
@@ -145,6 +150,7 @@ class VerifikatorModel
         while ($row = mysqli_fetch_assoc($result)) {
             $data[] = $row['namaTahapan'];
         }
+
         return $data;
     }
 
@@ -153,14 +159,14 @@ class VerifikatorModel
      */
     public function getRABByKAK($kakId)
     {
-        $query = "SELECT r.*, cat.namaKategori
+        $query = 'SELECT r.*, cat.namaKategori
                   FROM tbl_rab r
                   JOIN tbl_kategori_rab cat ON r.kategoriId = cat.kategoriRabId
                   WHERE r.kakId = ?
-                  ORDER BY cat.kategoriRabId ASC, r.rabItemId ASC";
+                  ORDER BY cat.kategoriRabId ASC, r.rabItemId ASC';
 
         $stmt = mysqli_prepare($this->db, $query);
-        mysqli_stmt_bind_param($stmt, "i", $kakId);
+        mysqli_stmt_bind_param($stmt, 'i', $kakId);
         mysqli_stmt_execute($stmt);
         $result = mysqli_stmt_get_result($stmt);
 
@@ -168,6 +174,7 @@ class VerifikatorModel
         while ($row = mysqli_fetch_assoc($result)) {
             $data[$row['namaKategori']][] = $row;
         }
+
         return $data;
     }
 
@@ -176,9 +183,10 @@ class VerifikatorModel
      */
     public function updateStatus($kegiatanId, $statusId)
     {
-        $query = "UPDATE tbl_kegiatan SET status_utama_id = ? WHERE kegiatanId = ?";
+        $query = 'UPDATE tbl_kegiatan SET status_utama_id = ? WHERE kegiatanId = ?';
         $stmt = mysqli_prepare($this->db, $query);
-        mysqli_stmt_bind_param($stmt, "ii", $statusId, $kegiatanId);
+        mysqli_stmt_bind_param($stmt, 'ii', $statusId, $kegiatanId);
+
         return mysqli_stmt_execute($stmt);
     }
 
@@ -187,17 +195,19 @@ class VerifikatorModel
      */
     public function getListJurusan()
     {
-        $query = "SELECT * FROM tbl_jurusan j";
+        $query = 'SELECT * FROM tbl_jurusan j';
         $stmt = mysqli_prepare($this->db, $query);
 
-        if (!$stmt) {
-            error_log('Prepare failed: ' . mysqli_error($this->db));
+        if (! $stmt) {
+            error_log('Prepare failed: '.mysqli_error($this->db));
+
             return [];
         }
 
-        if (!mysqli_stmt_execute($stmt)) {
-            error_log('Execute failed: ' . mysqli_stmt_error($stmt));
+        if (! mysqli_stmt_execute($stmt)) {
+            error_log('Execute failed: '.mysqli_stmt_error($stmt));
             mysqli_stmt_close($stmt);
+
             return [];
         }
 
@@ -209,6 +219,7 @@ class VerifikatorModel
         }
 
         mysqli_stmt_close($stmt);
+
         return $jurusan;
     }
 
@@ -252,24 +263,25 @@ class VerifikatorModel
                   ) latest_verif ON k.kegiatanId = latest_verif.kegiatanId
                   WHERE 1=1";
 
-        $types = "";
+        $types = '';
         $params = [];
 
-        if (!empty($userJurusan)) {
-            $query .= " AND k.jurusanPenyelenggara = ?";
-            $types .= "s";
+        if (! empty($userJurusan)) {
+            $query .= ' AND k.jurusanPenyelenggara = ?';
+            $types .= 's';
             $params[] = $userJurusan;
         }
 
-        $query .= " ORDER BY k.createdAt DESC";
+        $query .= ' ORDER BY k.createdAt DESC';
 
         $stmt = $this->db->prepare($query);
         if ($stmt === false) {
-             error_log("Prepare failed in getRiwayat: " . $this->db->error);
-             return [];
+            error_log('Prepare failed in getRiwayat: '.$this->db->error);
+
+            return [];
         }
 
-        if (!empty($params)) {
+        if (! empty($params)) {
             $stmt->bind_param($types, ...$params);
         }
 
@@ -282,6 +294,7 @@ class VerifikatorModel
         }
 
         $stmt->close();
+
         return $data;
     }
 
@@ -290,7 +303,7 @@ class VerifikatorModel
      */
     public function getDetailKegiatan($kegiatanId)
     {
-        $query = "SELECT
+        $query = 'SELECT
                     k.*,
                     kak.*,
                     k.tanggalMulai as tanggal_mulai,
@@ -306,10 +319,10 @@ class VerifikatorModel
                 JOIN tbl_kak kak ON k.kegiatanId = kak.kegiatanId
                 LEFT JOIN tbl_user u ON u.userId = k.userId
                 LEFT JOIN tbl_status_utama s ON k.status_utama_id = s.statusId
-                WHERE k.kegiatanId = ?";
+                WHERE k.kegiatanId = ?';
 
         $stmt = mysqli_prepare($this->db, $query);
-        mysqli_stmt_bind_param($stmt, "i", $kegiatanId);
+        mysqli_stmt_bind_param($stmt, 'i', $kegiatanId);
         mysqli_stmt_execute($stmt);
         $result = mysqli_stmt_get_result($stmt);
 
@@ -318,9 +331,7 @@ class VerifikatorModel
 
     /**
      * Memperbarui status kegiatan untuk revisi.
-     * @param int $kegiatanId
-     * @param array $komentarRevisi
-     * @return bool
+     *
      * @throws RuntimeException
      * @throws Throwable
      */
@@ -342,18 +353,18 @@ class VerifikatorModel
             $transactionStarted = true;
 
             // Update status kegiatan
-            $query = "UPDATE tbl_kegiatan
+            $query = 'UPDATE tbl_kegiatan
                       SET status_utama_id = ?, posisiId = ?
-                      WHERE kegiatanId = ?";
+                      WHERE kegiatanId = ?';
 
             $stmt = $connection->prepare($query);
             if ($stmt === false) {
                 throw new RuntimeException('Gagal menyiapkan statement update kegiatan.');
             }
-            $stmt->bind_param("iii", $statusRevisi, $backToPosisi, $kegiatanId);
+            $stmt->bind_param('iii', $statusRevisi, $backToPosisi, $kegiatanId);
 
-            if (!$stmt->execute()) {
-                throw new RuntimeException('Gagal update kegiatan: ' . $stmt->error);
+            if (! $stmt->execute()) {
+                throw new RuntimeException('Gagal update kegiatan: '.$stmt->error);
             }
             $stmt->close();
 
@@ -372,7 +383,7 @@ class VerifikatorModel
             }
 
             // Insert revision comments
-            if (!empty($komentarRevisi)) {
+            if (! empty($komentarRevisi)) {
                 foreach ($komentarRevisi as $komentar) {
                     $this->insertRevisiComment(
                         $historyId,
@@ -386,12 +397,14 @@ class VerifikatorModel
             }
 
             $connection->commit();
+
             return true;
         } catch (Throwable $e) {
             if ($transactionStarted) {
                 $connection->rollback();
             }
-            error_log('reviseUsulan (Model) Exception: ' . $e->getMessage());
+            error_log('reviseUsulan (Model) Exception: '.$e->getMessage());
+
             return false;
         }
     }
@@ -409,7 +422,7 @@ class VerifikatorModel
     ): int {
         $sql = 'INSERT INTO tbl_progress_history (kegiatanId, statusId, changedByUserId) VALUES (?, ?, ';
         $placeholders = $userId === null ? 'NULL)' : '?)';
-        $stmt = $this->db->prepare($sql . $placeholders);
+        $stmt = $this->db->prepare($sql.$placeholders);
 
         if ($stmt === false) {
             throw new RuntimeException('Gagal menyiapkan statement progress history.');
@@ -439,12 +452,12 @@ class VerifikatorModel
         $targetTabel = null,
         $targetKolom = null
     ) {
-        $query = "INSERT INTO tbl_revisi_comment
+        $query = 'INSERT INTO tbl_revisi_comment
                   (progressHistoryId, komentarRevisi, targetTabel, targetKolom)
-                  VALUES (?, ?, ?, ?)";
+                  VALUES (?, ?, ?, ?)';
 
         $stmt = mysqli_prepare($this->db, $query);
-        mysqli_stmt_bind_param($stmt, "isss", $historyId, $komentar, $targetTabel, $targetKolom);
+        mysqli_stmt_bind_param($stmt, 'isss', $historyId, $komentar, $targetTabel, $targetKolom);
 
         $result = mysqli_stmt_execute($stmt);
         mysqli_stmt_close($stmt);
@@ -454,11 +467,9 @@ class VerifikatorModel
 
     /**
      * Memperbarui status kegiatan untuk approval.
-     * @param int $kegiatanId
-     * @param string $kodeMak
-     * @param float $danaDisetujui Grand total RAB yang disetujui
-     * @param string|null $catatan
-     * @return bool
+     *
+     * @param  float  $danaDisetujui  Grand total RAB yang disetujui
+     *
      * @throws RuntimeException
      * @throws Throwable
      */
@@ -526,8 +537,8 @@ class VerifikatorModel
 
             $updateStmt->bind_param('iissdi', $nextStatus, $nextPosisi, $trimmedMak, $note, $danaDisetujui, $kegiatanId);
 
-            if (!$updateStmt->execute()) {
-                throw new RuntimeException('Gagal update kegiatan: ' . $updateStmt->error);
+            if (! $updateStmt->execute()) {
+                throw new RuntimeException('Gagal update kegiatan: '.$updateStmt->error);
             }
             $updateStmt->close();
 
@@ -546,21 +557,21 @@ class VerifikatorModel
             }
 
             $connection->commit();
+
             return true;
         } catch (Throwable $e) {
             if ($transactionStarted) {
                 $connection->rollback();
             }
-            error_log('approveUsulan Exception: ' . $e->getMessage());
+            error_log('approveUsulan Exception: '.$e->getMessage());
+
             return false;
         }
     }
 
     /**
      * Memperbarui status kegiatan untuk penolakan.
-     * @param int $kegiatanId
-     * @param string $alasanPenolakan
-     * @return bool
+     *
      * @throws RuntimeException
      * @throws Throwable
      */
@@ -581,18 +592,18 @@ class VerifikatorModel
             $transactionStarted = true;
 
             // Update kegiatan status
-            $query = "UPDATE tbl_kegiatan
+            $query = 'UPDATE tbl_kegiatan
                       SET status_utama_id = ?
-                      WHERE kegiatanId = ?";
+                      WHERE kegiatanId = ?';
 
             $stmt = $connection->prepare($query);
             if ($stmt === false) {
                 throw new RuntimeException('Gagal menyiapkan statement update kegiatan.');
             }
-            $stmt->bind_param("ii", $statusDitolak, $kegiatanId);
+            $stmt->bind_param('ii', $statusDitolak, $kegiatanId);
 
-            if (!$stmt->execute()) {
-                throw new RuntimeException('Gagal update kegiatan: ' . $stmt->error);
+            if (! $stmt->execute()) {
+                throw new RuntimeException('Gagal update kegiatan: '.$stmt->error);
             }
             $stmt->close();
 
@@ -611,7 +622,7 @@ class VerifikatorModel
             }
 
             // Insert rejection comment (targetKolom = NULL untuk alasan umum penolakan)
-            if (!empty($alasanPenolakan)) {
+            if (! empty($alasanPenolakan)) {
                 $insertResult = $this->insertRevisiComment(
                     $historyId,
                     $userId,
@@ -620,8 +631,8 @@ class VerifikatorModel
                     'tbl_kegiatan',
                     null // NULL karena ini alasan penolakan umum, bukan spesifik ke kolom
                 );
-                
-                if (!$insertResult) {
+
+                if (! $insertResult) {
                     error_log("REJECT - Failed to insert rejection comment for kegiatan $kegiatanId");
                 } else {
                     error_log("REJECT - Success insert comment for kegiatan $kegiatanId, historyId $historyId");
@@ -631,12 +642,14 @@ class VerifikatorModel
             }
 
             $connection->commit();
+
             return true;
         } catch (Throwable $e) {
             if ($transactionStarted) {
                 $connection->rollback();
             }
-            error_log('rejectUsulan Exception: ' . $e->getMessage());
+            error_log('rejectUsulan Exception: '.$e->getMessage());
+
             return false;
         }
     }
@@ -646,7 +659,7 @@ class VerifikatorModel
      */
     public function getProposalMonitoring()
     {
-        $query = "SELECT
+        $query = 'SELECT
                     k.kegiatanId as id,
                     k.namaKegiatan as nama,
                     k.pemilikKegiatan as pengusul,
@@ -656,7 +669,7 @@ class VerifikatorModel
                 FROM tbl_kegiatan k
                 LEFT JOIN tbl_status_utama s ON k.status_utama_id = s.statusId
                 LEFT JOIN tbl_role r ON k.posisiId = r.roleId
-                ORDER BY k.createdAt DESC";
+                ORDER BY k.createdAt DESC';
 
         $result = mysqli_query($this->db, $query);
         $data = [];
@@ -668,12 +681,13 @@ class VerifikatorModel
                 } else {
                     $row['status'] = 'Menunggu';
                 }
-                if (!isset($row['tahap_sekarang']) || empty($row['tahap_sekarang'])) {
+                if (! isset($row['tahap_sekarang']) || empty($row['tahap_sekarang'])) {
                     $row['tahap_sekarang'] = 'Admin';
                 }
                 $data[] = $row;
             }
         }
+
         return $data;
     }
 }

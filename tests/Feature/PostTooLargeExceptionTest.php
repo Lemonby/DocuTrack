@@ -2,8 +2,10 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
+use Illuminate\Foundation\Http\Middleware\ValidatePostSize;
+use Illuminate\Http\Exceptions\PostTooLargeException;
 use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class PostTooLargeExceptionTest extends TestCase
 {
@@ -25,10 +27,12 @@ class PostTooLargeExceptionTest extends TestCase
     public function it_redirects_back_with_validation_errors_when_web_post_too_large(): void
     {
         // Bind ValidatePostSize to mock that always throws PostTooLargeException
-        $this->app->bind(\Illuminate\Foundation\Http\Middleware\ValidatePostSize::class, function () {
-            return new class {
-                public function handle($request, \Closure $next) {
-                    throw new \Illuminate\Http\Exceptions\PostTooLargeException;
+        $this->app->bind(ValidatePostSize::class, function () {
+            return new class
+            {
+                public function handle($request, \Closure $next)
+                {
+                    throw new PostTooLargeException;
                 }
             };
         });
@@ -42,7 +46,7 @@ class PostTooLargeExceptionTest extends TestCase
 
         // Assert: Harus ada pesan error di session untuk 'surat_pengantar' dan 'error'
         $response->assertSessionHasErrors(['surat_pengantar', 'error']);
-        
+
         $errors = session('errors')->getBag('default');
         $this->assertStringContainsString('Ukuran file yang diunggah terlalu besar', $errors->first('surat_pengantar'));
     }
@@ -51,10 +55,12 @@ class PostTooLargeExceptionTest extends TestCase
     public function it_returns_json_error_when_api_post_too_large(): void
     {
         // Bind ValidatePostSize to mock that always throws PostTooLargeException
-        $this->app->bind(\Illuminate\Foundation\Http\Middleware\ValidatePostSize::class, function () {
-            return new class {
-                public function handle($request, \Closure $next) {
-                    throw new \Illuminate\Http\Exceptions\PostTooLargeException;
+        $this->app->bind(ValidatePostSize::class, function () {
+            return new class
+            {
+                public function handle($request, \Closure $next)
+                {
+                    throw new PostTooLargeException;
                 }
             };
         });

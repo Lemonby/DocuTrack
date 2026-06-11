@@ -21,14 +21,14 @@ class StoreUsulanRequest extends FormRequest
         }
 
         // Map flat array indicator inputs to nested indicator array
-        if (!empty($this->indikator_nama) && is_array($this->indikator_nama)) {
+        if (! empty($this->indikator_nama) && is_array($this->indikator_nama)) {
             $indikator = [];
             foreach ($this->indikator_nama as $idx => $nama) {
-                if (!empty($nama)) {
+                if (! empty($nama)) {
                     $indikator[] = [
                         'nama' => $nama,
-                        'bulan' => isset($this->indikator_bulan[$idx]) ? (int)$this->indikator_bulan[$idx] : null,
-                        'target' => isset($this->indikator_target[$idx]) ? (int)$this->indikator_target[$idx] : 0,
+                        'bulan' => isset($this->indikator_bulan[$idx]) ? (int) $this->indikator_bulan[$idx] : null,
+                        'target' => isset($this->indikator_target[$idx]) ? (int) $this->indikator_target[$idx] : 0,
                     ];
                 }
             }
@@ -62,34 +62,36 @@ class StoreUsulanRequest extends FormRequest
                 'array',
                 'min:1',
                 function ($attribute, $value, $fail) {
-                    if (!is_array($value)) {
+                    if (! is_array($value)) {
                         return;
                     }
                     $totalItems = 0;
                     foreach ($value as $category => $items) {
-                        if (!is_array($items)) {
+                        if (! is_array($items)) {
                             continue;
                         }
                         foreach ($items as $item) {
                             $uraian = trim($item['uraian'] ?? '');
-                            $harga = (float)($item['harga'] ?? 0);
-                            
+                            $harga = (float) ($item['harga'] ?? 0);
+
                             if (empty($uraian)) {
                                 $fail("Setiap item belanja pada kategori '{$category}' harus memiliki uraian yang jelas.");
+
                                 return;
                             }
                             if ($harga <= 0) {
                                 $fail("Harga untuk item '{$uraian}' pada kategori '{$category}' harus lebih besar dari 0.");
+
                                 return;
                             }
                             $totalItems++;
                         }
                     }
-                    
+
                     if ($totalItems === 0) {
                         $fail('Rincian Anggaran Biaya (RAB) minimal harus memiliki 1 item belanja yang valid.');
                     }
-                }
+                },
             ],
         ];
     }

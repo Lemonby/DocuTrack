@@ -99,7 +99,7 @@ class MasterDataSeeder extends Seeder
                 'realisasi' => '85%',
                 'tahun' => 2020,
                 'created_at' => now(),
-                'updated_at' => now()
+                'updated_at' => now(),
             ],
             [
                 'kode_iku' => 'IKU_2',
@@ -109,7 +109,7 @@ class MasterDataSeeder extends Seeder
                 'realisasi' => '55%',
                 'tahun' => 2020,
                 'created_at' => now(),
-                'updated_at' => now()
+                'updated_at' => now(),
             ],
             [
                 'kode_iku' => 'IKU_3',
@@ -119,7 +119,7 @@ class MasterDataSeeder extends Seeder
                 'realisasi' => '62%',
                 'tahun' => 2020,
                 'created_at' => now(),
-                'updated_at' => now()
+                'updated_at' => now(),
             ],
             [
                 'kode_iku' => 'IKU_4',
@@ -129,7 +129,7 @@ class MasterDataSeeder extends Seeder
                 'realisasi' => '75%',
                 'tahun' => 2020,
                 'created_at' => now(),
-                'updated_at' => now()
+                'updated_at' => now(),
             ],
             [
                 'kode_iku' => 'IKU_5',
@@ -139,7 +139,7 @@ class MasterDataSeeder extends Seeder
                 'realisasi' => '92%',
                 'tahun' => 2020,
                 'created_at' => now(),
-                'updated_at' => now()
+                'updated_at' => now(),
             ],
             [
                 'kode_iku' => 'IKU_6',
@@ -149,7 +149,7 @@ class MasterDataSeeder extends Seeder
                 'realisasi' => '85%',
                 'tahun' => 2020,
                 'created_at' => now(),
-                'updated_at' => now()
+                'updated_at' => now(),
             ],
         ]);
     }

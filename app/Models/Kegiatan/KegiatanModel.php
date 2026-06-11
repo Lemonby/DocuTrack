@@ -17,7 +17,7 @@ class KegiatanModel
     /**
      * Constructor - Dependency Injection for database connection
      *
-     * @param mysqli|null $db Database connection (optional for backward compatibility)
+     * @param  mysqli|null  $db  Database connection (optional for backward compatibility)
      */
     public function __construct($db = null)
     {
@@ -28,7 +28,7 @@ class KegiatanModel
             if (function_exists('db')) {
                 $this->db = db();
             } else {
-                throw new \Exception("Database connection not provided to KegiatanModel. Ensure bootstrap.php is loaded.");
+                throw new Exception('Database connection not provided to KegiatanModel. Ensure bootstrap.php is loaded.');
             }
         }
     }
@@ -46,14 +46,15 @@ class KegiatanModel
         $posisiId = 1; // Admin
         $wadirTujuan = 1; // Default Wadir 1
 
-        $query = "INSERT INTO tbl_kegiatan (
+        $query = 'INSERT INTO tbl_kegiatan (
                     userId, namaKegiatan, buktiMAK, 
                     statusUtamaId, posisiId, wadirTujuan
-                  ) VALUES (?, ?, ?, ?, ?, ?)";
+                  ) VALUES (?, ?, ?, ?, ?, ?)';
 
         $stmt = mysqli_prepare($this->db, $query);
         if ($stmt === false) {
-            error_log('KegiatanModel::insertKegiatan - Prepare failed: ' . mysqli_error($this->db));
+            error_log('KegiatanModel::insertKegiatan - Prepare failed: '.mysqli_error($this->db));
+
             return false;
         }
 
@@ -71,17 +72,19 @@ class KegiatanModel
         if (mysqli_stmt_execute($stmt)) {
             $newId = mysqli_insert_id($this->db);
             mysqli_stmt_close($stmt);
+
             return $newId; // Mengembalikan ID kegiatan yg baru dibuat
         } else {
-            error_log('KegiatanModel::insertKegiatan - Execute failed: ' . mysqli_stmt_error($this->db));
+            error_log('KegiatanModel::insertKegiatan - Execute failed: '.mysqli_stmt_error($this->db));
             mysqli_stmt_close($stmt);
+
             return false;
         }
     }
 
     public function getAllKegiatanForAntrian()
     {
-        $query = "SELECT 
+        $query = 'SELECT 
                     k.kegiatan_id as id,
                     k.nama_kegiatan,
                     k.statusUtamaId as status,
@@ -89,11 +92,12 @@ class KegiatanModel
                     k.prodiPenyelenggara as nama_prodi
                   FROM tbl_kegiatan k
                   LEFT JOIN tbl_user u ON k.userId = u.userId
-                  ORDER BY k.createdAt DESC";
+                  ORDER BY k.createdAt DESC';
 
         $result = mysqli_query($this->db, $query);
         if ($result === false) {
-            error_log('KegiatanModel::getAllKegiatanForAntrian - Query failed: ' . mysqli_error($this->db));
+            error_log('KegiatanModel::getAllKegiatanForAntrian - Query failed: '.mysqli_error($this->db));
+
             return [];
         }
 
@@ -102,17 +106,19 @@ class KegiatanModel
             $antrian[] = $row;
         }
         mysqli_free_result($result);
+
         return $antrian;
     }
 
     // Mengambil semua data kegiatan berdasarkan ID pengusul.
     public function getKegiatanByPengusulId($pengusul_id)
     {
-        $query = "SELECT * FROM tbl_kegiatan WHERE userId = ? ORDER BY createdAt DESC";
+        $query = 'SELECT * FROM tbl_kegiatan WHERE userId = ? ORDER BY createdAt DESC';
         $stmt = mysqli_prepare($this->db, $query);
 
         if ($stmt === false) {
-            error_log('KegiatanModel::getKegiatanByPengusulId - Prepare failed: ' . mysqli_error($this->db));
+            error_log('KegiatanModel::getKegiatanByPengusulId - Prepare failed: '.mysqli_error($this->db));
+
             return [];
         }
 
@@ -125,10 +131,12 @@ class KegiatanModel
                 $kegiatan_list[] = $row;
             }
             mysqli_stmt_close($stmt);
+
             return $kegiatan_list;
         } else {
-            error_log('KegiatanModel::getKegiatanByPengusulId - Execute failed: ' . mysqli_stmt_error($this->db));
+            error_log('KegiatanModel::getKegiatanByPengusulId - Execute failed: '.mysqli_stmt_error($this->db));
             mysqli_stmt_close($stmt);
+
             return [];
         }
     }
@@ -136,11 +144,12 @@ class KegiatanModel
     // Mengupdate data utama kegiatan (yang bisa diubah oleh pengusul, misal saat revisi)
     public function updateNamaKegiatanMak($kegiatan_id, $nama_kegiatan, $kode_mak)
     {
-        $query = "UPDATE tbl_kegiatan SET namaKegiatan = ?, buktiMAK = ? WHERE kegiatanId = ?";
+        $query = 'UPDATE tbl_kegiatan SET namaKegiatan = ?, buktiMAK = ? WHERE kegiatanId = ?';
         $stmt = mysqli_prepare($this->db, $query);
 
         if ($stmt === false) {
-            error_log('KegiatanModel::updateNamaKegiatanMak - Prepare failed: ' . mysqli_error($this->db));
+            error_log('KegiatanModel::updateNamaKegiatanMak - Prepare failed: '.mysqli_error($this->db));
+
             return false;
         }
 
@@ -148,10 +157,12 @@ class KegiatanModel
 
         if (mysqli_stmt_execute($stmt)) {
             mysqli_stmt_close($stmt);
+
             return true;
         } else {
-            error_log('KegiatanModel::updateNamaKegiatanMak - Execute failed: ' . mysqli_stmt_error($this->db));
+            error_log('KegiatanModel::updateNamaKegiatanMak - Execute failed: '.mysqli_stmt_error($this->db));
             mysqli_stmt_close($stmt);
+
             return false;
         }
     }
@@ -161,19 +172,22 @@ class KegiatanModel
     // Mengupdate kolom status_global.
     public function updateStatusGlobal($kegiatan_id, $status_utama_id)
     {
-        $query = "UPDATE tbl_kegiatan SET statusUtamaId = ? WHERE kegiatanId = ?";
+        $query = 'UPDATE tbl_kegiatan SET statusUtamaId = ? WHERE kegiatanId = ?';
         $stmt = mysqli_prepare($this->db, $query);
         if ($stmt === false) {
-            error_log('KegiatanModel::updateStatusGlobal - Prepare failed: ' . mysqli_error($this->db));
+            error_log('KegiatanModel::updateStatusGlobal - Prepare failed: '.mysqli_error($this->db));
+
             return false;
         }
         mysqli_stmt_bind_param($stmt, 'ii', $status_utama_id, $kegiatan_id);
         if (mysqli_stmt_execute($stmt)) {
             mysqli_stmt_close($stmt);
+
             return true;
         } else {
-            error_log('KegiatanModel::updateStatusGlobal - Execute failed: ' . mysqli_stmt_error($this->db));
+            error_log('KegiatanModel::updateStatusGlobal - Execute failed: '.mysqli_stmt_error($this->db));
             mysqli_stmt_close($stmt);
+
             return false;
         }
     }
@@ -181,19 +195,22 @@ class KegiatanModel
     // Update position to Verifikator (posisiId=2)
     public function updateStatusVerifikator($kegiatan_id, $posisi_id = 2)
     {
-        $query = "UPDATE tbl_kegiatan SET posisiId = ? WHERE kegiatanId = ?";
+        $query = 'UPDATE tbl_kegiatan SET posisiId = ? WHERE kegiatanId = ?';
         $stmt = mysqli_prepare($this->db, $query);
         if ($stmt === false) {
-            error_log('KegiatanModel::updateStatusVerifikator - Prepare failed: ' . mysqli_error($this->db));
+            error_log('KegiatanModel::updateStatusVerifikator - Prepare failed: '.mysqli_error($this->db));
+
             return false;
         }
         mysqli_stmt_bind_param($stmt, 'ii', $posisi_id, $kegiatan_id);
         if (mysqli_stmt_execute($stmt)) {
             mysqli_stmt_close($stmt);
+
             return true;
         } else {
-            error_log('KegiatanModel::updateStatusVerifikator - Execute failed: ' . mysqli_stmt_error($this->db));
+            error_log('KegiatanModel::updateStatusVerifikator - Execute failed: '.mysqli_stmt_error($this->db));
             mysqli_stmt_close($stmt);
+
             return false;
         }
     }
@@ -201,19 +218,22 @@ class KegiatanModel
     // Update position to Wadir (posisiId=3)
     public function updateStatusWadir($kegiatan_id, $posisi_id = 3)
     {
-        $query = "UPDATE tbl_kegiatan SET posisiId = ? WHERE kegiatanId = ?";
+        $query = 'UPDATE tbl_kegiatan SET posisiId = ? WHERE kegiatanId = ?';
         $stmt = mysqli_prepare($this->db, $query);
         if ($stmt === false) {
-            error_log('KegiatanModel::updateStatusWadir - Prepare failed: ' . mysqli_error($this->db));
+            error_log('KegiatanModel::updateStatusWadir - Prepare failed: '.mysqli_error($this->db));
+
             return false;
         }
         mysqli_stmt_bind_param($stmt, 'ii', $posisi_id, $kegiatan_id);
         if (mysqli_stmt_execute($stmt)) {
             mysqli_stmt_close($stmt);
+
             return true;
         } else {
-            error_log('KegiatanModel::updateStatusWadir - Execute failed: ' . mysqli_stmt_error($this->db));
+            error_log('KegiatanModel::updateStatusWadir - Execute failed: '.mysqli_stmt_error($this->db));
             mysqli_stmt_close($stmt);
+
             return false;
         }
     }
@@ -221,19 +241,22 @@ class KegiatanModel
     // Update position to PPK (posisiId=4)
     public function updateStatusPpk($kegiatan_id, $posisi_id = 4)
     {
-        $query = "UPDATE tbl_kegiatan SET posisiId = ? WHERE kegiatanId = ?";
+        $query = 'UPDATE tbl_kegiatan SET posisiId = ? WHERE kegiatanId = ?';
         $stmt = mysqli_prepare($this->db, $query);
         if ($stmt === false) {
-            error_log('KegiatanModel::updateStatusPpk - Prepare failed: ' . mysqli_error($this->db));
+            error_log('KegiatanModel::updateStatusPpk - Prepare failed: '.mysqli_error($this->db));
+
             return false;
         }
         mysqli_stmt_bind_param($stmt, 'ii', $posisi_id, $kegiatan_id);
         if (mysqli_stmt_execute($stmt)) {
             mysqli_stmt_close($stmt);
+
             return true;
         } else {
-            error_log('KegiatanModel::updateStatusPpk - Execute failed: ' . mysqli_stmt_error($this->db));
+            error_log('KegiatanModel::updateStatusPpk - Execute failed: '.mysqli_stmt_error($this->db));
             mysqli_stmt_close($stmt);
+
             return false;
         }
     }
@@ -241,19 +264,22 @@ class KegiatanModel
     // Update position to Bendahara (posisiId=5)
     public function updateStatusPencairan($kegiatan_id, $posisi_id = 5)
     {
-        $query = "UPDATE tbl_kegiatan SET posisiId = ? WHERE kegiatanId = ?";
+        $query = 'UPDATE tbl_kegiatan SET posisiId = ? WHERE kegiatanId = ?';
         $stmt = mysqli_prepare($this->db, $query);
         if ($stmt === false) {
-            error_log('KegiatanModel::updateStatusPencairan - Prepare failed: ' . mysqli_error($this->db));
+            error_log('KegiatanModel::updateStatusPencairan - Prepare failed: '.mysqli_error($this->db));
+
             return false;
         }
         mysqli_stmt_bind_param($stmt, 'ii', $posisi_id, $kegiatan_id);
         if (mysqli_stmt_execute($stmt)) {
             mysqli_stmt_close($stmt);
+
             return true;
         } else {
-            error_log('KegiatanModel::updateStatusPencairan - Execute failed: ' . mysqli_stmt_error($this->db));
+            error_log('KegiatanModel::updateStatusPencairan - Execute failed: '.mysqli_stmt_error($this->db));
             mysqli_stmt_close($stmt);
+
             return false;
         }
     }
@@ -261,18 +287,19 @@ class KegiatanModel
     // Update pencairan dana info
     public function updatePencairanDana($kegiatan_id, $jumlah_dana_dicairkan, $metode_pencairan = 'dana_penuh', $catatan = '')
     {
-        $query = "UPDATE tbl_kegiatan 
+        $query = 'UPDATE tbl_kegiatan 
                   SET jumlahDicairkan = ?, 
                       metodePencairan = ?, 
                       tanggalPencairan = NOW(),
                       catatanBendahara = ?,
                       statusUtamaId = 3,
                       posisiId = 5
-                  WHERE kegiatanId = ?";
+                  WHERE kegiatanId = ?';
 
         $stmt = mysqli_prepare($this->db, $query);
         if ($stmt === false) {
-            error_log('KegiatanModel::updatePencairanDana - Prepare failed: ' . mysqli_error($this->db));
+            error_log('KegiatanModel::updatePencairanDana - Prepare failed: '.mysqli_error($this->db));
+
             return false;
         }
 
@@ -288,10 +315,12 @@ class KegiatanModel
 
         if (mysqli_stmt_execute($stmt)) {
             mysqli_stmt_close($stmt);
+
             return true;
         } else {
-            error_log('KegiatanModel::updatePencairanDana - Execute failed: ' . mysqli_stmt_error($this->db));
+            error_log('KegiatanModel::updatePencairanDana - Execute failed: '.mysqli_stmt_error($this->db));
             mysqli_stmt_close($stmt);
+
             return false;
         }
     }
@@ -299,16 +328,17 @@ class KegiatanModel
     /**
      * Menghapus data kegiatan berdasarkan ID.
      *
-     * @param int $kegiatan_id ID kegiatan yang akan dihapus
+     * @param  int  $kegiatan_id  ID kegiatan yang akan dihapus
      * @return bool True jika berhasil, false jika gagal
      */
     public function deleteKegiatan($kegiatan_id)
     {
-        $query = "DELETE FROM tbl_kegiatan WHERE kegiatanId = ?";
+        $query = 'DELETE FROM tbl_kegiatan WHERE kegiatanId = ?';
         $stmt = mysqli_prepare($this->db, $query);
 
         if ($stmt === false) {
-            error_log('KegiatanModel::deleteKegiatan - Prepare failed: ' . mysqli_error($this->db));
+            error_log('KegiatanModel::deleteKegiatan - Prepare failed: '.mysqli_error($this->db));
+
             return false;
         }
 
@@ -316,10 +346,12 @@ class KegiatanModel
 
         if (mysqli_stmt_execute($stmt)) {
             mysqli_stmt_close($stmt);
+
             return true;
         } else {
-            error_log('KegiatanModel::deleteKegiatan - Execute failed: ' . mysqli_stmt_error($this->db));
+            error_log('KegiatanModel::deleteKegiatan - Execute failed: '.mysqli_stmt_error($this->db));
             mysqli_stmt_close($stmt);
+
             return false;
         }
     }
@@ -336,24 +368,25 @@ class KegiatanModel
      */
     public function getDashboardStats()
     {
-        $query = "SELECT 
+        $query = 'SELECT 
                     COUNT(*) as total,
                     SUM(CASE WHEN posisiId = 1 AND statusUtamaId = 8 THEN 1 ELSE 0 END) as disetujui,
                     SUM(CASE WHEN statusUtamaId = 4 THEN 1 ELSE 0 END) as ditolak,
                     SUM(CASE WHEN statusUtamaId != 4 AND (posisiId != 5 OR tanggalPencairan IS NULL) THEN 1 ELSE 0 END) as menunggu
-                FROM tbl_kegiatan";
+                FROM tbl_kegiatan';
 
         $result = mysqli_query($this->db, $query);
         if ($result) {
             return mysqli_fetch_assoc($result);
         }
+
         return ['total' => 0, 'disetujui' => 0, 'ditolak' => 0, 'menunggu' => 0];
     }
 
     /**
      * Get dashboard KAK list with optional jurusan filter
      *
-     * @param string|null $jurusan Optional filter by jurusan name
+     * @param  string|null  $jurusan  Optional filter by jurusan name
      * @return array Array of kegiatan data
      */
     public function getDashboardKAK($jurusan = null)
@@ -387,17 +420,18 @@ class KegiatanModel
                 LEFT JOIN tbl_status_utama s ON k.statusUtamaId = s.statusId";
 
         // Add WHERE clause if jurusan filter is provided
-        if ($jurusan !== null && !empty($jurusan)) {
-            $query .= " WHERE k.jurusanPenyelenggara = ?";
+        if ($jurusan !== null && ! empty($jurusan)) {
+            $query .= ' WHERE k.jurusanPenyelenggara = ?';
         }
 
-        $query .= " ORDER BY k.createdAt DESC";
+        $query .= ' ORDER BY k.createdAt DESC';
 
         // Execute with or without parameter binding
-        if ($jurusan !== null && !empty($jurusan)) {
+        if ($jurusan !== null && ! empty($jurusan)) {
             $stmt = mysqli_prepare($this->db, $query);
             if ($stmt === false) {
-                error_log('KegiatanModel::getDashboardKAK - Prepare failed: ' . mysqli_error($this->db));
+                error_log('KegiatanModel::getDashboardKAK - Prepare failed: '.mysqli_error($this->db));
+
                 return [];
             }
             mysqli_stmt_bind_param($stmt, 's', $jurusan);
@@ -406,7 +440,8 @@ class KegiatanModel
         } else {
             $result = mysqli_query($this->db, $query);
             if ($result === false) {
-                error_log('KegiatanModel::getDashboardKAK - Query failed: ' . mysqli_error($this->db));
+                error_log('KegiatanModel::getDashboardKAK - Query failed: '.mysqli_error($this->db));
+
                 return [];
             }
         }

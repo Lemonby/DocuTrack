@@ -2,21 +2,21 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use App\Models\User;
-use App\Models\Kegiatan;
-use App\Models\Kak;
 use App\Models\Iku;
 use App\Models\IndikatorKak;
-use App\Models\TahapanPelaksanaan;
-use App\Models\Rab;
+use App\Models\Kak;
+use App\Models\Kegiatan;
 use App\Models\Lpj;
+use App\Models\Rab;
+use App\Models\TahapanPelaksanaan;
 use App\Models\TahapanPencairan;
+use App\Models\User;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
 /**
  * Class AcademicActivitiesSeeder
- * 
+ *
  * Seeder lengkap untuk mensimulasikan lingkungan DocuTrack yang kaya data.
  * Untuk setiap jurusan (8 jurusan), seeder ini menghasilkan:
  * - 5 usulan baru yang menunggu di antrean Verifikator (belum cair, posisi_id = 2, status_utama_id = 1).
@@ -44,21 +44,21 @@ class AcademicActivitiesSeeder extends Seeder
 
         // Nama-nama kegiatan realistis untuk variasi data
         $templatesMenunggu = [
-            "Workshop Penguatan Metodologi Riset Terapan",
-            "Seminar Nasional Teknologi dan Inovasi Industri",
-            "Pelatihan Sertifikasi Kompetensi Profesi Mahasiswa",
-            "Penyusunan Kurikulum Berbasis Outcome-Based Education (OBE)",
-            "Pengembangan Lab Praktikum Berstandar Industri",
+            'Workshop Penguatan Metodologi Riset Terapan',
+            'Seminar Nasional Teknologi dan Inovasi Industri',
+            'Pelatihan Sertifikasi Kompetensi Profesi Mahasiswa',
+            'Penyusunan Kurikulum Berbasis Outcome-Based Education (OBE)',
+            'Pengembangan Lab Praktikum Berstandar Industri',
         ];
 
         $templatesSiapLpj = [
-            "Penerapan IoT untuk Efisiensi Energi Rumah Tangga",
-            "Pelatihan Pengolahan Limbah Industri Ramah Lingkungan",
-            "Kunjungan Industri Strategis Mahasiswa Tingkat Akhir",
+            'Penerapan IoT untuk Efisiensi Energi Rumah Tangga',
+            'Pelatihan Pengolahan Limbah Industri Ramah Lingkungan',
+            'Kunjungan Industri Strategis Mahasiswa Tingkat Akhir',
         ];
 
         // Ambil Bendahara sebagai pencatat log pencairan jika ada
-        $bendahara = User::whereHas('roles', function($q) {
+        $bendahara = User::whereHas('roles', function ($q) {
             $q->where('name', 'Bendahara');
         })->first();
         $bendaharaId = $bendahara ? $bendahara->user_id : null;
@@ -77,7 +77,7 @@ class AcademicActivitiesSeeder extends Seeder
             // KATEGORI 1: 5 Usulan Menunggu Verifikator (Awaiting MAK)
             // =========================================================================
             for ($i = 0; $i < 5; $i++) {
-                $namaKegiatan = $templatesMenunggu[$i] . " " . $jurusan;
+                $namaKegiatan = $templatesMenunggu[$i].' '.$jurusan;
 
                 // 1. Insert kegiatan
                 $kegiatan = Kegiatan::create([
@@ -85,7 +85,7 @@ class AcademicActivitiesSeeder extends Seeder
                     'prodi_penyelenggara' => $prodiName,
                     'pemilik_kegiatan' => $userNama,
                     'nip' => '199001012020121001',
-                    'nama_pj' => 'PJ Kegiatan ' . $jurusan,
+                    'nama_pj' => 'PJ Kegiatan '.$jurusan,
                     'user_id' => $userId,
                     'jurusan_penyelenggara' => $jurusan,
                     'status_utama_id' => 1, // Menunggu
@@ -99,8 +99,8 @@ class AcademicActivitiesSeeder extends Seeder
                 // 2. Insert KAK
                 $kak = Kak::create([
                     'kegiatan_id' => $kegiatan->kegiatan_id,
-                    'penerima_manfaat' => 'Dosen dan Mahasiswa Jurusan ' . $jurusan,
-                    'gambaran_umum' => 'Meningkatkan pemahaman praktis akademis di lingkungan ' . $jurusan,
+                    'penerima_manfaat' => 'Dosen dan Mahasiswa Jurusan '.$jurusan,
+                    'gambaran_umum' => 'Meningkatkan pemahaman praktis akademis di lingkungan '.$jurusan,
                     'metode_pelaksanaan' => 'Metode meliputi pemaparan materi ahli dan diskusi terfokus.',
                     'tgl_pembuatan' => '2026-06-01',
                 ]);
@@ -114,7 +114,7 @@ class AcademicActivitiesSeeder extends Seeder
                     IndikatorKak::create([
                         'kak_id' => $kak->kak_id,
                         'bulan' => $m,
-                        'indikator_keberhasilan' => 'Indikator Keberhasilan Target Bulan ke-' . $m,
+                        'indikator_keberhasilan' => 'Indikator Keberhasilan Target Bulan ke-'.$m,
                         'target_persen' => 100.00,
                     ]);
                 }
@@ -152,7 +152,7 @@ class AcademicActivitiesSeeder extends Seeder
             // KATEGORI 2: 3 Usulan Siap Ajukan LPJ (Dana Diberikan / Disbursed)
             // =========================================================================
             for ($j = 0; $j < 3; $j++) {
-                $namaKegiatanSiap = $templatesSiapLpj[$j] . " " . $jurusan;
+                $namaKegiatanSiap = $templatesSiapLpj[$j].' '.$jurusan;
 
                 // 1. Insert kegiatan dengan posisi Admin (1) & status Dana Diberikan (5)
                 $kegiatanCair = Kegiatan::create([
@@ -160,7 +160,7 @@ class AcademicActivitiesSeeder extends Seeder
                     'prodi_penyelenggara' => $prodiName,
                     'pemilik_kegiatan' => $userNama,
                     'nip' => '199001012020121001',
-                    'nama_pj' => 'PJ Pelaksana ' . $jurusan,
+                    'nama_pj' => 'PJ Pelaksana '.$jurusan,
                     'user_id' => $userId,
                     'jurusan_penyelenggara' => $jurusan,
                     'status_utama_id' => 5, // Status: Dana diberikan
@@ -168,7 +168,7 @@ class AcademicActivitiesSeeder extends Seeder
                     'wadir_tujuan' => 1,
                     'tanggal_mulai' => '2026-06-01',
                     'tanggal_selesai' => '2026-06-05',
-                    'bukti_mak' => 'MAK-' . strtoupper(substr(md5($jurusan . $j), 0, 8)), // Kode MAK Terisi
+                    'bukti_mak' => 'MAK-'.strtoupper(substr(md5($jurusan.$j), 0, 8)), // Kode MAK Terisi
                     'tanggal_pencairan' => '2026-06-02 10:00:00', // Tanggal pencairan terisi
                     'jumlah_dicairkan' => 10000000.00,
                     'dana_di_setujui' => 10000000.00,
@@ -177,8 +177,8 @@ class AcademicActivitiesSeeder extends Seeder
                 // 2. Insert KAK
                 $kakCair = Kak::create([
                     'kegiatan_id' => $kegiatanCair->kegiatan_id,
-                    'penerima_manfaat' => 'Dosen dan Mahasiswa Jurusan ' . $jurusan,
-                    'gambaran_umum' => 'Meningkatkan kompetensi aplikatif akademis pasca-pencairan dana untuk jurusan ' . $jurusan,
+                    'penerima_manfaat' => 'Dosen dan Mahasiswa Jurusan '.$jurusan,
+                    'gambaran_umum' => 'Meningkatkan kompetensi aplikatif akademis pasca-pencairan dana untuk jurusan '.$jurusan,
                     'metode_pelaksanaan' => 'Metode meliputi implementasi lapangan dan penyusunan berkas LPJ.',
                     'tgl_pembuatan' => '2026-05-15',
                 ]);
@@ -192,7 +192,7 @@ class AcademicActivitiesSeeder extends Seeder
                     IndikatorKak::create([
                         'kak_id' => $kakCair->kak_id,
                         'bulan' => $m,
-                        'indikator_keberhasilan' => 'Realisasi Target Indikator Bulan ke-' . $m,
+                        'indikator_keberhasilan' => 'Realisasi Target Indikator Bulan ke-'.$m,
                         'target_persen' => 100.00,
                     ]);
                 }

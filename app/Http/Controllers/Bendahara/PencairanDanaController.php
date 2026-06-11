@@ -5,9 +5,10 @@ namespace App\Http\Controllers\Bendahara;
 use App\Http\Controllers\Controller;
 use App\Models\Kegiatan;
 use App\Services\KegiatanService;
-use App\Services\WorkflowService;
 use App\Services\PencairanService;
+use App\Services\WorkflowService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Session;
 
 class PencairanDanaController extends Controller
 {
@@ -16,7 +17,7 @@ class PencairanDanaController extends Controller
         $kegiatanList = Kegiatan::with(['statusUtama', 'user'])
             ->where(function ($query) {
                 $query->where('posisi_id', '>=', WorkflowService::POSITION_BENDAHARA)
-                      ->orWhere('status_utama_id', WorkflowService::STATUS_DANA_DIBERIKAN);
+                    ->orWhere('status_utama_id', WorkflowService::STATUS_DANA_DIBERIKAN);
             })
             ->latest()
             ->get();
@@ -37,12 +38,13 @@ class PencairanDanaController extends Controller
                 'status' => $statusLabel,
             ];
         })->toArray();
+
         return view('bendahara.pencairan-dana.index', compact('list_kak'));
     }
 
     public function detail($id)
     {
-        $kegiatan = (new KegiatanService())->getDetailLengkap((int) $id);
+        $kegiatan = (new KegiatanService)->getDetailLengkap((int) $id);
 
         $rab_data = [];
         $anggaran_disetujui = 0;
@@ -157,7 +159,7 @@ class PencairanDanaController extends Controller
         ]);
 
         $kegiatanId = (int) $request->input('kegiatanId');
-        
+
         $tahapan = [];
         $nominalTahapan = $request->input('nominalTahapan');
         $tanggalTahapan = $request->input('tanggalTahapan');
@@ -172,10 +174,10 @@ class PencairanDanaController extends Controller
             ];
         }
 
-        $pencairanService = new PencairanService();
-        $userId = \Illuminate\Support\Facades\Session::get('user_id') ?? 1;
+        $pencairanService = new PencairanService;
+        $userId = Session::get('user_id') ?? 1;
         $metode = count($tahapan) > 1 ? 'bertahap' : 'penuh';
-        
+
         $payload = [
             'metode' => $metode,
             'catatan' => $request->input('catatan') ?? '',
@@ -188,7 +190,7 @@ class PencairanDanaController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Pencairan dana berhasil diproses.'
+            'message' => 'Pencairan dana berhasil diproses.',
         ]);
     }
 }

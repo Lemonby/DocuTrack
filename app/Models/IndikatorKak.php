@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class IndikatorKak extends Model
 {
     protected $primaryKey = 'indikator_id';
+
     public $timestamps = false;
 
     protected $fillable = ['kak_id', 'bulan', 'indikator_keberhasilan', 'target_persen'];

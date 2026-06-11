@@ -5,10 +5,11 @@ namespace App\Http\Controllers\Direktur;
 use App\Http\Controllers\Controller;
 use App\Services\SpkMautService;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 /**
  * Class IntegritasController
- * 
+ *
  * Kontroler khusus Direktur untuk menyajikan data halaman Integritas Jurusan
  * menggunakan metode SPK MAUT (Multi-Attribute Utility Theory).
  */
@@ -21,8 +22,8 @@ class IntegritasController extends Controller
 
     /**
      * Konstruktor untuk menyuntikkan (inject) dependensi SpkMautService.
-     * 
-     * @param SpkMautService $spkService Layanan penghitung SPK MAUT.
+     *
+     * @param  SpkMautService  $spkService  Layanan penghitung SPK MAUT.
      */
     public function __construct(SpkMautService $spkService)
     {
@@ -32,9 +33,9 @@ class IntegritasController extends Controller
     /**
      * Menampilkan halaman dashboard Integritas Jurusan (Leaderboard SPK MAUT)
      * beserta visualisasi grafik rata-rata kriteria dan rincian nilai per KAK.
-     * 
-     * @param Request $request Menampung query parameter 'jurusan' untuk filter detail.
-     * @return \Illuminate\View\View Halaman view dengan data peringkat, jurusan terpilih, dan rincian kegiatannya.
+     *
+     * @param  Request  $request  Menampung query parameter 'jurusan' untuk filter detail.
+     * @return View Halaman view dengan data peringkat, jurusan terpilih, dan rincian kegiatannya.
      */
     public function index(Request $request)
     {
@@ -45,7 +46,7 @@ class IntegritasController extends Controller
         // Jika ada parameter 'jurusan', gunakan parameter tersebut.
         // Jika tidak, default-kan ke jurusan di peringkat pertama (skor tertinggi).
         $selectedJurusanName = $request->query('jurusan');
-        if (!$selectedJurusanName && $rankings->isNotEmpty()) {
+        if (! $selectedJurusanName && $rankings->isNotEmpty()) {
             $selectedJurusanName = $rankings->first()['jurusan'];
         }
 

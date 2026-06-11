@@ -18,11 +18,11 @@ class RiwayatController extends Controller
             ->when($userId, fn ($q) => $q->where('changed_by_user_id', $userId))
             ->whereHas('kegiatan', function ($q) {
                 $q->where('posisi_id', '>', WorkflowService::POSITION_WADIR)
-                  ->orWhereIn('status_utama_id', [
-                      WorkflowService::STATUS_DANA_DIBERIKAN,
-                      WorkflowService::STATUS_LPJ_DISETUJUI,
-                      WorkflowService::STATUS_SELESAI
-                  ]);
+                    ->orWhereIn('status_utama_id', [
+                        WorkflowService::STATUS_DANA_DIBERIKAN,
+                        WorkflowService::STATUS_LPJ_DISETUJUI,
+                        WorkflowService::STATUS_SELESAI,
+                    ]);
             })
             ->latest('created_at')
             ->get()
@@ -33,6 +33,7 @@ class RiwayatController extends Controller
 
         $list_riwayat = $historyQuery->map(function ($history) {
             $kegiatan = $history->kegiatan;
+
             return [
                 'id' => $kegiatan->kegiatan_id,
                 'nama' => $kegiatan->nama_kegiatan,

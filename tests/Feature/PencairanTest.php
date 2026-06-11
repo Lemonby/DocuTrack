@@ -2,11 +2,11 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
-use App\Models\Kegiatan;
 use App\Models\Kak;
-use App\Models\Rab;
 use App\Models\KategoriRab;
+use App\Models\Kegiatan;
+use App\Models\Rab;
+use App\Models\User;
 use App\Services\WorkflowService;
 use Database\Seeders\MasterDataSeeder;
 use Database\Seeders\RolePermissionSeeder;
@@ -21,6 +21,7 @@ class PencairanTest extends TestCase
     use RefreshDatabase;
 
     private User $bendahara;
+
     private User $pengusul;
 
     protected function setUp(): void
@@ -31,20 +32,20 @@ class PencairanTest extends TestCase
         $this->seed(RolePermissionSeeder::class);
 
         $this->bendahara = User::create([
-            'nama'         => 'Bendahara Test',
-            'email'        => 'bendahara@example.com',
-            'password'     => Hash::make('password123'),
+            'nama' => 'Bendahara Test',
+            'email' => 'bendahara@example.com',
+            'password' => Hash::make('password123'),
             'nama_jurusan' => 'Teknik Informatika dan Komputer',
-            'status'       => 'Aktif',
+            'status' => 'Aktif',
         ]);
         $this->bendahara->assignRole('Bendahara');
 
         $this->pengusul = User::create([
-            'nama'         => 'Pengusul Test',
-            'email'        => 'pengusul@example.com',
-            'password'     => Hash::make('password123'),
+            'nama' => 'Pengusul Test',
+            'email' => 'pengusul@example.com',
+            'password' => Hash::make('password123'),
             'nama_jurusan' => 'Teknik Informatika dan Komputer',
-            'status'       => 'Aktif',
+            'status' => 'Aktif',
         ]);
         $this->pengusul->assignRole('Admin');
     }
@@ -70,13 +71,13 @@ class PencairanTest extends TestCase
 
         $response = $this->withSession([
             'user_id' => $this->bendahara->user_id,
-            'role' => 'bendahara'
+            'role' => 'bendahara',
         ])->get('/bendahara/pencairan-dana');
 
         $response->assertStatus(200);
         $response->assertViewIs('bendahara.pencairan-dana.index');
         $response->assertViewHas('list_kak');
-        
+
         $listKak = $response->viewData('list_kak');
         $this->assertNotEmpty($listKak);
         $this->assertEquals('Pencairan KAK 1', $listKak[0]['nama']);
@@ -121,7 +122,7 @@ class PencairanTest extends TestCase
 
         $response = $this->withSession([
             'user_id' => $this->bendahara->user_id,
-            'role' => 'bendahara'
+            'role' => 'bendahara',
         ])->get("/bendahara/pencairan-dana/show/{$kegiatan->kegiatan_id}");
 
         $response->assertStatus(200);
@@ -159,7 +160,7 @@ class PencairanTest extends TestCase
 
         $response = $this->withSession([
             'user_id' => $this->bendahara->user_id,
-            'role' => 'bendahara'
+            'role' => 'bendahara',
         ])->postJson('/bendahara/pencairan-dana/proses', $payload);
 
         $response->assertStatus(200);
@@ -213,7 +214,7 @@ class PencairanTest extends TestCase
 
         $response = $this->withSession([
             'user_id' => $this->bendahara->user_id,
-            'role' => 'bendahara'
+            'role' => 'bendahara',
         ])->postJson('/bendahara/pencairan-dana/proses', $payload);
 
         $response->assertStatus(200);

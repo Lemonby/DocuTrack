@@ -7,8 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 class Jurusan extends Model
 {
     protected $primaryKey = 'nama_jurusan';
+
     protected $keyType = 'string';
+
     public $incrementing = false;
+
     public $timestamps = false;
 
     protected $fillable = ['nama_jurusan'];

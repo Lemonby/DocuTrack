@@ -2,8 +2,8 @@
 
 namespace App\Models\Rab;
 
-use mysqli;
 use Exception;
+use mysqli;
 
 /**
  * RabItemModel - RAB (Rencana Anggaran Biaya) Item Model
@@ -11,10 +11,9 @@ use Exception;
  * Model untuk mengelola tbl_rab dengan DI pattern.
  *
  * @category Model
- * @package  DocuTrack
+ *
  * @version  2.0.0 - Converted from procedural to OOP
  */
-
 class RabItemModel
 {
     /**
@@ -25,7 +24,7 @@ class RabItemModel
     /**
      * Constructor - Dependency Injection untuk database connection
      *
-     * @param mysqli $db Database connection dari Database::getInstance()->getConnection()
+     * @param  mysqli  $db  Database connection dari Database::getInstance()->getConnection()
      */
     public function __construct(mysqli $db)
     {
@@ -35,17 +34,18 @@ class RabItemModel
     /**
      * Menyisipkan item RAB baru.
      *
-     * @param int $kakId ID KAK terkait
-     * @param int $kategoriId ID kategori RAB
-     * @param string $uraian Uraian item
-     * @param string $rincian Rincian detail item
-     * @param string $sat1 Satuan 1
-     * @param string $sat2 Satuan 2
-     * @param float $vol1 Volume 1
-     * @param float $vol2 Volume 2
-     * @param float $harga Harga satuan
-     * @param float $totalHarga Total harga item (dihitung)
+     * @param  int  $kakId  ID KAK terkait
+     * @param  int  $kategoriId  ID kategori RAB
+     * @param  string  $uraian  Uraian item
+     * @param  string  $rincian  Rincian detail item
+     * @param  string  $sat1  Satuan 1
+     * @param  string  $sat2  Satuan 2
+     * @param  float  $vol1  Volume 1
+     * @param  float  $vol2  Volume 2
+     * @param  float  $harga  Harga satuan
+     * @param  float  $totalHarga  Total harga item (dihitung)
      * @return int|false ID item RAB baru jika berhasil, false jika gagal
+     *
      * @throws Exception Jika operasi database gagal.
      */
     public function insertRabItem(
@@ -60,12 +60,12 @@ class RabItemModel
         float $harga,
         float $totalHarga
     ): int {
-        $query = "INSERT INTO tbl_rab (kakId, kategoriId, uraian, rincian, sat1, sat2, vol1, vol2, harga, totalHarga)
-                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        $query = 'INSERT INTO tbl_rab (kakId, kategoriId, uraian, rincian, sat1, sat2, vol1, vol2, harga, totalHarga)
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
         $stmt = mysqli_prepare($this->db, $query);
 
         if ($stmt === false) {
-            throw new Exception("RabItemModel::insertRabItem - Prepare failed: " . mysqli_error($this->db));
+            throw new Exception('RabItemModel::insertRabItem - Prepare failed: '.mysqli_error($this->db));
         }
 
         mysqli_stmt_bind_param(
@@ -83,12 +83,13 @@ class RabItemModel
             $totalHarga
         );
 
-        if (!mysqli_stmt_execute($stmt)) {
-            throw new Exception("RabItemModel::insertRabItem - Execute failed: " . mysqli_stmt_error($stmt));
+        if (! mysqli_stmt_execute($stmt)) {
+            throw new Exception('RabItemModel::insertRabItem - Execute failed: '.mysqli_stmt_error($stmt));
         }
 
         $newId = mysqli_insert_id($this->db);
         mysqli_stmt_close($stmt);
+
         return $newId;
     }
 
@@ -96,13 +97,13 @@ class RabItemModel
      * Retrieve RAB data by Kegiatan ID.
      * This method joins tbl_rab with tbl_kategori_rab.
      *
-     * @param int $kegiatanId
      * @return array Structured array of RAB data [CategoryId => [CategoryName, Items => []]]
+     *
      * @throws Exception If database operation fails.
      */
     public function getRabByKegiatanId(int $kegiatanId): array
     {
-        $query = "SELECT
+        $query = 'SELECT
                     r.rabItemId,
                     r.kakId,
                     r.kategoriId,
@@ -118,25 +119,25 @@ class RabItemModel
                   FROM tbl_rab r
                   JOIN tbl_kategori_rab kr ON r.kategoriId = kr.kategoriRabId
                   WHERE r.kakId = ?
-                  ORDER BY kr.namaKategori, r.rabItemId";
+                  ORDER BY kr.namaKategori, r.rabItemId';
 
         $stmt = mysqli_prepare($this->db, $query);
         if ($stmt === false) {
-            throw new Exception('RabItemModel::getRabByKegiatanId - Prepare failed: ' . mysqli_error($this->db));
+            throw new Exception('RabItemModel::getRabByKegiatanId - Prepare failed: '.mysqli_error($this->db));
         }
 
-        mysqli_stmt_bind_param($stmt, "i", $kegiatanId);
+        mysqli_stmt_bind_param($stmt, 'i', $kegiatanId);
         mysqli_stmt_execute($stmt);
         $result = mysqli_stmt_get_result($stmt);
 
         $rabData = [];
         while ($row = mysqli_fetch_assoc($result)) {
             $catId = $row['kategoriId'];
-            if (!isset($rabData[$catId])) {
+            if (! isset($rabData[$catId])) {
                 $rabData[$catId] = [
                     'kategoriId' => $row['kategoriId'],
                     'namaKategori' => $row['namaKategori'],
-                    'items' => []
+                    'items' => [],
                 ];
             }
             $rabData[$catId]['items'][] = [
@@ -149,10 +150,11 @@ class RabItemModel
                 'vol1' => $row['vol1'],
                 'vol2' => $row['vol2'],
                 'harga' => $row['harga'],
-                'totalHarga' => $row['totalHarga']
+                'totalHarga' => $row['totalHarga'],
             ];
         }
         mysqli_stmt_close($stmt);
+
         return $rabData;
     }
 }

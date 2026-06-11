@@ -5,13 +5,12 @@ namespace App\Http\Controllers\SuperAdmin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 
 class UserManagementController extends Controller
 {
     public function index()
     {
-        $users = User::all()->map(function($user) {
+        $users = User::all()->map(function ($user) {
             return [
                 'id' => $user->user_id,
                 'nama' => $user->nama,
@@ -30,7 +29,7 @@ class UserManagementController extends Controller
             'Teknik Grafika dan Penerbitan',
             'Akuntansi',
             'Administrasi Niaga',
-            'Pascasarjana'
+            'Pascasarjana',
         ];
 
         $list_roles = [
@@ -47,7 +46,7 @@ class UserManagementController extends Controller
         return view('superadmin.users.index', [
             'list_users' => $users,
             'list_jurusan' => $list_jurusan,
-            'list_roles' => $list_roles
+            'list_roles' => $list_roles,
         ]);
     }
 
@@ -84,7 +83,7 @@ class UserManagementController extends Controller
                     'role' => $roleToAssign,
                     'status' => $user->status,
                 ],
-                'message' => 'User berhasil ditambahkan.'
+                'message' => 'User berhasil ditambahkan.',
             ]);
         }
 
@@ -97,7 +96,7 @@ class UserManagementController extends Controller
         $rules = [
             'id' => ['required', 'exists:users,user_id'],
             'nama' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email,' . $request->id . ',user_id'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email,'.$request->id.',user_id'],
             'jurusan' => ['required', 'string', 'max:255'],
             'role' => ['required', 'string', 'max:50'],
         ];
@@ -109,14 +108,14 @@ class UserManagementController extends Controller
         $validated = $request->validate($rules);
 
         $user = User::findOrFail($validated['id']);
-        
+
         $updateData = [
             'nama' => $validated['nama'],
             'email' => $validated['email'],
             'nama_jurusan' => $validated['jurusan'],
         ];
 
-        if (!empty($validated['password'])) {
+        if (! empty($validated['password'])) {
             $updateData['password'] = bcrypt($validated['password']);
         }
 
@@ -137,7 +136,7 @@ class UserManagementController extends Controller
                     'role' => $roleToAssign,
                     'status' => $user->status,
                 ],
-                'message' => 'Profil user berhasil diperbarui.'
+                'message' => 'Profil user berhasil diperbarui.',
             ]);
         }
 
@@ -153,7 +152,7 @@ class UserManagementController extends Controller
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => 'User berhasil dihapus permanent.'
+                'message' => 'User berhasil dihapus permanent.',
             ]);
         }
 
@@ -171,7 +170,7 @@ class UserManagementController extends Controller
             return response()->json([
                 'success' => true,
                 'status' => $user->status,
-                'message' => 'Status user ' . $user->nama . ' berhasil diubah menjadi ' . $user->status
+                'message' => 'Status user '.$user->nama.' berhasil diubah menjadi '.$user->status,
             ]);
         }
 

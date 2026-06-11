@@ -4,10 +4,15 @@ namespace App\Http\Controllers\API\Bendahara;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\LpjResource;
+use App\Models\Kegiatan;
+use App\Models\LogStatus;
 use App\Models\Lpj;
+use App\Models\LpjItem;
+use App\Models\ProgressHistory;
 use App\Services\LpjService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class PengajuanLpjController extends Controller
 {
@@ -28,6 +33,7 @@ class PengajuanLpjController extends Controller
     public function show(int $id): JsonResponse
     {
         $lpj = Lpj::with(['kegiatan', 'status', 'items.kategori'])->findOrFail($id);
+
         return response()->json(['success' => true, 'data' => new LpjResource($lpj)]);
     }
 
@@ -50,12 +56,12 @@ class PengajuanLpjController extends Controller
         $itemFeedback = $request->input('item_feedback') ?? [];
 
         $lpj = Lpj::findOrFail($lpjId);
-        $kegiatan = \App\Models\Kegiatan::findOrFail($lpj->kegiatan_id);
+        $kegiatan = Kegiatan::findOrFail($lpj->kegiatan_id);
 
-        \Illuminate\Support\Facades\DB::transaction(function () use ($kegiatan, $lpj, $action, $notes, $itemFeedback, $request) {
+        DB::transaction(function () use ($kegiatan, $lpj, $action, $notes, $itemFeedback, $request) {
             // 1. Save item feedback
             foreach ($itemFeedback as $itemId => $feedback) {
-                $lpjItem = \App\Models\LpjItem::where('lpj_id', $lpj->lpj_id)
+                $lpjItem = LpjItem::where('lpj_id', $lpj->lpj_id)
                     ->where('lpj_item_id', $itemId)
                     ->first();
                 if ($lpjItem) {
@@ -76,14 +82,14 @@ class PengajuanLpjController extends Controller
                     'status_utama_id' => 6, // LPJ Disetujui
                 ]);
 
-                \App\Models\ProgressHistory::create([
+                ProgressHistory::create([
                     'kegiatan_id' => $kegiatan->kegiatan_id,
                     'status_id' => 6,
                     'changed_by_user_id' => $request->user()->user_id,
                     'created_at' => now(),
                 ]);
 
-                \App\Models\LogStatus::create([
+                LogStatus::create([
                     'user_id' => $kegiatan->user_id,
                     'tipe_log' => 'APPROVAL',
                     'id_referensi' => $kegiatan->kegiatan_id,
@@ -91,14 +97,14 @@ class PengajuanLpjController extends Controller
                     'konten_json' => [
                         'judul' => 'LPJ Disetujui',
                         'pesan' => "Laporan pertanggungjawaban kegiatan \"{$kegiatan->nama_kegiatan}\" telah disetujui lunas oleh Bendahara.",
-                        'link' => "/admin/pengajuan-lpj"
-                    ]
+                        'link' => '/admin/pengajuan-lpj',
+                    ],
                 ]);
 
                 // Create log status for the actor (Bendahara)
                 $actorUserId = $request->user()->user_id;
                 if ($actorUserId && $actorUserId !== $kegiatan->user_id) {
-                    \App\Models\LogStatus::create([
+                    LogStatus::create([
                         'user_id' => $actorUserId,
                         'tipe_log' => 'APPROVAL',
                         'id_referensi' => $kegiatan->kegiatan_id,
@@ -106,8 +112,8 @@ class PengajuanLpjController extends Controller
                         'konten_json' => [
                             'judul' => 'Persetujuan LPJ Berhasil',
                             'pesan' => "Anda telah menyetujui LPJ untuk kegiatan \"{$kegiatan->nama_kegiatan}\".",
-                            'link' => "/bendahara/lpj/show/{$kegiatan->kegiatan_id}"
-                        ]
+                            'link' => "/bendahara/lpj/show/{$kegiatan->kegiatan_id}",
+                        ],
                     ]);
                 }
 
@@ -118,7 +124,7 @@ class PengajuanLpjController extends Controller
                     'approved_at' => null,
                 ]);
 
-                \App\Models\LogStatus::create([
+                LogStatus::create([
                     'user_id' => $kegiatan->user_id,
                     'tipe_log' => 'REVISION',
                     'id_referensi' => $kegiatan->kegiatan_id,
@@ -126,14 +132,14 @@ class PengajuanLpjController extends Controller
                     'konten_json' => [
                         'judul' => 'LPJ Perlu Revisi',
                         'pesan' => "LPJ kegiatan \"{$kegiatan->nama_kegiatan}\" memerlukan revisi. Catatan: {$notes}",
-                        'link' => "/admin/pengajuan-lpj"
-                    ]
+                        'link' => '/admin/pengajuan-lpj',
+                    ],
                 ]);
 
                 // Create log status for the actor (Bendahara)
                 $actorUserId = $request->user()->user_id;
                 if ($actorUserId && $actorUserId !== $kegiatan->user_id) {
-                    \App\Models\LogStatus::create([
+                    LogStatus::create([
                         'user_id' => $actorUserId,
                         'tipe_log' => 'REVISION',
                         'id_referensi' => $kegiatan->kegiatan_id,
@@ -141,8 +147,8 @@ class PengajuanLpjController extends Controller
                         'konten_json' => [
                             'judul' => 'Revisi LPJ Berhasil Dikirim',
                             'pesan' => "Permintaan revisi LPJ untuk kegiatan \"{$kegiatan->nama_kegiatan}\" berhasil dikirim. Catatan: {$notes}",
-                            'link' => "/bendahara/lpj/show/{$kegiatan->kegiatan_id}"
-                        ]
+                            'link' => "/bendahara/lpj/show/{$kegiatan->kegiatan_id}",
+                        ],
                     ]);
                 }
             } elseif ($action === 'reject') {

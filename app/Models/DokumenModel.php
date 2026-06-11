@@ -2,8 +2,8 @@
 
 namespace App\Model;
 
-use mysqli;
 use Exception;
+use mysqli;
 
 /**
  * DokumenModel - Database operations untuk file metadata
@@ -12,7 +12,7 @@ use Exception;
  * metadata file upload (KAK, RAB, LPJ).
  *
  * @category Model
- * @package  DocuTrack\Model
+ *
  * @version  1.0.0
  */
 class DokumenModel
@@ -25,7 +25,7 @@ class DokumenModel
     /**
      * Constructor
      *
-     * @param mysqli $db Database connection
+     * @param  mysqli  $db  Database connection
      */
     public function __construct($db)
     {
@@ -35,21 +35,22 @@ class DokumenModel
     /**
      * Insert new document record
      *
-     * @param array $data Document data
+     * @param  array  $data  Document data
      * @return int Inserted document ID
+     *
      * @throws Exception
      */
     public function insert($data)
     {
-        $sql = "INSERT INTO tbl_dokumen 
+        $sql = 'INSERT INTO tbl_dokumen 
                 (reference_type, reference_id, original_name, filename, file_path, 
                  file_size, mime_type, uploaded_by, uploaded_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())";
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())';
 
         $stmt = $this->db->prepare($sql);
 
-        if (!$stmt) {
-            throw new Exception('Failed to prepare statement: ' . $this->db->error);
+        if (! $stmt) {
+            throw new Exception('Failed to prepare statement: '.$this->db->error);
         }
 
         $stmt->bind_param(
@@ -64,8 +65,8 @@ class DokumenModel
             $data['uploaded_by']
         );
 
-        if (!$stmt->execute()) {
-            throw new Exception('Failed to insert document: ' . $stmt->error);
+        if (! $stmt->execute()) {
+            throw new Exception('Failed to insert document: '.$stmt->error);
         }
 
         $insertId = $stmt->insert_id;
@@ -77,20 +78,20 @@ class DokumenModel
     /**
      * Find document by ID
      *
-     * @param int $id Document ID
+     * @param  int  $id  Document ID
      * @return array|null Document data
      */
     public function findById($id)
     {
-        $sql = "SELECT d.*, u.nama as uploader_name
+        $sql = 'SELECT d.*, u.nama as uploader_name
                 FROM tbl_dokumen d
                 LEFT JOIN tbl_user u ON d.uploaded_by = u.id
-                WHERE d.id = ?";
+                WHERE d.id = ?';
 
         $stmt = $this->db->prepare($sql);
 
-        if (!$stmt) {
-            throw new Exception('Failed to prepare statement: ' . $this->db->error);
+        if (! $stmt) {
+            throw new Exception('Failed to prepare statement: '.$this->db->error);
         }
 
         $stmt->bind_param('i', $id);
@@ -107,22 +108,22 @@ class DokumenModel
     /**
      * Find documents by reference (KAK/RAB/LPJ)
      *
-     * @param string $type Reference type ('kak', 'rab', 'lpj')
-     * @param int $refId Reference ID (kegiatan_id, rab_id, lpj_id)
+     * @param  string  $type  Reference type ('kak', 'rab', 'lpj')
+     * @param  int  $refId  Reference ID (kegiatan_id, rab_id, lpj_id)
      * @return array Array of documents
      */
     public function findByReference($type, $refId)
     {
-        $sql = "SELECT d.*, u.nama as uploader_name
+        $sql = 'SELECT d.*, u.nama as uploader_name
                 FROM tbl_dokumen d
                 LEFT JOIN tbl_user u ON d.uploaded_by = u.id
                 WHERE d.reference_type = ? AND d.reference_id = ?
-                ORDER BY d.uploaded_at DESC";
+                ORDER BY d.uploaded_at DESC';
 
         $stmt = $this->db->prepare($sql);
 
-        if (!$stmt) {
-            throw new Exception('Failed to prepare statement: ' . $this->db->error);
+        if (! $stmt) {
+            throw new Exception('Failed to prepare statement: '.$this->db->error);
         }
 
         $stmt->bind_param('si', $type, $refId);
@@ -143,24 +144,24 @@ class DokumenModel
     /**
      * Find all documents by type
      *
-     * @param string $type Reference type ('kak', 'rab', 'lpj')
-     * @param int $limit Limit results (default: 100)
-     * @param int $offset Offset (default: 0)
+     * @param  string  $type  Reference type ('kak', 'rab', 'lpj')
+     * @param  int  $limit  Limit results (default: 100)
+     * @param  int  $offset  Offset (default: 0)
      * @return array Array of documents
      */
     public function findByType($type, $limit = 100, $offset = 0)
     {
-        $sql = "SELECT d.*, u.nama as uploader_name
+        $sql = 'SELECT d.*, u.nama as uploader_name
                 FROM tbl_dokumen d
                 LEFT JOIN tbl_user u ON d.uploaded_by = u.id
                 WHERE d.reference_type = ?
                 ORDER BY d.uploaded_at DESC
-                LIMIT ? OFFSET ?";
+                LIMIT ? OFFSET ?';
 
         $stmt = $this->db->prepare($sql);
 
-        if (!$stmt) {
-            throw new Exception('Failed to prepare statement: ' . $this->db->error);
+        if (! $stmt) {
+            throw new Exception('Failed to prepare statement: '.$this->db->error);
         }
 
         $stmt->bind_param('sii', $type, $limit, $offset);
@@ -181,24 +182,25 @@ class DokumenModel
     /**
      * Delete document record
      *
-     * @param int $id Document ID
+     * @param  int  $id  Document ID
      * @return bool Success status
+     *
      * @throws Exception
      */
     public function delete($id)
     {
-        $sql = "DELETE FROM tbl_dokumen WHERE id = ?";
+        $sql = 'DELETE FROM tbl_dokumen WHERE id = ?';
 
         $stmt = $this->db->prepare($sql);
 
-        if (!$stmt) {
-            throw new Exception('Failed to prepare statement: ' . $this->db->error);
+        if (! $stmt) {
+            throw new Exception('Failed to prepare statement: '.$this->db->error);
         }
 
         $stmt->bind_param('i', $id);
 
-        if (!$stmt->execute()) {
-            throw new Exception('Failed to delete document: ' . $stmt->error);
+        if (! $stmt->execute()) {
+            throw new Exception('Failed to delete document: '.$stmt->error);
         }
 
         $affectedRows = $stmt->affected_rows;
@@ -210,18 +212,18 @@ class DokumenModel
     /**
      * Update file size
      *
-     * @param int $id Document ID
-     * @param int $size New file size
+     * @param  int  $id  Document ID
+     * @param  int  $size  New file size
      * @return bool Success status
      */
     public function updateFileSize($id, $size)
     {
-        $sql = "UPDATE tbl_dokumen SET file_size = ? WHERE id = ?";
+        $sql = 'UPDATE tbl_dokumen SET file_size = ? WHERE id = ?';
 
         $stmt = $this->db->prepare($sql);
 
-        if (!$stmt) {
-            throw new Exception('Failed to prepare statement: ' . $this->db->error);
+        if (! $stmt) {
+            throw new Exception('Failed to prepare statement: '.$this->db->error);
         }
 
         $stmt->bind_param('ii', $size, $id);
@@ -235,20 +237,20 @@ class DokumenModel
     /**
      * Count documents by reference
      *
-     * @param string $type Reference type
-     * @param int $refId Reference ID
+     * @param  string  $type  Reference type
+     * @param  int  $refId  Reference ID
      * @return int Document count
      */
     public function countByReference($type, $refId)
     {
-        $sql = "SELECT COUNT(*) as total
+        $sql = 'SELECT COUNT(*) as total
                 FROM tbl_dokumen
-                WHERE reference_type = ? AND reference_id = ?";
+                WHERE reference_type = ? AND reference_id = ?';
 
         $stmt = $this->db->prepare($sql);
 
-        if (!$stmt) {
-            throw new Exception('Failed to prepare statement: ' . $this->db->error);
+        if (! $stmt) {
+            throw new Exception('Failed to prepare statement: '.$this->db->error);
         }
 
         $stmt->bind_param('si', $type, $refId);
@@ -265,19 +267,19 @@ class DokumenModel
     /**
      * Get total storage used by type
      *
-     * @param string $type Reference type
+     * @param  string  $type  Reference type
      * @return int Total size in bytes
      */
     public function getTotalStorageByType($type)
     {
-        $sql = "SELECT SUM(file_size) as total_size
+        $sql = 'SELECT SUM(file_size) as total_size
                 FROM tbl_dokumen
-                WHERE reference_type = ?";
+                WHERE reference_type = ?';
 
         $stmt = $this->db->prepare($sql);
 
-        if (!$stmt) {
-            throw new Exception('Failed to prepare statement: ' . $this->db->error);
+        if (! $stmt) {
+            throw new Exception('Failed to prepare statement: '.$this->db->error);
         }
 
         $stmt->bind_param('s', $type);
@@ -294,26 +296,26 @@ class DokumenModel
     /**
      * Get recent uploads
      *
-     * @param int $limit Limit results
-     * @param int|null $userId Filter by user ID (optional)
+     * @param  int  $limit  Limit results
+     * @param  int|null  $userId  Filter by user ID (optional)
      * @return array Recent documents
      */
     public function getRecentUploads($limit = 10, $userId = null)
     {
-        $sql = "SELECT d.*, u.nama as uploader_name
+        $sql = 'SELECT d.*, u.nama as uploader_name
                 FROM tbl_dokumen d
-                LEFT JOIN tbl_user u ON d.uploaded_by = u.id";
+                LEFT JOIN tbl_user u ON d.uploaded_by = u.id';
 
         if ($userId !== null) {
-            $sql .= " WHERE d.uploaded_by = ?";
+            $sql .= ' WHERE d.uploaded_by = ?';
         }
 
-        $sql .= " ORDER BY d.uploaded_at DESC LIMIT ?";
+        $sql .= ' ORDER BY d.uploaded_at DESC LIMIT ?';
 
         $stmt = $this->db->prepare($sql);
 
-        if (!$stmt) {
-            throw new Exception('Failed to prepare statement: ' . $this->db->error);
+        if (! $stmt) {
+            throw new Exception('Failed to prepare statement: '.$this->db->error);
         }
 
         if ($userId !== null) {
@@ -339,16 +341,16 @@ class DokumenModel
     /**
      * Check if document exists
      *
-     * @param int $id Document ID
+     * @param  int  $id  Document ID
      * @return bool
      */
     public function exists($id)
     {
-        $sql = "SELECT 1 FROM tbl_dokumen WHERE id = ? LIMIT 1";
+        $sql = 'SELECT 1 FROM tbl_dokumen WHERE id = ? LIMIT 1';
 
         $stmt = $this->db->prepare($sql);
 
-        if (!$stmt) {
+        if (! $stmt) {
             return false;
         }
 

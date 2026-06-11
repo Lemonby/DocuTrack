@@ -6,7 +6,6 @@ use App\Models\Lpj;
 use App\Models\LpjItem;
 use App\Models\Rab;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 
 class LpjService
 {

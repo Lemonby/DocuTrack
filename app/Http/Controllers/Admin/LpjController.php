@@ -3,24 +3,32 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Http\Requests\Admin\StoreLpjRequest;
+use App\Models\Kegiatan;
+use App\Models\LogStatus;
+use App\Models\Lpj;
+use App\Models\LpjItem;
+use App\Services\ActivityLogService;
+use App\Services\KegiatanService;
+use App\Services\WorkflowService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Session;
 
 class LpjController extends Controller
 {
     public function index()
     {
-        $userId = \Illuminate\Support\Facades\Session::get('user_id') ?? 1;
-        $jurusan = \Illuminate\Support\Facades\Session::get('jurusan');
+        $userId = Session::get('user_id') ?? 1;
+        $jurusan = Session::get('jurusan');
 
-        $query = \App\Models\Kegiatan::with(['statusUtama', 'user', 'lpj'])
+        $query = Kegiatan::with(['statusUtama', 'user', 'lpj'])
             ->whereIn('status_utama_id', [
-                \App\Services\WorkflowService::STATUS_DANA_DIBERIKAN,
+                WorkflowService::STATUS_DANA_DIBERIKAN,
                 6,
-                8
+                8,
             ]);
 
-        if (!empty($jurusan)) {
+        if (! empty($jurusan)) {
             $query->where('jurusan_penyelenggara', $jurusan);
         } else {
             $query->where('user_id', $userId);
@@ -48,12 +56,12 @@ class LpjController extends Controller
 
             return [
                 'id' => $kegiatan->kegiatan_id,
-                'nama' => 'LPJ ' . $kegiatan->nama_kegiatan,
+                'nama' => 'LPJ '.$kegiatan->nama_kegiatan,
                 'nama_mahasiswa' => $kegiatan->user->nama ?? $kegiatan->pemilik_kegiatan,
                 'jurusan' => $kegiatan->jurusan_penyelenggara,
                 'tanggal_pengajuan' => $kegiatan->lpj ? ($kegiatan->lpj->submitted_at ?? $kegiatan->lpj->created_at ?? $kegiatan->created_at) : $kegiatan->created_at,
                 'tenggatLpj' => $kegiatan->lpj && $kegiatan->lpj->tenggat_lpj ? $kegiatan->lpj->tenggat_lpj->toDateString() : ($kegiatan->tanggal_selesai ? $kegiatan->tanggal_selesai->copy()->addDays(14)->toDateString() : now()->addDays(14)->toDateString()),
-                'status' => $statusLabel
+                'status' => $statusLabel,
             ];
         })->toArray();
 
@@ -63,8 +71,8 @@ class LpjController extends Controller
     public function detail(Request $request, $id)
     {
         $from = $request->query('from', 'index');
-        $kegiatan = (new \App\Services\KegiatanService())->getDetailLengkap($id);
-        
+        $kegiatan = (new KegiatanService)->getDetailLengkap($id);
+
         $status = 'menunggu_upload';
         if ($kegiatan->status_utama_id == 8) {
             $status = 'selesai';
@@ -81,7 +89,7 @@ class LpjController extends Controller
                 $status = 'selesai';
             }
         }
-        
+
         $kegiatan_nama = $kegiatan->nama_kegiatan;
         $prodi = $kegiatan->prodi_penyelenggara;
         $kode_mak = $kegiatan->bukti_mak ?? '-';
@@ -96,7 +104,7 @@ class LpjController extends Controller
         if ($kegiatan->kak) {
             foreach ($kegiatan->kak->rabs as $rab) {
                 $cat = $rab->kategori->nama_kategori ?? 'Lainnya';
-                if (!isset($categoryCounters[$cat])) {
+                if (! isset($categoryCounters[$cat])) {
                     $categoryCounters[$cat] = 0;
                 }
                 $index = $categoryCounters[$cat];
@@ -107,7 +115,7 @@ class LpjController extends Controller
                 }
 
                 $rab_items[$cat][] = [
-                    'id' => 'it-' . $rab->rab_item_id,
+                    'id' => 'it-'.$rab->rab_item_id,
                     'rab_item_id' => $rab->rab_item_id,
                     'lpj_item_id' => $lpjItem ? $lpjItem->lpj_item_id : null,
                     'uraian' => $lpjItem ? $lpjItem->uraian : $rab->uraian,
@@ -137,7 +145,7 @@ class LpjController extends Controller
         }
 
         $catatan_revisi = $kegiatan->lpj ? $kegiatan->lpj->komentar_revisi : null;
-        
+
         $tanggal_mulai = $kegiatan->tanggal_mulai;
         $tanggal_selesai = $kegiatan->tanggal_selesai;
         $realisasi_tanggal_mulai = $kegiatan->lpj && $kegiatan->lpj->realisasi_tanggal_mulai ? $kegiatan->lpj->realisasi_tanggal_mulai->format('Y-m-d') : null;
@@ -152,11 +160,11 @@ class LpjController extends Controller
 
     public function store(StoreLpjRequest $request)
     {
-        $kegiatan = \App\Models\Kegiatan::with(['kak.rabs.kategori', 'lpj'])->findOrFail($request->kegiatan_id);
+        $kegiatan = Kegiatan::with(['kak.rabs.kategori', 'lpj'])->findOrFail($request->kegiatan_id);
 
         $lpj = $kegiatan->lpj;
-        if (!$lpj) {
-            $lpj = \App\Models\Lpj::create([
+        if (! $lpj) {
+            $lpj = Lpj::create([
                 'kegiatan_id' => $kegiatan->kegiatan_id,
                 'status_id' => 1, // Menunggu Verifikasi
                 'tenggat_lpj' => $kegiatan->tanggal_selesai ? $kegiatan->tanggal_selesai->copy()->addDays(14) : now()->addDays(14),
@@ -182,7 +190,7 @@ class LpjController extends Controller
                 $vol2 = $request->input("vol2.{$kategori}.{$index}") ?? $rab->vol2;
                 $sat2 = $request->input("sat2.{$kategori}.{$index}") ?? $rab->sat2;
                 $harga = $request->input("harga.{$kategori}.{$index}") ?? $rab->harga;
-                
+
                 $realisasi = $request->input("realisasi.{$kategori}.{$index}") ?? 0;
                 $lpjItemId = $request->input("lpj_item_id.{$kategori}.{$index}");
                 $file = $request->file("bukti.{$kategori}.{$index}");
@@ -190,14 +198,14 @@ class LpjController extends Controller
                 // Find existing lpj_item
                 $lpjItem = null;
                 if ($lpjItemId) {
-                    $lpjItem = \App\Models\LpjItem::where('lpj_id', $lpj->lpj_id)
+                    $lpjItem = LpjItem::where('lpj_id', $lpj->lpj_id)
                         ->where('lpj_item_id', $lpjItemId)
                         ->first();
                 }
 
                 // Fallback to match by original rab details if lpj_item_id is not provided
-                if (!$lpjItem) {
-                    $lpjItem = \App\Models\LpjItem::where('lpj_id', $lpj->lpj_id)
+                if (! $lpjItem) {
+                    $lpjItem = LpjItem::where('lpj_id', $lpj->lpj_id)
                         ->where('uraian', $rab->uraian)
                         ->where('rincian', $rab->rincian)
                         ->where('vol1', $rab->vol1)
@@ -235,7 +243,7 @@ class LpjController extends Controller
                 if ($lpjItem) {
                     $lpjItem->update($itemData);
                 } else {
-                    \App\Models\LpjItem::create($itemData);
+                    LpjItem::create($itemData);
                 }
 
                 $grandTotalRealisasi += $realisasi;
@@ -251,7 +259,7 @@ class LpjController extends Controller
         ]);
 
         // Create log status for Admin (actor) who submits the LPJ
-        \App\Models\LogStatus::create([
+        LogStatus::create([
             'user_id' => $kegiatan->user_id,
             'tipe_log' => 'SUBMISSION',
             'id_referensi' => $kegiatan->kegiatan_id,
@@ -259,12 +267,12 @@ class LpjController extends Controller
             'konten_json' => [
                 'judul' => 'LPJ Berhasil Dikirim',
                 'pesan' => "Laporan pertanggungjawaban kegiatan \"{$kegiatan->nama_kegiatan}\" berhasil dikirim ke Bendahara.",
-                'link' => "/admin/pengajuan-lpj"
-            ]
+                'link' => '/admin/pengajuan-lpj',
+            ],
         ]);
 
         // Create activity log
-        app(\App\Services\ActivityLogService::class)->log(
+        app(ActivityLogService::class)->log(
             userId: $kegiatan->user_id,
             action: 'SUBMIT_LPJ',
             category: 'document',

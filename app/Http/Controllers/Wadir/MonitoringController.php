@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Wadir;
 
 use App\Http\Controllers\Controller;
-use App\Models\Jurusan;
 use App\Models\Kegiatan;
 use App\Services\WorkflowService;
 use Illuminate\Http\Request;
@@ -13,7 +12,7 @@ class MonitoringController extends Controller
     public function index()
     {
         $tahapan_all = ['Pengajuan', 'Verifikasi', 'ACC PPK', 'ACC WD', 'Dana Cair', 'LPJ'];
-        
+
         $kegiatanList = Kegiatan::with(['statusUtama', 'user'])
             ->latest()
             ->get();
@@ -41,7 +40,7 @@ class MonitoringController extends Controller
                 'nim' => $kegiatan->nim_pelaksana,
                 'jurusan' => $kegiatan->jurusan_penyelenggara,
                 'tahap_sekarang' => $tahap,
-                'status' => $kegiatan->statusUtama->nama_status_usulan ?? 'In Process'
+                'status' => $kegiatan->statusUtama->nama_status_usulan ?? 'In Process',
             ];
         })->toArray();
 
@@ -73,9 +72,9 @@ class MonitoringController extends Controller
 
         if ($search) {
             $query->where(function ($q) use ($search) {
-                $q->where('nama_kegiatan', 'like', '%' . $search . '%')
-                    ->orWhere('pemilik_kegiatan', 'like', '%' . $search . '%')
-                    ->orWhere('nim_pelaksana', 'like', '%' . $search . '%');
+                $q->where('nama_kegiatan', 'like', '%'.$search.'%')
+                    ->orWhere('pemilik_kegiatan', 'like', '%'.$search.'%')
+                    ->orWhere('nim_pelaksana', 'like', '%'.$search.'%');
             });
         }
 

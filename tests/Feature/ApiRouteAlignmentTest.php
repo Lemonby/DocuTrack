@@ -2,9 +2,9 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
-use App\Models\Kegiatan;
 use App\Models\Kak;
+use App\Models\Kegiatan;
+use App\Models\User;
 use App\Services\WorkflowService;
 use Database\Seeders\MasterDataSeeder;
 use Database\Seeders\RolePermissionSeeder;
@@ -19,9 +19,13 @@ class ApiRouteAlignmentTest extends TestCase
     use RefreshDatabase;
 
     private User $admin;
+
     private User $ppk;
+
     private User $wadir;
+
     private User $direktur;
+
     private Kegiatan $kegiatan;
 
     protected function setUp(): void
@@ -33,40 +37,40 @@ class ApiRouteAlignmentTest extends TestCase
 
         // Admin User
         $this->admin = User::create([
-            'nama'         => 'Admin API',
-            'email'        => 'adminapi@example.com',
-            'password'     => Hash::make('password123'),
+            'nama' => 'Admin API',
+            'email' => 'adminapi@example.com',
+            'password' => Hash::make('password123'),
             'nama_jurusan' => 'Teknik Informatika dan Komputer',
-            'status'       => 'Aktif',
+            'status' => 'Aktif',
         ]);
         $this->admin->assignRole('Admin');
 
         // PPK User
         $this->ppk = User::create([
-            'nama'         => 'PPK API',
-            'email'        => 'ppkapi@example.com',
-            'password'     => Hash::make('password123'),
+            'nama' => 'PPK API',
+            'email' => 'ppkapi@example.com',
+            'password' => Hash::make('password123'),
             'nama_jurusan' => 'Teknik Informatika dan Komputer',
-            'status'       => 'Aktif',
+            'status' => 'Aktif',
         ]);
         $this->ppk->assignRole('PPK');
 
         // Wadir User
         $this->wadir = User::create([
-            'nama'         => 'Wadir API',
-            'email'        => 'wadirapi@example.com',
-            'password'     => Hash::make('password123'),
+            'nama' => 'Wadir API',
+            'email' => 'wadirapi@example.com',
+            'password' => Hash::make('password123'),
             'nama_jurusan' => 'Teknik Informatika dan Komputer',
-            'status'       => 'Aktif',
+            'status' => 'Aktif',
         ]);
         $this->wadir->assignRole('Wadir');
 
         // Direktur User
         $this->direktur = User::create([
-            'nama'         => 'Direktur API',
-            'email'        => 'direkturapi@example.com',
-            'password'     => Hash::make('password123'),
-            'status'       => 'Aktif',
+            'nama' => 'Direktur API',
+            'email' => 'direkturapi@example.com',
+            'password' => Hash::make('password123'),
+            'status' => 'Aktif',
         ]);
         $this->direktur->assignRole('Direktur');
 
@@ -108,7 +112,7 @@ class ApiRouteAlignmentTest extends TestCase
             'wadir_tujuan' => 1,
         ];
 
-        $response = $this->withHeaders(['Authorization' => 'Bearer ' . $token])
+        $response = $this->withHeaders(['Authorization' => 'Bearer '.$token])
             ->putJson("/api/v1/admin/usulan/{$this->kegiatan->kegiatan_id}", $payload);
 
         $response->assertStatus(200)
@@ -116,7 +120,7 @@ class ApiRouteAlignmentTest extends TestCase
 
         $this->assertDatabaseHas('kegiatans', [
             'kegiatan_id' => $this->kegiatan->kegiatan_id,
-            'nama_kegiatan' => 'Nama Kegiatan API Baru'
+            'nama_kegiatan' => 'Nama Kegiatan API Baru',
         ]);
     }
 
@@ -129,7 +133,7 @@ class ApiRouteAlignmentTest extends TestCase
     {
         $token = $this->admin->createToken('test-token')->plainTextToken;
 
-        $response = $this->withHeaders(['Authorization' => 'Bearer ' . $token])
+        $response = $this->withHeaders(['Authorization' => 'Bearer '.$token])
             ->postJson("/api/v1/admin/usulan/{$this->kegiatan->kegiatan_id}/selesai");
 
         $response->assertStatus(200)
@@ -137,7 +141,7 @@ class ApiRouteAlignmentTest extends TestCase
 
         $this->assertDatabaseHas('kegiatans', [
             'kegiatan_id' => $this->kegiatan->kegiatan_id,
-            'status_utama_id' => 8
+            'status_utama_id' => 8,
         ]);
     }
 
@@ -150,8 +154,8 @@ class ApiRouteAlignmentTest extends TestCase
     {
         $token = $this->ppk->createToken('test-token')->plainTextToken;
 
-        $response = $this->withHeaders(['Authorization' => 'Bearer ' . $token])
-            ->getJson("/api/v1/ppk/riwayat");
+        $response = $this->withHeaders(['Authorization' => 'Bearer '.$token])
+            ->getJson('/api/v1/ppk/riwayat');
 
         $response->assertStatus(200)
             ->assertJsonPath('success', true);
@@ -166,8 +170,8 @@ class ApiRouteAlignmentTest extends TestCase
     {
         $token = $this->wadir->createToken('test-token')->plainTextToken;
 
-        $response = $this->withHeaders(['Authorization' => 'Bearer ' . $token])
-            ->getJson("/api/v1/wadir/riwayat");
+        $response = $this->withHeaders(['Authorization' => 'Bearer '.$token])
+            ->getJson('/api/v1/wadir/riwayat');
 
         $response->assertStatus(200)
             ->assertJsonPath('success', true);
@@ -182,8 +186,8 @@ class ApiRouteAlignmentTest extends TestCase
     {
         $token = $this->direktur->createToken('test-token')->plainTextToken;
 
-        $response = $this->withHeaders(['Authorization' => 'Bearer ' . $token])
-            ->getJson("/api/v1/direktur/integritas");
+        $response = $this->withHeaders(['Authorization' => 'Bearer '.$token])
+            ->getJson('/api/v1/direktur/integritas');
 
         $response->assertStatus(200)
             ->assertJsonPath('success', true);

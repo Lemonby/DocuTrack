@@ -3,18 +3,22 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Http\Requests\Admin\StoreUsulanRequest;
+use App\Models\Iku;
+use App\Models\Kegiatan;
+use App\Services\KegiatanService;
+use App\Services\WorkflowService;
+use Illuminate\Support\Facades\Session;
 
 class UsulanController extends Controller
 {
     public function index()
     {
-        $userId = \Illuminate\Support\Facades\Session::get('user_id') ?? 1;
-        $jurusan = \Illuminate\Support\Facades\Session::get('jurusan');
+        $userId = Session::get('user_id') ?? 1;
+        $jurusan = Session::get('jurusan');
 
-        $query = \App\Models\Kegiatan::with(['statusUtama', 'user']);
-        if (!empty($jurusan)) {
+        $query = Kegiatan::with(['statusUtama', 'user']);
+        if (! empty($jurusan)) {
             $query->where('jurusan_penyelenggara', $jurusan);
         } else {
             $query->where('user_id', $userId);
@@ -29,19 +33,20 @@ class UsulanController extends Controller
                 'nama_mahasiswa' => $kegiatan->user->nama ?? $kegiatan->pemilik_kegiatan,
                 'jurusan' => $kegiatan->jurusan_penyelenggara,
                 'tanggal_pengajuan' => $kegiatan->created_at,
-                'status' => $kegiatan->statusUtama->nama_status_usulan ?? 'Menunggu'
+                'status' => $kegiatan->statusUtama->nama_status_usulan ?? 'Menunggu',
             ];
         })->toArray();
 
-        $all_ikus = \App\Models\Iku::orderBy('id', 'asc')->get();
+        $all_ikus = Iku::orderBy('id', 'asc')->get();
+
         return view('admin.usulan.index', compact('list_usulan', 'all_ikus'));
     }
 
     public function show($id)
     {
-        $kegiatan = (new \App\Services\KegiatanService())->getDetailLengkap($id);
+        $kegiatan = (new KegiatanService)->getDetailLengkap($id);
         $status = $kegiatan->statusUtama->nama_status_usulan ?? 'Menunggu';
-        
+
         $iku_data = $kegiatan->kak ? explode(',', $kegiatan->kak->iku ?? '') : [];
 
         $tahapan_pelaksanaan = [];
@@ -51,7 +56,7 @@ class UsulanController extends Controller
                 if ($ind->bulan) {
                     $indikator_keberhasilan[$ind->bulan] = [
                         'deskripsi' => $ind->indikator_keberhasilan,
-                        'target_persen' => $ind->target_persen
+                        'target_persen' => $ind->target_persen,
                     ];
                 }
             }
@@ -71,7 +76,7 @@ class UsulanController extends Controller
                     'sat1' => $rab->sat1,
                     'vol2' => $rab->vol2,
                     'sat2' => $rab->sat2,
-                    'harga' => $rab->harga
+                    'harga' => $rab->harga,
                 ];
             }
         }
@@ -98,14 +103,14 @@ class UsulanController extends Controller
             'surat_pengantar' => $kegiatan->surat_pengantar ?? null,
             'tanggal_mulai' => $kegiatan->tanggal_mulai ?? null,
             'tanggal_selesai' => $kegiatan->tanggal_selesai ?? null,
-            'metode_pencairan' => $kegiatan->metode_pencairan ?? null
+            'metode_pencairan' => $kegiatan->metode_pencairan ?? null,
         ];
 
         $catatan_revisi = null;
         $revisi_comments = [];
-        if ($kegiatan->status_utama_id == \App\Services\WorkflowService::STATUS_REVISI) {
+        if ($kegiatan->status_utama_id == WorkflowService::STATUS_REVISI) {
             $latestRevisi = $kegiatan->progressHistories()
-                ->where('status_id', \App\Services\WorkflowService::STATUS_REVISI)
+                ->where('status_id', WorkflowService::STATUS_REVISI)
                 ->latest()
                 ->first();
             if ($latestRevisi && $latestRevisi->revisiComments->isNotEmpty()) {
@@ -115,7 +120,7 @@ class UsulanController extends Controller
 
                 foreach ($latestRevisi->revisiComments as $rc) {
                     if ($rc->target_tabel) {
-                        $key = $rc->target_tabel . '.' . $rc->target_kolom;
+                        $key = $rc->target_tabel.'.'.$rc->target_kolom;
                         $revisi_comments[$key] = $rc->komentar_revisi;
                     }
                 }
@@ -127,9 +132,9 @@ class UsulanController extends Controller
 
     public function edit($id)
     {
-        $kegiatan = (new \App\Services\KegiatanService())->getDetailLengkap($id);
+        $kegiatan = (new KegiatanService)->getDetailLengkap($id);
         $status = $kegiatan->statusUtama->nama_status_usulan ?? 'Menunggu';
-        
+
         $iku_data = $kegiatan->kak ? explode(',', $kegiatan->kak->iku ?? '') : [];
 
         $tahapan_pelaksanaan = [];
@@ -139,7 +144,7 @@ class UsulanController extends Controller
                 if ($ind->bulan) {
                     $indikator_keberhasilan[$ind->bulan] = [
                         'deskripsi' => $ind->indikator_keberhasilan,
-                        'target_persen' => $ind->target_persen
+                        'target_persen' => $ind->target_persen,
                     ];
                 }
             }
@@ -159,7 +164,7 @@ class UsulanController extends Controller
                     'sat1' => $rab->sat1,
                     'vol2' => $rab->vol2,
                     'sat2' => $rab->sat2,
-                    'harga' => $rab->harga
+                    'harga' => $rab->harga,
                 ];
             }
         }
@@ -176,13 +181,13 @@ class UsulanController extends Controller
             'penerima_manfaat' => $kegiatan->kak->penerima_manfaat ?? '-',
             'gambaran_umum' => $kegiatan->kak->gambaran_umum ?? '-',
             'metode_pelaksanaan' => $kegiatan->kak->metode_pelaksanaan ?? '-',
-            'kode_mak' => $kegiatan->bukti_mak ?? null
+            'kode_mak' => $kegiatan->bukti_mak ?? null,
         ];
 
         $catatan_revisi = null;
-        if ($kegiatan->status_utama_id == \App\Services\WorkflowService::STATUS_REVISI) {
+        if ($kegiatan->status_utama_id == WorkflowService::STATUS_REVISI) {
             $latestRevisi = $kegiatan->progressHistories()
-                ->where('status_id', \App\Services\WorkflowService::STATUS_REVISI)
+                ->where('status_id', WorkflowService::STATUS_REVISI)
                 ->latest()
                 ->first();
             if ($latestRevisi && $latestRevisi->revisiComments->isNotEmpty()) {
@@ -190,30 +195,33 @@ class UsulanController extends Controller
             }
         }
 
-        $all_ikus = \App\Models\Iku::orderBy('id', 'asc')->get();
+        $all_ikus = Iku::orderBy('id', 'asc')->get();
+
         return view('admin.usulan.edit', compact('id', 'status', 'iku_data', 'rab_data', 'kegiatan_data', 'tahapan_pelaksanaan', 'indikator_keberhasilan', 'catatan_revisi', 'kegiatan', 'all_ikus'));
     }
 
     public function store(StoreUsulanRequest $request)
     {
-        $userId = \Illuminate\Support\Facades\Session::get('user_id') ?? 1;
+        $userId = Session::get('user_id') ?? 1;
         try {
-            (new \App\Services\KegiatanService())->createKegiatan($request->all(), $userId);
+            (new KegiatanService)->createKegiatan($request->all(), $userId);
+
             return redirect()->route('admin.usulan.index')->with('success_message', 'Usulan berhasil diajukan!');
         } catch (\Exception $e) {
             // Handle error, fallback for now if structure doesn't match
-            return redirect()->route('admin.usulan.index')->with('success_message', 'Terdapat kesalahan: ' . $e->getMessage());
+            return redirect()->route('admin.usulan.index')->with('success_message', 'Terdapat kesalahan: '.$e->getMessage());
         }
     }
 
     public function update(StoreUsulanRequest $request, $id)
     {
-        $userId = \Illuminate\Support\Facades\Session::get('user_id') ?? 1;
+        $userId = Session::get('user_id') ?? 1;
         try {
-            (new \App\Services\KegiatanService())->updateKegiatan($id, $request->all(), $userId);
+            (new KegiatanService)->updateKegiatan($id, $request->all(), $userId);
+
             return redirect()->route('admin.usulan.index')->with('success_message', 'Revisi usulan berhasil disimpan dan diajukan ulang!');
         } catch (\Exception $e) {
-            return back()->withInput()->with('error_message', 'Gagal memperbarui usulan: ' . $e->getMessage());
+            return back()->withInput()->with('error_message', 'Gagal memperbarui usulan: '.$e->getMessage());
         }
     }
 }

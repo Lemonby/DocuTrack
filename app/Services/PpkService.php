@@ -4,25 +4,25 @@ namespace App\Services;
 
 use App\Models\kegiatan\KegiatanModel;
 use App\Models\PpkModel;
-use App\Services\LogStatusService;
-use App\Services\ValidationService;
-use App\Services\WorkflowService;
-use Exception;
 use Throwable;
 
 class PpkService
 {
     private PpkModel $ppkModel;
+
     private LogStatusService $logStatusService;
+
     private ValidationService $validationService;
+
     private KegiatanModel $kegiatanModel;
+
     private WorkflowService $workflowService;
 
     public function __construct($db)
     {
         $this->ppkModel = new PpkModel($db);
         $this->logStatusService = new LogStatusService($db);
-        $this->validationService = new ValidationService();
+        $this->validationService = new ValidationService;
         $this->kegiatanModel = new KegiatanModel($db);
         $this->workflowService = new WorkflowService($db);
     }
@@ -99,7 +99,7 @@ class PpkService
                     );
                 }
             } catch (Throwable $e) {
-                error_log("Gagal membuat notifikasi persetujuan PPK untuk kegiatan ID {$kegiatanId}: " . $e->getMessage());
+                error_log("Gagal membuat notifikasi persetujuan PPK untuk kegiatan ID {$kegiatanId}: ".$e->getMessage());
             }
         }
 

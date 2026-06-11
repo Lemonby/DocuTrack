@@ -62,7 +62,7 @@ class TelaahController extends Controller
         $this->activityLog->createNotification(
             Kegiatan::find($id)->user_id,
             'APPROVAL',
-            "Proposal telah disetujui Verifikator dan diteruskan ke PPK.",
+            'Proposal telah disetujui Verifikator dan diteruskan ke PPK.',
             $id
         );
 

@@ -8,7 +8,6 @@ use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
 class KelolaAkunController extends Controller
@@ -51,6 +50,7 @@ class KelolaAkunController extends Controller
     public function show(int $id): JsonResponse
     {
         $user = User::with('roles')->findOrFail($id);
+
         return response()->json(['success' => true, 'data' => new UserResource($user)]);
     }
 

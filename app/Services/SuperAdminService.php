@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\SuperAdminModel;
-use Exception;
 
 class SuperAdminService
 {
@@ -42,8 +41,7 @@ class SuperAdminService
     /**
      * Create a new user. Handles password hashing.
      *
-     * @param array $data Validated user data.
-     * @return bool
+     * @param  array  $data  Validated user data.
      */
     public function createUser(array $data): bool
     {
@@ -51,25 +49,26 @@ class SuperAdminService
         if (isset($data['password'])) {
             $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
         }
+
         return $this->model->createUser($data);
     }
 
     /**
      * Update an existing user. Handles password hashing.
      *
-     * @param int $id User ID.
-     * @param array $data Validated data to update.
-     * @return bool
+     * @param  int  $id  User ID.
+     * @param  array  $data  Validated data to update.
      */
     public function updateUser(int $id, array $data): bool
     {
         // Hash password only if it is being changed
-        if (isset($data['password']) && !empty($data['password'])) {
+        if (isset($data['password']) && ! empty($data['password'])) {
             $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
         } else {
             // Don't update password if it's empty
             unset($data['password']);
         }
+
         return $this->model->updateUser($id, $data);
     }
 }

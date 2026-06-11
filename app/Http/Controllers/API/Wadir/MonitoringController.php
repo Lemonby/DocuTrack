@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\API\Wadir;
 
 use App\Http\Controllers\Controller;
-use App\Http\Resources\KegiatanResource;
 use App\Models\Kegiatan;
 use Illuminate\Http\JsonResponse;
 

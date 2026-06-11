@@ -3,14 +3,17 @@
 namespace App\Http\Controllers\Verifikator;
 
 use App\Http\Controllers\Controller;
+use App\Models\Kegiatan;
+use App\Services\KegiatanService;
+use App\Services\WorkflowService;
 use Illuminate\Http\Request;
 
 class TelaahController extends Controller
 {
     public function index()
     {
-        $kegiatanList = \App\Models\Kegiatan::with(['statusUtama', 'user'])
-            ->atPosition(\App\Services\WorkflowService::POSITION_VERIFIKATOR)
+        $kegiatanList = Kegiatan::with(['statusUtama', 'user'])
+            ->atPosition(WorkflowService::POSITION_VERIFIKATOR)
             ->latest()
             ->get();
 
@@ -23,7 +26,7 @@ class TelaahController extends Controller
                 'prodi' => $kegiatan->prodi_penyelenggara,
                 'jurusan' => $kegiatan->jurusan_penyelenggara,
                 'tanggal_pengajuan' => $kegiatan->created_at ? $kegiatan->created_at->format('Y-m-d') : null,
-                'status' => $kegiatan->statusUtama->nama_status_usulan ?? 'Menunggu'
+                'status' => $kegiatan->statusUtama->nama_status_usulan ?? 'Menunggu',
             ];
         })->toArray();
 
@@ -36,12 +39,13 @@ class TelaahController extends Controller
             'Administrasi Niaga',
             'Akuntansi',
         ];
+
         return view('verifikator.telaah.index', compact('list_usulan', 'jurusan_list'));
     }
 
     public function show($id)
     {
-        $kegiatan = (new \App\Services\KegiatanService())->getDetailLengkap($id);
+        $kegiatan = (new KegiatanService)->getDetailLengkap($id);
         $status = $kegiatan->statusUtama->nama_status_usulan ?? 'Menunggu';
 
         $iku_data = $kegiatan->kak ? explode(',', $kegiatan->kak->iku ?? '') : [];
@@ -53,7 +57,7 @@ class TelaahController extends Controller
                 if ($ind->bulan) {
                     $indikator_keberhasilan[$ind->bulan] = [
                         'deskripsi' => $ind->indikator_keberhasilan,
-                        'target_persen' => $ind->target_persen
+                        'target_persen' => $ind->target_persen,
                     ];
                 }
             }
@@ -73,7 +77,7 @@ class TelaahController extends Controller
                     'sat1' => $rab->sat1,
                     'vol2' => $rab->vol2,
                     'sat2' => $rab->sat2,
-                    'harga' => $rab->harga
+                    'harga' => $rab->harga,
                 ];
             }
         }
@@ -90,7 +94,7 @@ class TelaahController extends Controller
             'penerima_manfaat' => $kegiatan->kak->penerima_manfaat ?? '-',
             'gambaran_umum' => $kegiatan->kak->gambaran_umum ?? '-',
             'metode_pelaksanaan' => $kegiatan->kak->metode_pelaksanaan ?? '-',
-            'kode_mak' => $kegiatan->bukti_mak ?? null
+            'kode_mak' => $kegiatan->bukti_mak ?? null,
         ];
 
         $catatan_revisi = null;
@@ -100,23 +104,23 @@ class TelaahController extends Controller
 
     public function store(Request $request, $id)
     {
-        $workflowService = new \App\Services\WorkflowService();
+        $workflowService = new WorkflowService;
         $action = $request->input('action');
-        
+
         if ($action == 'approve') {
-            $workflowService->moveToNextPosition($id, \App\Services\WorkflowService::POSITION_VERIFIKATOR, \App\Services\WorkflowService::STATUS_TELAH_DIVERIFIKASI, [
+            $workflowService->moveToNextPosition($id, WorkflowService::POSITION_VERIFIKATOR, WorkflowService::STATUS_TELAH_DIVERIFIKASI, [
                 'kode_mak' => $request->input('kode_mak'),
                 'dana_disetujui' => $request->input('dana_disetujui'),
-                'umpan_balik' => $request->input('umpan_balik_verifikator')
+                'umpan_balik' => $request->input('umpan_balik_verifikator'),
             ]);
         } elseif ($action == 'reject') {
-            $workflowService->reject($id, \App\Services\WorkflowService::POSITION_VERIFIKATOR, $request->input('alasan_penolakan') ?? 'Ditolak Verifikator');
+            $workflowService->reject($id, WorkflowService::POSITION_VERIFIKATOR, $request->input('alasan_penolakan') ?? 'Ditolak Verifikator');
         } elseif ($action == 'revise') {
             $fieldComments = [];
             if ($request->has('field_comments')) {
                 foreach ($request->input('field_comments') as $table => $columns) {
                     foreach ($columns as $column => $commentText) {
-                        if (!empty($commentText)) {
+                        if (! empty($commentText)) {
                             $fieldComments[] = [
                                 'komentar' => $commentText,
                                 'target_tabel' => $table,
@@ -128,7 +132,7 @@ class TelaahController extends Controller
             }
             $workflowService->requestRevision(
                 $id,
-                \App\Services\WorkflowService::POSITION_VERIFIKATOR,
+                WorkflowService::POSITION_VERIFIKATOR,
                 $request->input('catatan_revisi') ?? 'Perlu Revisi',
                 $fieldComments
             );

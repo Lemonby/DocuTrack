@@ -2,9 +2,9 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
 use App\Models\ActivityLog;
 use App\Models\LogStatus;
+use App\Models\User;
 use App\Services\ActivityLogService;
 use Database\Seeders\MasterDataSeeder;
 use Database\Seeders\RolePermissionSeeder;
@@ -42,11 +42,11 @@ class ActivityLogTest extends TestCase
     public function test_service_can_log_activity_successfully(): void
     {
         $user = User::create([
-            'nama'         => 'Test Log User',
-            'email'        => 'testlog@example.com',
-            'password'     => Hash::make('password123'),
+            'nama' => 'Test Log User',
+            'email' => 'testlog@example.com',
+            'password' => Hash::make('password123'),
             'nama_jurusan' => 'Teknik Informatika dan Komputer',
-            'status'       => 'Aktif',
+            'status' => 'Aktif',
         ]);
 
         $oldVal = ['status' => 'DRAFT'];
@@ -96,11 +96,11 @@ class ActivityLogTest extends TestCase
     public function test_service_can_create_notification_successfully(): void
     {
         $user = User::create([
-            'nama'         => 'Test Notif User',
-            'email'        => 'testnotif@example.com',
-            'password'     => Hash::make('password123'),
+            'nama' => 'Test Notif User',
+            'email' => 'testnotif@example.com',
+            'password' => Hash::make('password123'),
             'nama_jurusan' => 'Teknik Informatika dan Komputer',
-            'status'       => 'Aktif',
+            'status' => 'Aktif',
         ]);
 
         $notif = $this->activityLogService->createNotification(
@@ -133,11 +133,11 @@ class ActivityLogTest extends TestCase
     public function test_api_login_records_activity_log_and_log_status(): void
     {
         $user = User::create([
-            'nama'         => 'API Log User',
-            'email'        => 'apiloguser@example.com',
-            'password'     => Hash::make('password123'),
+            'nama' => 'API Log User',
+            'email' => 'apiloguser@example.com',
+            'password' => Hash::make('password123'),
             'nama_jurusan' => 'Teknik Informatika dan Komputer',
-            'status'       => 'Aktif',
+            'status' => 'Aktif',
         ]);
         $user->assignRole('Admin');
 
@@ -146,9 +146,9 @@ class ActivityLogTest extends TestCase
         Cache::put("captcha:{$captchaKey}", 'ABCDE', now()->addMinutes(5));
 
         $response = $this->postJson('/api/v1/login', [
-            'email'        => 'apiloguser@example.com',
-            'password'     => 'password123',
-            'captcha_key'  => $captchaKey,
+            'email' => 'apiloguser@example.com',
+            'password' => 'password123',
+            'captcha_key' => $captchaKey,
             'captcha_code' => 'ABCDE',
         ]);
 
@@ -157,7 +157,7 @@ class ActivityLogTest extends TestCase
         // Memastikan tersimpan di tabel activity_logs
         $this->assertDatabaseHas('activity_logs', [
             'user_id' => $user->user_id,
-            'action'  => 'LOGIN',
+            'action' => 'LOGIN',
             'category' => 'authentication',
             'entity_type' => 'User',
             'entity_id' => $user->user_id,
@@ -167,7 +167,7 @@ class ActivityLogTest extends TestCase
         $this->assertDatabaseHas('log_statuses', [
             'user_id' => $user->user_id,
             'tipe_log' => 'LOGIN',
-            'status'  => 'DIBACA',
+            'status' => 'DIBACA',
         ]);
     }
 
@@ -179,18 +179,18 @@ class ActivityLogTest extends TestCase
     public function test_api_logout_records_activity_log(): void
     {
         $user = User::create([
-            'nama'         => 'API Logout User',
-            'email'        => 'apilogoutuser@example.com',
-            'password'     => Hash::make('password123'),
+            'nama' => 'API Logout User',
+            'email' => 'apilogoutuser@example.com',
+            'password' => Hash::make('password123'),
             'nama_jurusan' => 'Teknik Informatika dan Komputer',
-            'status'       => 'Aktif',
+            'status' => 'Aktif',
         ]);
         $user->assignRole('Admin');
 
         $token = $user->createToken('test-token')->plainTextToken;
 
         $response = $this->withHeaders([
-            'Authorization' => 'Bearer ' . $token,
+            'Authorization' => 'Bearer '.$token,
         ])->postJson('/api/v1/logout');
 
         $response->assertStatus(200);
@@ -198,7 +198,7 @@ class ActivityLogTest extends TestCase
         // Memastikan tersimpan di tabel activity_logs
         $this->assertDatabaseHas('activity_logs', [
             'user_id' => $user->user_id,
-            'action'  => 'LOGOUT',
+            'action' => 'LOGOUT',
             'category' => 'authentication',
         ]);
     }
@@ -211,11 +211,11 @@ class ActivityLogTest extends TestCase
     public function test_web_notifications_api_endpoints(): void
     {
         $user = User::create([
-            'nama'         => 'Web Notif User',
-            'email'        => 'webnotifuser@example.com',
-            'password'     => Hash::make('password123'),
+            'nama' => 'Web Notif User',
+            'email' => 'webnotifuser@example.com',
+            'password' => Hash::make('password123'),
             'nama_jurusan' => 'Teknik Informatika dan Komputer',
-            'status'       => 'Aktif',
+            'status' => 'Aktif',
         ]);
         $user->assignRole('Admin');
 
@@ -224,14 +224,14 @@ class ActivityLogTest extends TestCase
             'user_id' => $user->user_id,
             'tipe_log' => 'NOTIFIKASI_TEST1',
             'status' => 'BELUM_DIBACA',
-            'konten_json' => ['judul' => 'Judul 1', 'pesan' => 'Pesan 1', 'link' => '/link-1']
+            'konten_json' => ['judul' => 'Judul 1', 'pesan' => 'Pesan 1', 'link' => '/link-1'],
         ]);
 
         $notif2 = LogStatus::create([
             'user_id' => $user->user_id,
             'tipe_log' => 'NOTIFIKASI_TEST2',
             'status' => 'BELUM_DIBACA',
-            'konten_json' => ['judul' => 'Judul 2', 'pesan' => 'Pesan 2', 'link' => '/link-2']
+            'konten_json' => ['judul' => 'Judul 2', 'pesan' => 'Pesan 2', 'link' => '/link-2'],
         ]);
 
         // 1. GET /api/notifikasi (unauthenticated) harus dialihkan ke halaman login/utama (Status 302)
@@ -275,11 +275,11 @@ class ActivityLogTest extends TestCase
     public function test_api_notifications_endpoints(): void
     {
         $user = User::create([
-            'nama'         => 'API Notif User',
-            'email'        => 'apinotiuser@example.com',
-            'password'     => Hash::make('password123'),
+            'nama' => 'API Notif User',
+            'email' => 'apinotiuser@example.com',
+            'password' => Hash::make('password123'),
             'nama_jurusan' => 'Teknik Informatika dan Komputer',
-            'status'       => 'Aktif',
+            'status' => 'Aktif',
         ]);
         $user->assignRole('Admin');
         $token = $user->createToken('test-token')->plainTextToken;
@@ -289,18 +289,18 @@ class ActivityLogTest extends TestCase
             'user_id' => $user->user_id,
             'tipe_log' => 'NOTIFIKASI_TEST1',
             'status' => 'BELUM_DIBACA',
-            'konten_json' => ['judul' => 'Judul 1', 'pesan' => 'Pesan 1', 'link' => '/link-1']
+            'konten_json' => ['judul' => 'Judul 1', 'pesan' => 'Pesan 1', 'link' => '/link-1'],
         ]);
 
         $notif2 = LogStatus::create([
             'user_id' => $user->user_id,
             'tipe_log' => 'NOTIFIKASI_TEST2',
             'status' => 'BELUM_DIBACA',
-            'konten_json' => ['judul' => 'Judul 2', 'pesan' => 'Pesan 2', 'link' => '/link-2']
+            'konten_json' => ['judul' => 'Judul 2', 'pesan' => 'Pesan 2', 'link' => '/link-2'],
         ]);
 
         // 1. GET /api/v1/notifikasi (authenticated via token)
-        $response = $this->withHeaders(['Authorization' => 'Bearer ' . $token])
+        $response = $this->withHeaders(['Authorization' => 'Bearer '.$token])
             ->getJson('/api/v1/notifikasi');
 
         $response->assertStatus(200)
@@ -308,7 +308,7 @@ class ActivityLogTest extends TestCase
             ->assertJsonPath('meta.unread', 2);
 
         // 2. Mark satu sebagai dibaca: POST /api/v1/notifikasi/{id}/baca
-        $bacaResponse = $this->withHeaders(['Authorization' => 'Bearer ' . $token])
+        $bacaResponse = $this->withHeaders(['Authorization' => 'Bearer '.$token])
             ->postJson("/api/v1/notifikasi/{$notif1->id}/baca");
 
         $bacaResponse->assertStatus(200)
@@ -318,7 +318,7 @@ class ActivityLogTest extends TestCase
         $this->assertEquals('BELUM_DIBACA', $notif2->refresh()->status);
 
         // 3. Mark semua sebagai dibaca: POST /api/v1/notifikasi/baca-semua
-        $bacaSemuaResponse = $this->withHeaders(['Authorization' => 'Bearer ' . $token])
+        $bacaSemuaResponse = $this->withHeaders(['Authorization' => 'Bearer '.$token])
             ->postJson('/api/v1/notifikasi/baca-semua');
 
         $bacaSemuaResponse->assertStatus(200)
@@ -336,11 +336,11 @@ class ActivityLogTest extends TestCase
     public function test_superadmin_dashboard_receives_formatted_recent_logs(): void
     {
         $superAdmin = User::create([
-            'nama'         => 'Super Admin User',
-            'email'        => 'superadmin@example.com',
-            'password'     => Hash::make('password123'),
+            'nama' => 'Super Admin User',
+            'email' => 'superadmin@example.com',
+            'password' => Hash::make('password123'),
             'nama_jurusan' => 'Teknik Informatika dan Komputer',
-            'status'       => 'Aktif',
+            'status' => 'Aktif',
         ]);
         $superAdmin->assignRole('SuperAdmin');
 
@@ -354,7 +354,7 @@ class ActivityLogTest extends TestCase
 
         $response = $this->withSession([
             'user_id' => $superAdmin->user_id,
-            'role' => 'superadmin'
+            'role' => 'superadmin',
         ])->get('/superadmin/dashboard');
 
         $response->assertStatus(200);
@@ -364,7 +364,7 @@ class ActivityLogTest extends TestCase
         // Memastikan log yang dibuat ada di recent_logs
         $recentLogs = $response->viewData('recent_logs');
         $this->assertNotEmpty($recentLogs);
-        
+
         $matched = false;
         foreach ($recentLogs as $log) {
             if ($log['event'] === 'Super Admin menghapus user') {

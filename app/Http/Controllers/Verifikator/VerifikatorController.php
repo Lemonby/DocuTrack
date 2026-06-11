@@ -3,13 +3,15 @@
 namespace App\Http\Controllers\Verifikator;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Models\Kegiatan;
+use App\Services\KegiatanService;
+use App\Services\WorkflowService;
 
 class VerifikatorController extends Controller
 {
     public function dashboard()
     {
-        $kegiatanService = new \App\Services\KegiatanService();
+        $kegiatanService = new KegiatanService;
         $statsData = $kegiatanService->getDashboardStats();
         $stats = [
             'total' => $statsData['total'] ?? 0,
@@ -18,8 +20,8 @@ class VerifikatorController extends Controller
             'pending' => $statsData['menunggu'] ?? 0,
         ];
 
-        $kegiatanList = \App\Models\Kegiatan::with(['statusUtama', 'user'])
-            ->where('posisi_id', '>=', \App\Services\WorkflowService::POSITION_VERIFIKATOR)
+        $kegiatanList = Kegiatan::with(['statusUtama', 'user'])
+            ->where('posisi_id', '>=', WorkflowService::POSITION_VERIFIKATOR)
             ->latest()
             ->get();
 
@@ -32,7 +34,7 @@ class VerifikatorController extends Controller
                 'prodi' => $kegiatan->prodi_penyelenggara,
                 'jurusan' => $kegiatan->jurusan_penyelenggara,
                 'tanggal_pengajuan' => $kegiatan->created_at ? $kegiatan->created_at->format('Y-m-d') : null,
-                'status' => $kegiatan->statusUtama->nama_status_usulan ?? 'Menunggu'
+                'status' => $kegiatan->statusUtama->nama_status_usulan ?? 'Menunggu',
             ];
         })->toArray();
 
@@ -45,7 +47,7 @@ class VerifikatorController extends Controller
             'Administrasi Niaga',
             'Akuntansi',
         ];
-        
+
         return view('verifikator.dashboard', compact('stats', 'list_usulan', 'jurusan_list'));
     }
 }

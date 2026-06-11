@@ -9,7 +9,9 @@ use Exception;
 class AuthService
 {
     private $loginModel;
+
     private $userModel;
+
     private $db;
 
     public function __construct($db)
@@ -23,12 +25,13 @@ class AuthService
     {
         $user = $this->loginModel->getUserByEmail($email);
 
-        if (!$user) {
+        if (! $user) {
             return ['success' => false, 'message' => 'Email tidak terdaftar.'];
         }
 
         if (password_verify($password, $user['password'])) {
             unset($user['password']);
+
             return ['success' => true, 'user' => $user];
         } else {
             return ['success' => false, 'message' => 'Password salah.'];
@@ -40,7 +43,8 @@ class AuthService
         try {
             return $this->userModel->getUserById($userId);
         } catch (Exception $e) {
-            error_log("AuthService Error fetching user profile for ID {$userId}: " . $e->getMessage());
+            error_log("AuthService Error fetching user profile for ID {$userId}: ".$e->getMessage());
+
             return null;
         }
     }
@@ -65,7 +69,7 @@ class AuthService
     public function changePassword(int $userId, string $newPassword): bool
     {
         if (strlen($newPassword) < 8) {
-            throw new Exception("Password terlalu pendek, minimal 8 karakter.");
+            throw new Exception('Password terlalu pendek, minimal 8 karakter.');
         }
 
         $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);

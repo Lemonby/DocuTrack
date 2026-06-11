@@ -2,13 +2,14 @@
 
 namespace App\Services;
 
-use App\Models\LogStatusModel;
 use App\Core\Mailer;
+use App\Models\LogStatusModel;
 use Throwable;
 
 class LogStatusService
 {
     private $logStatusModel;
+
     private $mailer;
 
     public function __construct($db)
@@ -22,36 +23,36 @@ class LogStatusService
 
     /**
      * Create a new notification for a user and send email.
-     * @param int    $userId The ID of the recipient user.
-     * @param string $tipe The type of notification (e.g., 'APPROVAL', 'REJECTION', 'REMINDER').
-     * @param string $pesan The message content of the notification.
-     * @param int|null $refId The ID of the related entity (e.g., kegiatan_id).
-     * @param string $tipeLogSuffix Suffix for log type in DB (defaults to $tipe).
-     * @param int|null $kegiatanIdExplicit Optional explicit kegiatan ID if refId is ambiguous.
-     * @return bool
+     *
+     * @param  int  $userId  The ID of the recipient user.
+     * @param  string  $tipe  The type of notification (e.g., 'APPROVAL', 'REJECTION', 'REMINDER').
+     * @param  string  $pesan  The message content of the notification.
+     * @param  int|null  $refId  The ID of the related entity (e.g., kegiatan_id).
+     * @param  string  $tipeLogSuffix  Suffix for log type in DB (defaults to $tipe).
+     * @param  int|null  $kegiatanIdExplicit  Optional explicit kegiatan ID if refId is ambiguous.
      */
-    public function createNotification(int $userId, string $tipe, string $pesan, int $refId = null, string $tipeLogSuffix = null, ?int $kegiatanIdExplicit = null): bool
+    public function createNotification(int $userId, string $tipe, string $pesan, ?int $refId = null, ?string $tipeLogSuffix = null, ?int $kegiatanIdExplicit = null): bool
     {
         $link = '#'; // Default link
         if ($refId) {
             // Asumsi link default ke detail kegiatan, bisa disesuaikan per role nanti jika perlu
             // Namun karena ini notifikasi untuk Pengusul, biasanya ke detail pengajuan mereka
-            $link = "/docutrack/public/pengajuan/detail/" . $refId;
+            $link = '/docutrack/public/pengajuan/detail/'.$refId;
         }
 
-        $judul = "Notifikasi DocuTrack";
-        $tipeLogDB = 'NOTIFIKASI_' . ($tipeLogSuffix ?: strtoupper($tipe));
+        $judul = 'Notifikasi DocuTrack';
+        $tipeLogDB = 'NOTIFIKASI_'.($tipeLogSuffix ?: strtoupper($tipe));
 
         $data = [
             'user_id' => $userId,
             'tipe_log' => $tipeLogDB,
             'id_referensi' => $refId,
             'status' => 'BELUM_DIBACA',
-            'konten_json' => json_encode(['judul' => $judul, 'pesan' => $pesan, 'link' => $link])
+            'konten_json' => json_encode(['judul' => $judul, 'pesan' => $pesan, 'link' => $link]),
         ];
 
         // 1. Simpan ke Database
-        $created = (bool)$this->logStatusModel->create($data);
+        $created = (bool) $this->logStatusModel->create($data);
 
         // 2. Kirim Email (Fire and Forget logic ideally, but synchronous here)
         if ($created) {
@@ -68,12 +69,12 @@ class LogStatusService
     {
         try {
             $user = $this->logStatusModel->getUserInfo($userId);
-            if (!$user || empty($user['email'])) {
+            if (! $user || empty($user['email'])) {
                 return;
             }
 
             // Inisialisasi Mailer
-            $mailer = new Mailer();
+            $mailer = new Mailer;
 
             // Persiapkan Data View
             $kegiatan = null;
@@ -118,24 +119,22 @@ class LogStatusService
                 'status_label' => $statusLabel,
                 'detail_kegiatan' => $kegiatan,
                 'catatan_tambahan' => $catatanTambahan,
-                'link_action' => 'http://' . $_SERVER['HTTP_HOST'] . $link // Ensure absolute URL
+                'link_action' => 'http://'.$_SERVER['HTTP_HOST'].$link, // Ensure absolute URL
             ];
 
             // Subject Email
-            $subject = "[DocuTrack] " . ucfirst(strtolower($statusLabel)) . ": " . ($kegiatan['namaKegiatan'] ?? 'Notifikasi Baru');
+            $subject = '[DocuTrack] '.ucfirst(strtolower($statusLabel)).': '.($kegiatan['namaKegiatan'] ?? 'Notifikasi Baru');
 
             // Kirim
             $mailer->send($user['email'], $subject, 'notification', $emailData);
         } catch (Throwable $e) {
             // Jangan biarkan error email menghentikan proses utama
-            error_log("Gagal mengirim email notifikasi ke UserID {$userId}: " . $e->getMessage());
+            error_log("Gagal mengirim email notifikasi ke UserID {$userId}: ".$e->getMessage());
         }
     }
 
     /**
      * Get notifications for a user, formatted for display.
-     * @param int $userId
-     * @return array
      */
     public function getNotificationsForUser(int $userId): array
     {
@@ -152,21 +151,18 @@ class LogStatusService
                 'link' => $konten['link'] ?? '#',
                 'tipe_log' => str_replace('NOTIFIKASI_', '', $notif['tipe_log']), // Helper frontend ikon
                 'created_at' => $notif['created_at'], // Helper frontend time ago
-                'status' => $notif['status']
+                'status' => $notif['status'],
             ];
         }
 
         return [
             'items' => $formatted,
-            'unread_count' => $unreadCount
+            'unread_count' => $unreadCount,
         ];
     }
 
     /**
      * Mark a notification as read.
-     * @param int $notificationId
-     * @param int $userId
-     * @return bool
      */
     public function markNotificationAsRead(int $notificationId, int $userId): bool
     {
@@ -183,8 +179,6 @@ class LogStatusService
 
     /**
      * Helper to format timestamp into "time ago" string.
-     * @param string $timestamp
-     * @return string
      */
     private function timeAgo(string $timestamp): string
     {
@@ -201,16 +195,18 @@ class LogStatusService
             604800 => 'minggu',
             86400 => 'hari',
             3600 => 'jam',
-            60 => 'menit'
+            60 => 'menit',
         ];
 
         foreach ($intervals as $secs => $str) {
             $d = $diff / $secs;
             if ($d >= 1) {
                 $r = round($d);
-                return $r . ' ' . $str . ' yang lalu';
+
+                return $r.' '.$str.' yang lalu';
             }
         }
+
         return 'beberapa detik yang lalu';
     }
 }

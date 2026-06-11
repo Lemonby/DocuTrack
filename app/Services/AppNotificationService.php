@@ -2,26 +2,19 @@
 
 namespace App\Services;
 
+use App\Mail\GenericNotificationMail;
 use App\Models\LogStatus;
 use App\Models\User;
-use App\Mail\GenericNotificationMail;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Log;
 use Exception;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class AppNotificationService
 {
     /**
      * Send a notification and an optional email to a user.
      *
-     * @param int $userId
-     * @param string $title
-     * @param string $message
-     * @param string|null $typeLog e.g., 'INFO', 'WARNING', 'APPROVAL'
-     * @param int|null $referenceId
-     * @param string|null $link
-     * @param bool $sendEmail
-     * @return LogStatus
+     * @param  string|null  $typeLog  e.g., 'INFO', 'WARNING', 'APPROVAL'
      */
     public static function send(
         int $userId,
@@ -44,7 +37,7 @@ class AppNotificationService
         // Save to Database
         $notification = LogStatus::create([
             'user_id' => $userId,
-            'tipe_log' => 'NOTIFIKASI_' . strtoupper($typeLog),
+            'tipe_log' => 'NOTIFIKASI_'.strtoupper($typeLog),
             'id_referensi' => $referenceId,
             'status' => 'BELUM_DIBACA',
             'konten_json' => $kontenJson,
@@ -65,7 +58,7 @@ class AppNotificationService
                     );
                 }
             } catch (Exception $e) {
-                Log::error("Failed to send notification email to User ID {$userId}: " . $e->getMessage());
+                Log::error("Failed to send notification email to User ID {$userId}: ".$e->getMessage());
             }
         }
 

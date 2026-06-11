@@ -7,7 +7,6 @@ use App\Models\Iku;
 use App\Models\Jurusan;
 use App\Models\Kegiatan;
 use App\Services\WorkflowService;
-use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 
 class DirekturController extends Controller
@@ -45,6 +44,7 @@ class DirekturController extends Controller
             $target = (float) ($iku->target ?? 0);
             $capaian = (float) ($iku->realisasi ?? 0);
             $status = $capaian >= $target ? 'Exceeded' : ($target > 0 && $capaian >= $target * 0.9 ? 'On Track' : 'Warning');
+
             return [
                 'nama' => $iku->indikator_kinerja,
                 'target' => $target,
@@ -56,6 +56,7 @@ class DirekturController extends Controller
         $approval_queue = Kegiatan::with('user')->latest()->take(5)->get()->map(function ($kegiatan) {
             $dana = (float) ($kegiatan->dana_di_setujui ?? 0);
             $prioritas = $dana >= 50000000 ? 'High' : ($dana >= 20000000 ? 'Medium' : 'Low');
+
             return [
                 'id' => $kegiatan->kegiatan_id,
                 'nama' => $kegiatan->nama_kegiatan,
@@ -83,11 +84,11 @@ class DirekturController extends Controller
         ];
 
         return view('direktur.dashboard', compact(
-            'stats', 
-            'budget', 
-            'iku_achievements', 
-            'approval_queue', 
-            'list_jurusan', 
+            'stats',
+            'budget',
+            'iku_achievements',
+            'approval_queue',
+            'list_jurusan',
             'monthly_trend'
         ));
     }
@@ -107,7 +108,7 @@ class DirekturController extends Controller
                 'data' => array_map(function ($jurusan) use ($totals) {
                     return (float) ($totals[$jurusan] ?? 0);
                 }, $labels),
-            ]
+            ],
         ]);
     }
 }

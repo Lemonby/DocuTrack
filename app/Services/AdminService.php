@@ -2,15 +2,16 @@
 
 namespace App\Services;
 
-use App\Models\Admin\AdminModel;
-use App\Models\Lpj\LpjModel; // Tambahkan LpjModel jika diperlukan untuk operasi LPJ
 use App\Exceptions\BusinessLogicException;
-use Exception;
+use App\Models\Admin\AdminModel; // Tambahkan LpjModel jika diperlukan untuk operasi LPJ
+use App\Models\Lpj\LpjModel;
 
 class AdminService
 {
     private $adminModel;
+
     private $lpjModel; // Tambahkan ini jika AdminService akan berinteraksi langsung dengan LPJModel
+
     private $db;
 
     public function __construct($db)
@@ -31,7 +32,7 @@ class AdminService
         return $this->adminModel->getDetailLPJ($lpjId);
     }
 
-    public function getRABForLPJ(int $kakId, int $lpjId = null)
+    public function getRABForLPJ(int $kakId, ?int $lpjId = null)
     {
         return $this->adminModel->getRABForLPJ($kakId, $lpjId);
     }
@@ -43,9 +44,10 @@ class AdminService
         // Contoh: Update status LPJ di LpjModel
         // Asumsi LpjModel memiliki metode approve/verify
         $result = $this->lpjModel->updateLpjStatus($lpjId, 'Verified'); // Asumsi 'Verified' adalah status baru
-        if (!$result) {
-            throw new BusinessLogicException("Gagal memverifikasi LPJ.");
+        if (! $result) {
+            throw new BusinessLogicException('Gagal memverifikasi LPJ.');
         }
+
         return $result;
     }
 
@@ -53,9 +55,10 @@ class AdminService
     {
         // Use specific method in LpjModel that handles status and comment
         $result = $this->lpjModel->tolakLpj($lpjId, $komentar);
-        if (!$result) {
-            throw new BusinessLogicException("Gagal menolak LPJ.");
+        if (! $result) {
+            throw new BusinessLogicException('Gagal menolak LPJ.');
         }
+
         return $result;
     }
 
@@ -65,9 +68,10 @@ class AdminService
         $komentarStr = implode("\n", $komentarRevisi);
 
         $result = $this->lpjModel->submitRevisiLpj($lpjId, $komentarStr);
-        if (!$result) {
-            throw new BusinessLogicException("Gagal mengirim revisi LPJ.");
+        if (! $result) {
+            throw new BusinessLogicException('Gagal mengirim revisi LPJ.');
         }
+
         return $result;
     }
 

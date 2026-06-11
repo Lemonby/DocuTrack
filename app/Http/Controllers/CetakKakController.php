@@ -2,21 +2,21 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Services\KegiatanService;
 use App\Services\PdfService;
+use Illuminate\Http\Response;
 
 class CetakKakController extends Controller
 {
     /**
      * Generate KAK PDF for a specific kegiatan.
      *
-     * @param int $id
-     * @return \Illuminate\Http\Response
+     * @param  int  $id
+     * @return Response
      */
     public function cetak($id)
     {
-        $kegiatan = (new KegiatanService())->getDetailLengkap($id);
+        $kegiatan = (new KegiatanService)->getDetailLengkap($id);
 
         $kegiatan_data = [
             'nama_pengusul' => $kegiatan->user->nama ?? $kegiatan->pemilik_kegiatan,
@@ -43,7 +43,7 @@ class CetakKakController extends Controller
                 $indikator_data[] = [
                     'bulan' => $ind->bulan,
                     'nama' => $ind->indikator_keberhasilan,
-                    'target' => $ind->target_persen
+                    'target' => $ind->target_persen,
                 ];
             }
         }
@@ -59,16 +59,16 @@ class CetakKakController extends Controller
                     'sat1' => $rab->sat1,
                     'vol2' => $rab->vol2,
                     'sat2' => $rab->sat2,
-                    'harga' => $rab->harga
+                    'harga' => $rab->harga,
                 ];
             }
         }
 
         $kode_mak = $kegiatan->bukti_mak ?? '';
 
-        $pdfService = new PdfService();
-        $filename = 'KAK_' . str_replace([' ', '/', '\\', ':', '*', '?', '"', '<', '>', '|'], '_', $kegiatan->nama_kegiatan) . '.pdf';
-        
+        $pdfService = new PdfService;
+        $filename = 'KAK_'.str_replace([' ', '/', '\\', ':', '*', '?', '"', '<', '>', '|'], '_', $kegiatan->nama_kegiatan).'.pdf';
+
         return $pdfService->generate(
             resource_path('views/pdf/kak_template.php'),
             compact('kegiatan_data', 'iku_data', 'indikator_data', 'rab_data', 'kode_mak'),

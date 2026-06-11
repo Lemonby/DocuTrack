@@ -1,61 +1,57 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Middleware\CheckDepartmentAccess;
-
-// --- Controller Imports ---
-use App\Http\Controllers\API\AuthController;
-use App\Http\Controllers\API\NotifikasiController;
-
-// Admin
-use App\Http\Controllers\API\Admin\DashboardController as AdminDashboard;
 use App\Http\Controllers\API\Admin\AkunController as AdminAkun;
-use App\Http\Controllers\API\Admin\PengajuanUsulanController;
-use App\Http\Controllers\API\Admin\PengajuanKegiatanController as AdminKegiatan;
+use App\Http\Controllers\API\Admin\DashboardController as AdminDashboard;
+// --- Controller Imports ---
 use App\Http\Controllers\API\Admin\DetailKakController;
+use App\Http\Controllers\API\Admin\PengajuanKegiatanController as AdminKegiatan;
+// Admin
 use App\Http\Controllers\API\Admin\PengajuanLpjController as AdminLpj;
-
-// Verifikator
-use App\Http\Controllers\API\Verifikator\DashboardController as VerifikatorDashboard;
-use App\Http\Controllers\API\Verifikator\AkunController as VerifikatorAkun;
-use App\Http\Controllers\API\Verifikator\TelaahController as VerifikatorTelaah;
-use App\Http\Controllers\API\Verifikator\RiwayatController as VerifikatorRiwayat;
-
-// PPK
-use App\Http\Controllers\API\PPK\DashboardController as PPKDashboard;
-use App\Http\Controllers\API\PPK\AkunController as PPKAkun;
-use App\Http\Controllers\API\PPK\TelaahController as PPKTelaah;
-use App\Http\Controllers\API\PPK\MonitoringController as PPKMonitoring;
-use App\Http\Controllers\API\PPK\RiwayatController as PPKRiwayat;
-
-// Wadir
-use App\Http\Controllers\API\Wadir\DashboardController as WadirDashboard;
-use App\Http\Controllers\API\Wadir\AkunController as WadirAkun;
-use App\Http\Controllers\API\Wadir\TelaahController as WadirTelaah;
-use App\Http\Controllers\API\Wadir\MonitoringController as WadirMonitoring;
-use App\Http\Controllers\API\Wadir\RiwayatController as WadirRiwayat;
-
-// Bendahara
-use App\Http\Controllers\API\Bendahara\DashboardController as BendaharaDashboard;
+use App\Http\Controllers\API\Admin\PengajuanUsulanController;
+use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\Bendahara\AkunController as BendaharaAkun;
+use App\Http\Controllers\API\Bendahara\DashboardController as BendaharaDashboard;
 use App\Http\Controllers\API\Bendahara\PencairanDanaController;
+// Verifikator
 use App\Http\Controllers\API\Bendahara\PengajuanLpjController as BendaharaLpj;
 use App\Http\Controllers\API\Bendahara\RiwayatController as BendaharaRiwayat;
-
-// SuperAdmin
-use App\Http\Controllers\API\SuperAdmin\DashboardController as SuperAdminDashboard;
-use App\Http\Controllers\API\SuperAdmin\AkunController as SuperAdminAkun;
-use App\Http\Controllers\API\SuperAdmin\KelolaAkunController;
-use App\Http\Controllers\API\SuperAdmin\BuatIkuController;
-use App\Http\Controllers\API\SuperAdmin\MonitoringController as SuperAdminMonitoring;
-use App\Http\Controllers\API\SuperAdmin\AiMonitoringController;
-use App\Http\Controllers\API\SuperAdmin\SendNotificationController;
-
-// Direktur
-use App\Http\Controllers\API\Direktur\DashboardController as DirekturDashboard;
 use App\Http\Controllers\API\Direktur\AkunController as DirekturAkun;
-use App\Http\Controllers\API\Direktur\MonitoringController as DirekturMonitoring;
+use App\Http\Controllers\API\Direktur\DashboardController as DirekturDashboard;
+// PPK
 use App\Http\Controllers\API\Direktur\IntegritasController as DirekturIntegritas;
+use App\Http\Controllers\API\Direktur\MonitoringController as DirekturMonitoring;
+use App\Http\Controllers\API\NotifikasiController;
+use App\Http\Controllers\API\PPK\AkunController as PPKAkun;
+use App\Http\Controllers\API\PPK\DashboardController as PPKDashboard;
+// Wadir
+use App\Http\Controllers\API\PPK\MonitoringController as PPKMonitoring;
+use App\Http\Controllers\API\PPK\RiwayatController as PPKRiwayat;
+use App\Http\Controllers\API\PPK\TelaahController as PPKTelaah;
+use App\Http\Controllers\API\SuperAdmin\AiMonitoringController;
+use App\Http\Controllers\API\SuperAdmin\AkunController as SuperAdminAkun;
+// Bendahara
+use App\Http\Controllers\API\SuperAdmin\BuatIkuController;
+use App\Http\Controllers\API\SuperAdmin\DashboardController as SuperAdminDashboard;
+use App\Http\Controllers\API\SuperAdmin\KelolaAkunController;
+use App\Http\Controllers\API\SuperAdmin\MonitoringController as SuperAdminMonitoring;
+use App\Http\Controllers\API\SuperAdmin\SendNotificationController;
+// SuperAdmin
+use App\Http\Controllers\API\Verifikator\AkunController as VerifikatorAkun;
+use App\Http\Controllers\API\Verifikator\DashboardController as VerifikatorDashboard;
+use App\Http\Controllers\API\Verifikator\RiwayatController as VerifikatorRiwayat;
+use App\Http\Controllers\API\Verifikator\TelaahController as VerifikatorTelaah;
+use App\Http\Controllers\API\Wadir\AkunController as WadirAkun;
+use App\Http\Controllers\API\Wadir\DashboardController as WadirDashboard;
+use App\Http\Controllers\API\Wadir\MonitoringController as WadirMonitoring;
+// Direktur
+use App\Http\Controllers\API\Wadir\RiwayatController as WadirRiwayat;
+use App\Http\Controllers\API\Wadir\TelaahController as WadirTelaah;
+use App\Http\Middleware\CheckDepartmentAccess;
+use App\Models\Iku;
+use App\Models\Jurusan;
+use App\Models\Prodi;
+use App\Models\Wadir;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -69,7 +65,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/', fn () => response()->json([
         'success' => true,
         'message' => 'Welcome to DocuTrack API v1',
-        'status' => 'online'
+        'status' => 'online',
     ]));
 
     Route::post('/captcha', [AuthController::class, 'captcha']);
@@ -92,19 +88,19 @@ Route::prefix('v1')->group(function () {
         // Master data (shared)
         Route::get('/jurusan', fn () => response()->json([
             'success' => true,
-            'data' => \App\Models\Jurusan::with('prodis')->get(),
+            'data' => Jurusan::with('prodis')->get(),
         ]));
         Route::get('/prodi', fn () => response()->json([
             'success' => true,
-            'data' => \App\Models\Prodi::all(),
+            'data' => Prodi::all(),
         ]));
         Route::get('/wadir', fn () => response()->json([
             'success' => true,
-            'data' => \App\Models\Wadir::all(),
+            'data' => Wadir::all(),
         ]));
         Route::get('/iku', fn () => response()->json([
             'success' => true,
-            'data' => \App\Models\Iku::all(),
+            'data' => Iku::all(),
         ]));
 
         // ===============================

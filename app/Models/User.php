@@ -14,6 +14,7 @@ class User extends Authenticatable
     use HasApiTokens, HasFactory, HasRoles, Notifiable, SoftDeletes;
 
     protected $primaryKey = 'user_id';
+
     protected $guard_name = 'sanctum';
 
     protected $fillable = [

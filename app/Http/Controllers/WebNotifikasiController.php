@@ -16,10 +16,10 @@ class WebNotifikasiController extends Controller
     {
         $userId = Session::get('user_id');
 
-        if (!$userId) {
+        if (! $userId) {
             return response()->json([
                 'success' => false,
-                'message' => 'Unauthenticated.'
+                'message' => 'Unauthenticated.',
             ], 401);
         }
 
@@ -35,6 +35,7 @@ class WebNotifikasiController extends Controller
 
         $formatted = $notifikasi->map(function ($notif) {
             $konten = $notif->konten_json;
+
             return [
                 'id' => $notif->id,
                 'judul' => $konten['judul'] ?? 'Notifikasi',
@@ -42,7 +43,7 @@ class WebNotifikasiController extends Controller
                 'link' => $konten['link'] ?? '#',
                 'tipe_log' => str_replace('NOTIFIKASI_', '', $notif->tipe_log),
                 'created_at' => $notif->created_at ? $notif->created_at->toISOString() : now()->toISOString(),
-                'status' => $notif->status
+                'status' => $notif->status,
             ];
         });
 
@@ -50,8 +51,8 @@ class WebNotifikasiController extends Controller
             'success' => true,
             'data' => [
                 'items' => $formatted,
-                'unread_count' => $unreadCount
-            ]
+                'unread_count' => $unreadCount,
+            ],
         ]);
     }
 
@@ -61,7 +62,7 @@ class WebNotifikasiController extends Controller
     public function markAsRead(Request $request, int $id): JsonResponse
     {
         $userId = Session::get('user_id');
-        if (!$userId) {
+        if (! $userId) {
             return response()->json(['success' => false, 'message' => 'Unauthenticated.'], 401);
         }
 
@@ -77,7 +78,7 @@ class WebNotifikasiController extends Controller
     public function markAllAsRead(Request $request): JsonResponse
     {
         $userId = Session::get('user_id');
-        if (!$userId) {
+        if (! $userId) {
             return response()->json(['success' => false, 'message' => 'Unauthenticated.'], 401);
         }
 

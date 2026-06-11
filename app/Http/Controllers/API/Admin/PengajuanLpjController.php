@@ -5,7 +5,6 @@ namespace App\Http\Controllers\API\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\LpjResource;
 use App\Models\Lpj;
-use App\Models\Kegiatan;
 use App\Services\LpjService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;

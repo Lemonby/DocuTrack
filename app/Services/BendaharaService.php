@@ -3,12 +3,11 @@
 namespace App\Services;
 
 use App\Models\Bendahara\BendaharaModel;
-use App\Services\WorkflowService;
-use Exception;
 
 class BendaharaService
 {
     private $model;
+
     private WorkflowService $workflowService;
 
     public function __construct($db)
@@ -25,19 +24,19 @@ class BendaharaService
     public function getListKegiatanDashboard($limit = 10)
     {
         $data = $this->model->getListKegiatanDashboard($limit);
-        
+
         // ✅ FIX: Map database field names to JavaScript expected field names
         foreach ($data as &$item) {
             // Map ID field for JavaScript compatibility
             $item['id'] = $item['kegiatanId'] ?? null;
-            
+
             // Determine disbursement status based on the new total_dicairkan field from the model
             if (isset($item['total_dicairkan']) && $item['total_dicairkan'] > 0) {
                 $item['status'] = 'Sudah Dicairkan';
             } else {
                 $item['status'] = 'Belum Dicairkan';
             }
-            
+
             // Map other expected fields for consistency
             $item['nama'] = $item['namaKegiatan'] ?? 'N/A';
             $item['nama_kegiatan'] = $item['namaKegiatan'] ?? 'N/A'; // Pass original too
@@ -48,24 +47,24 @@ class BendaharaService
             $item['jurusan'] = $item['jurusanPenyelenggara'] ?? '-';
             $item['tanggal_pengajuan'] = $item['createdAt'] ?? null;
         }
-        
+
         return $data;
     }
 
     public function getAntrianLPJ()
     {
         $data = $this->model->getAntrianLPJ();
-        
+
         // ✅ FIX: Map database field names to JavaScript expected field names
         foreach ($data as &$item) {
             // Map status field
-            if (!isset($item['status']) && isset($item['status_text'])) {
+            if (! isset($item['status']) && isset($item['status_text'])) {
                 $item['status'] = $item['status_text'];
             }
             if (empty($item['status'])) {
                 $item['status'] = 'Menunggu';
             }
-            
+
             // Map field names for JavaScript compatibility
             $item['id'] = $item['lpjId'] ?? null;
             $item['nama'] = $item['namaKegiatan'] ?? 'N/A';
@@ -78,7 +77,7 @@ class BendaharaService
             $item['tanggal_pengajuan'] = $item['submittedAt'] ?? null;
             $item['tenggat_lpj'] = $item['tenggatLpj'] ?? null;
         }
-        
+
         return $data;
     }
 
@@ -90,7 +89,7 @@ class BendaharaService
     public function getRiwayatVerifikasi()
     {
         $data = $this->model->getRiwayatVerifikasi();
-        
+
         // Map fields if necessary for frontend
         foreach ($data as &$item) {
             $item['tanggal'] = $item['tanggal_verifikasi'] ?? null;
@@ -101,7 +100,7 @@ class BendaharaService
             // Map nim
             $item['nim'] = $item['nim'] ?? $item['nimPelaksana'] ?? '-';
         }
-        
+
         return $data;
     }
 
@@ -112,7 +111,7 @@ class BendaharaService
 
     public function getRiwayatPencairanDana()
     {
-        return $this->model->getRiwayatPencairan(); 
+        return $this->model->getRiwayatPencairan();
     }
 
     public function getListJurusan()

@@ -21,7 +21,7 @@ class IntegritasController extends Controller
         $rankings = $this->spkService->getJurusanRankings();
 
         $selectedJurusanName = $request->query('jurusan');
-        if (!$selectedJurusanName && $rankings->isNotEmpty()) {
+        if (! $selectedJurusanName && $rankings->isNotEmpty()) {
             $selectedJurusanName = $rankings->first()['jurusan'];
         }
 
@@ -35,7 +35,7 @@ class IntegritasController extends Controller
                 'selected_jurusan' => $selectedJurusanName,
                 'selected_rank_data' => $selectedRankData,
                 'selected_kegiatans' => $selectedKegiatans,
-            ]
+            ],
         ]);
     }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\KegiatanResource;
+use App\Models\Kegiatan;
 use App\Services\KegiatanService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -20,7 +21,7 @@ class DashboardController extends Controller
 
         $stats = $this->kegiatanService->getDashboardStats($jurusan);
 
-        $recentKegiatan = \App\Models\Kegiatan::with(['statusUtama', 'user'])
+        $recentKegiatan = Kegiatan::with(['statusUtama', 'user'])
             ->when($jurusan, fn ($q) => $q->byJurusan($jurusan))
             ->latest()
             ->take(5)

@@ -12,6 +12,7 @@ class BuatIkuController extends Controller
     public function index(): JsonResponse
     {
         $ikus = Iku::latest()->paginate(15);
+
         return response()->json(['success' => true, 'data' => $ikus]);
     }
 
@@ -52,6 +53,7 @@ class BuatIkuController extends Controller
     public function destroy(int $id): JsonResponse
     {
         Iku::findOrFail($id)->delete();
+
         return response()->json(['success' => true, 'message' => 'IKU berhasil dihapus.']);
     }
 }

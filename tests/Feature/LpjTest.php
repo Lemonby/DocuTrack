@@ -2,13 +2,13 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
-use App\Models\Kegiatan;
 use App\Models\Kak;
-use App\Models\Rab;
+use App\Models\KategoriRab;
+use App\Models\Kegiatan;
 use App\Models\Lpj;
 use App\Models\LpjItem;
-use App\Models\KategoriRab;
+use App\Models\Rab;
+use App\Models\User;
 use App\Services\WorkflowService;
 use Database\Seeders\MasterDataSeeder;
 use Database\Seeders\RolePermissionSeeder;
@@ -25,9 +25,13 @@ class LpjTest extends TestCase
     use RefreshDatabase;
 
     private User $admin;
+
     private Kegiatan $kegiatan;
+
     private Kak $kak;
+
     private Rab $rabItem;
+
     private KategoriRab $kategori;
 
     protected function setUp(): void
@@ -38,11 +42,11 @@ class LpjTest extends TestCase
         $this->seed(RolePermissionSeeder::class);
 
         $this->admin = User::create([
-            'nama'         => 'Admin Pengusul',
-            'email'        => 'adminpengusul@example.com',
-            'password'     => Hash::make('password123'),
+            'nama' => 'Admin Pengusul',
+            'email' => 'adminpengusul@example.com',
+            'password' => Hash::make('password123'),
             'nama_jurusan' => 'Teknik Informatika dan Komputer',
-            'status'       => 'Aktif',
+            'status' => 'Aktif',
         ]);
         $this->admin->assignRole('Admin');
 
@@ -92,7 +96,7 @@ class LpjTest extends TestCase
 
         $response = $this->withSession([
             'user_id' => $this->admin->user_id,
-            'role' => 'admin'
+            'role' => 'admin',
         ])->get('/admin/pengajuan-lpj');
 
         $response->assertStatus(200);
@@ -115,7 +119,7 @@ class LpjTest extends TestCase
 
         $response = $this->withSession([
             'user_id' => $this->admin->user_id,
-            'role' => 'admin'
+            'role' => 'admin',
         ])->get("/admin/pengajuan-lpj/show/{$this->kegiatan->kegiatan_id}");
 
         $response->assertStatus(200);
@@ -145,19 +149,19 @@ class LpjTest extends TestCase
             'realisasi_tanggal_selesai' => now()->addDays(2)->toDateString(),
             'realisasi' => [
                 'Belanja Barang' => [
-                    0 => 45000
-                ]
+                    0 => 45000,
+                ],
             ],
             'bukti' => [
                 'Belanja Barang' => [
-                    0 => $file
-                ]
-            ]
+                    0 => $file,
+                ],
+            ],
         ];
 
         $response = $this->withSession([
             'user_id' => $this->admin->user_id,
-            'role' => 'admin'
+            'role' => 'admin',
         ])->post('/admin/pengajuan-lpj/store', $payload);
 
         $response->assertRedirect(route('admin.lpj.index'));
@@ -202,14 +206,14 @@ class LpjTest extends TestCase
         ]);
 
         // 1. GET index API
-        $response = $this->withHeaders(['Authorization' => 'Bearer ' . $token])
+        $response = $this->withHeaders(['Authorization' => 'Bearer '.$token])
             ->getJson('/api/v1/admin/lpj');
 
         $response->assertStatus(200)
             ->assertJsonPath('success', true);
 
         // 2. GET show API
-        $showResponse = $this->withHeaders(['Authorization' => 'Bearer ' . $token])
+        $showResponse = $this->withHeaders(['Authorization' => 'Bearer '.$token])
             ->getJson("/api/v1/admin/lpj/{$lpj->lpj_id}");
 
         $showResponse->assertStatus(200)
@@ -217,11 +221,11 @@ class LpjTest extends TestCase
 
         // 3. POST upload bukti API
         $file = UploadedFile::fake()->create('receipt.png', 100);
-        $uploadResponse = $this->withHeaders(['Authorization' => 'Bearer ' . $token])
+        $uploadResponse = $this->withHeaders(['Authorization' => 'Bearer '.$token])
             ->postJson('/api/v1/admin/lpj/upload-bukti', [
                 'lpj_id' => $lpj->lpj_id,
                 'rab_item_id' => $this->rabItem->rab_item_id,
-                'file' => $file
+                'file' => $file,
             ]);
 
         $uploadResponse->assertStatus(200)
@@ -232,15 +236,15 @@ class LpjTest extends TestCase
         Storage::disk('public')->assertExists($lpjItem->file_bukti);
 
         // 4. POST submit LPJ API
-        $submitResponse = $this->withHeaders(['Authorization' => 'Bearer ' . $token])
+        $submitResponse = $this->withHeaders(['Authorization' => 'Bearer '.$token])
             ->postJson('/api/v1/admin/lpj/submit', [
                 'kegiatan_id' => $this->kegiatan->kegiatan_id,
                 'items' => [
                     [
                         'id' => $lpjItem->lpj_item_id,
-                        'realisasi' => 50000
-                    ]
-                ]
+                        'realisasi' => 50000,
+                    ],
+                ],
             ]);
 
         $submitResponse->assertStatus(200)

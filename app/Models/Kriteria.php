@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Kriteria extends Model
 {
     protected $table = 'kriterias';
+
     protected $primaryKey = 'kriteria_id';
 
     protected $fillable = [

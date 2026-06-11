@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API\SuperAdmin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\ActivityLogService;
 use App\Services\AppNotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -32,13 +33,13 @@ class SendNotificationController extends Controller
 
         if ($request->filled('user_id')) {
             $user = User::find($request->input('user_id'));
-            if (!$user) {
+            if (! $user) {
                 return response()->json(['success' => false, 'message' => 'User not found.'], 404);
             }
             AppNotificationService::send($user->user_id, $title, $message, $typeLog, null, $link, $sendEmail);
             $messageCount = 1;
-            
-            (new \App\Services\ActivityLogService())->log(
+
+            (new ActivityLogService)->log(
                 $request->user()->user_id,
                 'send_notification',
                 'workflow', // Or another appropriate category
@@ -55,8 +56,8 @@ class SendNotificationController extends Controller
                 AppNotificationService::send($user->user_id, $title, $message, $typeLog, null, $link, $sendEmail);
             }
             $messageCount = $users->count();
-            
-            (new \App\Services\ActivityLogService())->log(
+
+            (new ActivityLogService)->log(
                 $request->user()->user_id,
                 'broadcast_notification',
                 'workflow',

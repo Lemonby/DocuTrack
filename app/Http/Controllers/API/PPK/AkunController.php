@@ -18,6 +18,7 @@ class AkunController extends Controller
     public function update(UpdateProfileRequest $request): JsonResponse
     {
         $request->user()->update($request->validated());
+
         return response()->json(['success' => true, 'message' => 'Profil diperbarui.', 'data' => new UserResource($request->user()->fresh()->load('roles'))]);
     }
 }

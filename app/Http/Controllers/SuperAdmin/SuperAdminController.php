@@ -4,9 +4,11 @@ namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
+use App\Models\AppSetting;
 use App\Models\Kegiatan;
 use App\Models\Lpj;
 use App\Models\User;
+use App\Services\ActivityLogService;
 use App\Services\WorkflowService;
 use Illuminate\Http\Request;
 
@@ -62,7 +64,7 @@ class SuperAdminController extends Controller
             'cpu' => 24,
             'ram' => 45,
             'disk' => 68,
-            'traffic' => '1.2 GB/s'
+            'traffic' => '1.2 GB/s',
         ];
 
         $recent_logs = ActivityLog::with('user')
@@ -102,9 +104,9 @@ class SuperAdminController extends Controller
         ];
 
         return view('superadmin.dashboard', compact(
-            'stats', 
-            'system_health', 
-            'monitoring_kegiatan', 
+            'stats',
+            'system_health',
+            'monitoring_kegiatan',
             'monitoring_lpj',
             'server_load',
             'recent_logs',
@@ -122,12 +124,14 @@ class SuperAdminController extends Controller
             'data' => "Sistem dalam kondisi optimal.\nStabilitas database: 100%.\nPenggunaan memori efisien.\n\nInsight: Terdapat peningkatan usulan kegiatan sebesar 15% minggu ini.",
         ]);
     }
+
     public function monitoring()
     {
-        $ai_agents_active = \App\Models\AppSetting::getValue('ai_agents_active', false);
+        $ai_agents_active = AppSetting::getValue('ai_agents_active', false);
+
         return view('superadmin.monitoring', [
             'title' => 'Monitoring Sistem - Super Admin',
-            'ai_agents_active' => $ai_agents_active
+            'ai_agents_active' => $ai_agents_active,
         ]);
     }
 
@@ -137,12 +141,12 @@ class SuperAdminController extends Controller
             'ai_agents_active' => 'required|boolean',
         ]);
 
-        $oldValue = \App\Models\AppSetting::getValue('ai_agents_active', false);
+        $oldValue = AppSetting::getValue('ai_agents_active', false);
         $newValue = $request->input('ai_agents_active');
 
-        \App\Models\AppSetting::setValue('ai_agents_active', $newValue, 'boolean');
+        AppSetting::setValue('ai_agents_active', $newValue, 'boolean');
 
-        (new \App\Services\ActivityLogService())->log(
+        (new ActivityLogService)->log(
             $request->user()->user_id,
             $newValue ? 'activate_ai_agents' : 'deactivate_ai_agents',
             'security',

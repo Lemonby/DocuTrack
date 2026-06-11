@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use App\Services\SpkMautService;
 use Illuminate\Database\Eloquent\Model;
 
 class Lpj extends Model
 {
     protected $primaryKey = 'lpj_id';
+
     public $timestamps = false;
 
     protected $fillable = [
@@ -46,7 +48,7 @@ class Lpj extends Model
     {
         static::saved(function ($lpj) {
             if ($lpj->submitted_at && $lpj->kegiatan) {
-                resolve(\App\Services\SpkMautService::class)->syncKegiatanScores($lpj->kegiatan);
+                resolve(SpkMautService::class)->syncKegiatanScores($lpj->kegiatan);
             }
         });
     }

@@ -41,18 +41,21 @@ class TelaahController extends Controller
     public function approve(Request $request, int $id): JsonResponse
     {
         $this->workflowService->moveToNextPosition($id, WorkflowService::POSITION_PPK, WorkflowService::STATUS_DISETUJUI);
+
         return response()->json(['success' => true, 'message' => 'Disetujui PPK, diteruskan ke Wadir.']);
     }
 
     public function reject(RejectRequest $request, int $id): JsonResponse
     {
         $this->workflowService->reject($id, WorkflowService::POSITION_PPK, $request->validated('alasan'));
+
         return response()->json(['success' => true, 'message' => 'Usulan ditolak PPK.']);
     }
 
     public function revise(ReviseRequest $request, int $id): JsonResponse
     {
         $this->workflowService->requestRevision($id, WorkflowService::POSITION_PPK, $request->validated('komentar'), $request->validated('field_comments', []));
+
         return response()->json(['success' => true, 'message' => 'Dikembalikan untuk revisi.']);
     }
 }

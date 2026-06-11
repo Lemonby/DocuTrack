@@ -39,7 +39,7 @@ class UserSeeder extends Seeder
                 $userData
             );
 
-            if (!$user->hasRole($role)) {
+            if (! $user->hasRole($role)) {
                 $user->assignRole($role);
             }
         }

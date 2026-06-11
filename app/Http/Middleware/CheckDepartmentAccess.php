@@ -2,11 +2,11 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Kegiatan;
 use Closure;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Session;
-use App\Models\Kegiatan;
+use Symfony\Component\HttpFoundation\Response;
 
 class CheckDepartmentAccess
 {
@@ -16,7 +16,7 @@ class CheckDepartmentAccess
     public function handle(Request $request, Closure $next): Response
     {
         $user = $request->user();
-        
+
         if ($user) {
             // Sanctum / authenticated API user
             $userRole = $user->roles->first()?->name ?? '';
@@ -30,7 +30,7 @@ class CheckDepartmentAccess
         $userRole = strtolower($userRole);
 
         // Only enforce department protection for 'admin' role
-        if ($userRole === 'admin' && !empty($userJurusan)) {
+        if ($userRole === 'admin' && ! empty($userJurusan)) {
             // Check for route parameter 'id' or request input 'kegiatan_id'
             $kegiatanId = $request->route('id') ?? $request->input('kegiatan_id');
 
@@ -45,7 +45,7 @@ class CheckDepartmentAccess
                             'message' => 'Anda tidak memiliki hak untuk melihat data ini',
                         ], 403);
                     }
-                    
+
                     abort(403, 'Anda tidak memiliki hak untuk melihat data ini');
                 }
             }

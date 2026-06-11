@@ -5,7 +5,6 @@ namespace App\Http\Controllers\API\SuperAdmin;
 use App\Http\Controllers\Controller;
 use App\Models\Kegiatan;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\DB;
 
 class MonitoringController extends Controller
 {

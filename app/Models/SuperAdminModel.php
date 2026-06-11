@@ -5,16 +5,14 @@ declare(strict_types=1);
 namespace App\Models;
 
 use mysqli;
-use Exception;
 
 /**
  * SuperAdminModel - Super Admin Management Model
  *
  * @category Model
- * @package  DocuTrack
+ *
  * @version  2.3.0 - Refactored for Strict Dependency Injection
  */
-
 class SuperAdminModel
 {
     /**
@@ -24,8 +22,8 @@ class SuperAdminModel
 
     /**
      * Constructor - Strict Dependency Injection
-     * 
-     * @param mysqli $db Database connection instance (Required)
+     *
+     * @param  mysqli  $db  Database connection instance (Required)
      */
     public function __construct(mysqli $db)
     {
@@ -38,24 +36,25 @@ class SuperAdminModel
 
     public function getDashboardStats(): array
     {
-        $query = "SELECT 
+        $query = 'SELECT 
                     COUNT(*) as total,
                     SUM(CASE WHEN statusUtamaId = 3 THEN 1 ELSE 0 END) as disetujui,
                     SUM(CASE WHEN statusUtamaId = 4 THEN 1 ELSE 0 END) as ditolak,
                     SUM(CASE WHEN statusUtamaId = 1 THEN 1 ELSE 0 END) as menunggu,
                     SUM(CASE WHEN statusUtamaId = 2 THEN 1 ELSE 0 END) as revisi
-                  FROM tbl_kegiatan";
+                  FROM tbl_kegiatan';
 
         $result = mysqli_query($this->db, $query);
 
         if ($result) {
             $row = mysqli_fetch_assoc($result);
+
             return [
-                'total' => (int)($row['total'] ?? 0),
-                'disetujui' => (int)($row['disetujui'] ?? 0),
-                'ditolak' => (int)($row['ditolak'] ?? 0),
-                'menunggu' => (int)($row['menunggu'] ?? 0),
-                'revisi' => (int)($row['revisi'] ?? 0)
+                'total' => (int) ($row['total'] ?? 0),
+                'disetujui' => (int) ($row['disetujui'] ?? 0),
+                'ditolak' => (int) ($row['ditolak'] ?? 0),
+                'menunggu' => (int) ($row['menunggu'] ?? 0),
+                'revisi' => (int) ($row['revisi'] ?? 0),
             ];
         }
 
@@ -64,7 +63,7 @@ class SuperAdminModel
 
     public function getListJurusan(): array
     {
-        $query = "SELECT namaJurusan FROM tbl_jurusan ORDER BY namaJurusan ASC";
+        $query = 'SELECT namaJurusan FROM tbl_jurusan ORDER BY namaJurusan ASC';
 
         $result = mysqli_query($this->db, $query);
         $list = [];
@@ -103,9 +102,6 @@ class SuperAdminModel
 
     /**
      * Get ALL activities for Super Admin monitoring (God Mode)
-     * 
-     * @param int $limit
-     * @return array
      */
     public function getGlobalMonitoringKegiatan(int $limit = 50): array
     {
@@ -143,7 +139,7 @@ class SuperAdminModel
                   LIMIT ?";
 
         $stmt = mysqli_prepare($this->db, $query);
-        mysqli_stmt_bind_param($stmt, "i", $limit);
+        mysqli_stmt_bind_param($stmt, 'i', $limit);
         mysqli_stmt_execute($stmt);
         $result = mysqli_stmt_get_result($stmt);
 
@@ -163,9 +159,6 @@ class SuperAdminModel
 
     /**
      * Get ALL LPJs for Super Admin monitoring (God Mode)
-     * 
-     * @param int $limit
-     * @return array
      */
     public function getGlobalMonitoringLPJ(int $limit = 50): array
     {
@@ -191,7 +184,7 @@ class SuperAdminModel
                   LIMIT ?";
 
         $stmt = mysqli_prepare($this->db, $query);
-        mysqli_stmt_bind_param($stmt, "i", $limit);
+        mysqli_stmt_bind_param($stmt, 'i', $limit);
         mysqli_stmt_execute($stmt);
         $result = mysqli_stmt_get_result($stmt);
 
@@ -214,12 +207,12 @@ class SuperAdminModel
         // Safe check for columns existence
         $checkCols = mysqli_query($this->db, "SHOW COLUMNS FROM tbl_user LIKE 'status'");
         $hasStatus = mysqli_num_rows($checkCols) > 0;
-        
+
         $checkColsCreated = mysqli_query($this->db, "SHOW COLUMNS FROM tbl_user LIKE 'created_at'");
         $hasCreatedAt = mysqli_num_rows($checkColsCreated) > 0;
 
-        $statusField = $hasStatus ? "u.status" : "'Aktif' as status";
-        $dateField = $hasCreatedAt ? "u.created_at" : "NOW()";
+        $statusField = $hasStatus ? 'u.status' : "'Aktif' as status";
+        $dateField = $hasCreatedAt ? 'u.created_at' : 'NOW()';
 
         $query = "SELECT 
                     u.userId as id,
@@ -248,13 +241,13 @@ class SuperAdminModel
 
     public function getUserById(int $userId): ?array
     {
-        $query = "SELECT u.*, r.namaRole 
+        $query = 'SELECT u.*, r.namaRole 
                   FROM tbl_user u
                   LEFT JOIN tbl_role r ON u.roleId = r.roleId
-                  WHERE u.userId = ?";
+                  WHERE u.userId = ?';
 
         $stmt = mysqli_prepare($this->db, $query);
-        mysqli_stmt_bind_param($stmt, "i", $userId);
+        mysqli_stmt_bind_param($stmt, 'i', $userId);
         mysqli_stmt_execute($stmt);
 
         $result = mysqli_stmt_get_result($stmt);
@@ -265,22 +258,22 @@ class SuperAdminModel
 
     public function createUser(array $data): bool
     {
-        $fields = "nama, email, password, roleId, namaJurusan";
-        $placeholders = "?, ?, ?, ?, ?";
-        $types = "sssis";
+        $fields = 'nama, email, password, roleId, namaJurusan';
+        $placeholders = '?, ?, ?, ?, ?';
+        $types = 'sssis';
         $values = [
             $data['nama'],
             $data['email'],
             $data['password'],
-            (int)$data['roleId'],
-            $data['namaJurusan'] ?? ''
+            (int) $data['roleId'],
+            $data['namaJurusan'] ?? '',
         ];
 
         $checkCols = mysqli_query($this->db, "SHOW COLUMNS FROM tbl_user LIKE 'status'");
         if (mysqli_num_rows($checkCols) > 0 && isset($data['status'])) {
-            $fields .= ", status";
-            $placeholders .= ", ?";
-            $types .= "s";
+            $fields .= ', status';
+            $placeholders .= ', ?';
+            $types .= 's';
             $values[] = $data['status'];
         }
 
@@ -296,43 +289,43 @@ class SuperAdminModel
     {
         $fields = [];
         $values = [];
-        $types = "";
+        $types = '';
 
-        if (!empty($data['nama'])) {
-            $fields[] = "nama = ?";
+        if (! empty($data['nama'])) {
+            $fields[] = 'nama = ?';
             $values[] = $data['nama'];
-            $types .= "s";
+            $types .= 's';
         }
 
-        if (!empty($data['email'])) {
-            $fields[] = "email = ?";
+        if (! empty($data['email'])) {
+            $fields[] = 'email = ?';
             $values[] = $data['email'];
-            $types .= "s";
+            $types .= 's';
         }
 
-        if (!empty($data['password'])) {
-            $fields[] = "password = ?";
+        if (! empty($data['password'])) {
+            $fields[] = 'password = ?';
             $values[] = $data['password'];
-            $types .= "s";
+            $types .= 's';
         }
 
         if (isset($data['roleId'])) {
-            $fields[] = "roleId = ?";
-            $values[] = (int)$data['roleId'];
-            $types .= "i";
+            $fields[] = 'roleId = ?';
+            $values[] = (int) $data['roleId'];
+            $types .= 'i';
         }
 
         if (isset($data['namaJurusan'])) {
-            $fields[] = "namaJurusan = ?";
+            $fields[] = 'namaJurusan = ?';
             $values[] = $data['namaJurusan'];
-            $types .= "s";
+            $types .= 's';
         }
 
         $checkCols = mysqli_query($this->db, "SHOW COLUMNS FROM tbl_user LIKE 'status'");
         if (mysqli_num_rows($checkCols) > 0 && isset($data['status'])) {
-            $fields[] = "status = ?";
+            $fields[] = 'status = ?';
             $values[] = $data['status'];
-            $types .= "s";
+            $types .= 's';
         }
 
         if (empty($fields)) {
@@ -340,9 +333,9 @@ class SuperAdminModel
         }
 
         $values[] = $userId;
-        $types .= "i";
+        $types .= 'i';
 
-        $query = "UPDATE tbl_user SET " . implode(", ", $fields) . " WHERE userId = ?";
+        $query = 'UPDATE tbl_user SET '.implode(', ', $fields).' WHERE userId = ?';
 
         $stmt = mysqli_prepare($this->db, $query);
         mysqli_stmt_bind_param($stmt, $types, ...$values);
@@ -352,17 +345,17 @@ class SuperAdminModel
 
     public function deleteUser(int $userId): bool
     {
-        $query = "DELETE FROM tbl_user WHERE userId = ?";
+        $query = 'DELETE FROM tbl_user WHERE userId = ?';
 
         $stmt = mysqli_prepare($this->db, $query);
-        mysqli_stmt_bind_param($stmt, "i", $userId);
+        mysqli_stmt_bind_param($stmt, 'i', $userId);
 
         return mysqli_stmt_execute($stmt);
     }
 
     public function getAllRoles(): array
     {
-        $query = "SELECT roleId, namaRole FROM tbl_role ORDER BY roleId ASC";
+        $query = 'SELECT roleId, namaRole FROM tbl_role ORDER BY roleId ASC';
 
         $result = mysqli_query($this->db, $query);
         $data = [];
@@ -389,7 +382,7 @@ class SuperAdminModel
             return [];
         }
 
-        $query = "SELECT id, indikator_kinerja as nama, deskripsi FROM ikus ORDER BY created_at DESC";
+        $query = 'SELECT id, indikator_kinerja as nama, deskripsi FROM ikus ORDER BY created_at DESC';
         $result = mysqli_query($this->db, $query);
         $data = [];
 
@@ -404,25 +397,28 @@ class SuperAdminModel
 
     public function createIKU(string $nama, string $deskripsi): bool
     {
-        $query = "INSERT INTO ikus (indikator_kinerja, deskripsi, created_at, updated_at) VALUES (?, ?, NOW(), NOW())";
+        $query = 'INSERT INTO ikus (indikator_kinerja, deskripsi, created_at, updated_at) VALUES (?, ?, NOW(), NOW())';
         $stmt = mysqli_prepare($this->db, $query);
-        mysqli_stmt_bind_param($stmt, "ss", $nama, $deskripsi);
+        mysqli_stmt_bind_param($stmt, 'ss', $nama, $deskripsi);
+
         return mysqli_stmt_execute($stmt);
     }
 
     public function updateIKU(int $id, string $nama, string $deskripsi): bool
     {
-        $query = "UPDATE ikus SET indikator_kinerja = ?, deskripsi = ?, updated_at = NOW() WHERE id = ?";
+        $query = 'UPDATE ikus SET indikator_kinerja = ?, deskripsi = ?, updated_at = NOW() WHERE id = ?';
         $stmt = mysqli_prepare($this->db, $query);
-        mysqli_stmt_bind_param($stmt, "ssi", $nama, $deskripsi, $id);
+        mysqli_stmt_bind_param($stmt, 'ssi', $nama, $deskripsi, $id);
+
         return mysqli_stmt_execute($stmt);
     }
 
     public function deleteIKU(int $id): bool
     {
-        $query = "DELETE FROM ikus WHERE id = ?";
+        $query = 'DELETE FROM ikus WHERE id = ?';
         $stmt = mysqli_prepare($this->db, $query);
-        mysqli_stmt_bind_param($stmt, "i", $id);
+        mysqli_stmt_bind_param($stmt, 'i', $id);
+
         return mysqli_stmt_execute($stmt);
     }
 }

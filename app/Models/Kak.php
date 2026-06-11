@@ -7,8 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 class Kak extends Model
 {
     protected $primaryKey = 'kak_id';
+
     public $timestamps = false;
+
     protected $with = ['ikus'];
+
     public ?string $tempIkuValue = null;
 
     protected $fillable = [
@@ -31,7 +34,7 @@ class Kak extends Model
                 unset($kak->tempIkuValue);
 
                 $ikuNames = array_filter(array_map('trim', explode(',', $ikuValue)));
-                $ikus = \App\Models\Iku::whereIn('indikator_kinerja', $ikuNames)
+                $ikus = Iku::whereIn('indikator_kinerja', $ikuNames)
                     ->orWhereIn('kode_iku', $ikuNames)
                     ->get();
 
@@ -40,12 +43,12 @@ class Kak extends Model
                 // Fallback for tests or dynamic seeders
                 if (empty($ikuIds) && app()->environment('testing')) {
                     foreach ($ikuNames as $name) {
-                        $newIku = \App\Models\Iku::firstOrCreate(
+                        $newIku = Iku::firstOrCreate(
                             ['indikator_kinerja' => $name],
                             [
-                                'kode_iku' => 'TEST_' . strtoupper(str_replace(' ', '_', $name)),
+                                'kode_iku' => 'TEST_'.strtoupper(str_replace(' ', '_', $name)),
                                 'deskripsi' => $name,
-                                'tahun' => 2020
+                                'tahun' => 2020,
                             ]
                         );
                         $ikuIds[] = $newIku->id;

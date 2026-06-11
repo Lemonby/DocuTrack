@@ -10,8 +10,6 @@ use mysqli;
  *
  * Mengelola data pengguna (tbl_user) dan peran (tbl_role).
  * Menggabungkan fungsionalitas legacy dan modern.
- *
- * @package App\Models
  */
 class UserModel
 {
@@ -19,12 +17,13 @@ class UserModel
      * @var mysqli Database connection instance
      */
     private $db;
+
     protected $table = 'tbl_user';
 
     /**
      * Constructor
      *
-     * @param mysqli $db Database connection instance
+     * @param  mysqli  $db  Database connection instance
      */
     public function __construct($db)
     {
@@ -38,8 +37,8 @@ class UserModel
     /**
      * Memverifikasi login user berdasarkan email dan password.
      *
-     * @param string $email User email address
-     * @param string $password Plain text password to verify
+     * @param  string  $email  User email address
+     * @param  string  $password  Plain text password to verify
      * @return array|false User data array if successful, false otherwise
      */
     public function verifyUserLogin(string $email, string $password)
@@ -53,7 +52,8 @@ class UserModel
 
         $stmt = mysqli_prepare($this->db, $query);
         if ($stmt === false) {
-            error_log('UserModel::verifyUserLogin - Prepare failed: ' . mysqli_error($this->db));
+            error_log('UserModel::verifyUserLogin - Prepare failed: '.mysqli_error($this->db));
+
             return false;
         }
 
@@ -69,7 +69,7 @@ class UserModel
                 return $user;
             }
         } else {
-            error_log('UserModel::verifyUserLogin - Execute failed: ' . mysqli_stmt_error($stmt));
+            error_log('UserModel::verifyUserLogin - Execute failed: '.mysqli_stmt_error($stmt));
             mysqli_stmt_close($stmt);
         }
 
@@ -83,19 +83,20 @@ class UserModel
     /**
      * Mengambil satu data user spesifik berdasarkan ID.
      *
-     * @param int $userId User ID to retrieve
+     * @param  int  $userId  User ID to retrieve
      * @return array|null User data array if found, null otherwise
      */
     public function getById(int $userId): ?array
     {
-        $query = "SELECT u.*, r.namaRole 
+        $query = 'SELECT u.*, r.namaRole 
                   FROM tbl_user u
                   JOIN tbl_role r ON u.roleId = r.roleId
-                  WHERE u.userId = ?";
+                  WHERE u.userId = ?';
         $stmt = mysqli_prepare($this->db, $query);
 
         if ($stmt === false) {
-            error_log('UserModel::getById - Prepare failed: ' . mysqli_error($this->db));
+            error_log('UserModel::getById - Prepare failed: '.mysqli_error($this->db));
+
             return null;
         }
 
@@ -105,10 +106,12 @@ class UserModel
             $result = mysqli_stmt_get_result($stmt);
             $user = mysqli_fetch_assoc($result);
             mysqli_stmt_close($stmt);
+
             return $user ?: null;
         } else {
-            error_log('UserModel::getById - Execute failed: ' . mysqli_stmt_error($stmt));
+            error_log('UserModel::getById - Execute failed: '.mysqli_stmt_error($stmt));
             mysqli_stmt_close($stmt);
+
             return null;
         }
     }
@@ -128,14 +131,15 @@ class UserModel
      */
     public function getAllUsers(): array
     {
-        $query = "SELECT u.userId, u.nama, u.email, u.namaJurusan, u.status, r.namaRole, u.created_at 
+        $query = 'SELECT u.userId, u.nama, u.email, u.namaJurusan, u.status, r.namaRole, u.created_at 
                   FROM tbl_user u
                   JOIN tbl_role r ON u.roleId = r.roleId
-                  ORDER BY u.created_at DESC";
+                  ORDER BY u.created_at DESC';
 
         $result = mysqli_query($this->db, $query);
         if ($result === false) {
-            error_log('UserModel::getAllUsers - Query failed: ' . mysqli_error($this->db));
+            error_log('UserModel::getAllUsers - Query failed: '.mysqli_error($this->db));
+
             return [];
         }
 
@@ -145,19 +149,14 @@ class UserModel
         }
 
         mysqli_free_result($result);
+
         return $users;
     }
 
     /**
      * Menambah user baru ke tbl_user.
      *
-     * @param string $userName
-     * @param int $roleId
-     * @param int|null $prodiId (Not used in schema directly, maybe mapped to namaJurusan?)
-     * @param string $email
-     * @param string $password
-     * @param string $confirmPassword
-     * @return bool
+     * @param  int|null  $prodiId  (Not used in schema directly, maybe mapped to namaJurusan?)
      */
     public function insertUser(
         string $userName,
@@ -172,7 +171,8 @@ class UserModel
                 throw new Exception('Password dan konfirmasi password tidak sesuai.');
             }
         } catch (Exception $e) {
-            error_log('UserModel::insertUser - Validation error: ' . $e->getMessage());
+            error_log('UserModel::insertUser - Validation error: '.$e->getMessage());
+
             return false;
         }
 
@@ -181,10 +181,11 @@ class UserModel
         // Schema: userId, nama, email, password, roleId, namaJurusan, created_at, status
         $query = "INSERT INTO tbl_user (nama, roleId, namaJurusan, email, password, status) 
                   VALUES (?, ?, ?, ?, ?, 'Aktif')";
-        
+
         $stmt = mysqli_prepare($this->db, $query);
         if ($stmt === false) {
-            error_log('UserModel::insertUser - Prepare failed: ' . mysqli_error($this->db));
+            error_log('UserModel::insertUser - Prepare failed: '.mysqli_error($this->db));
+
             return false;
         }
 
@@ -192,10 +193,12 @@ class UserModel
 
         if (mysqli_stmt_execute($stmt)) {
             mysqli_stmt_close($stmt);
+
             return true;
         } else {
-            error_log('UserModel::insertUser - Execute failed: ' . mysqli_stmt_error($stmt));
+            error_log('UserModel::insertUser - Execute failed: '.mysqli_stmt_error($stmt));
             mysqli_stmt_close($stmt);
+
             return false;
         }
     }
@@ -203,13 +206,7 @@ class UserModel
     /**
      * Mengupdate data user.
      *
-     * @param int $userId
-     * @param string $userName
-     * @param int $roleId
-     * @param string|null $namaJurusan
-     * @param string $email
-     * @param string $status ('Aktif' or 'Tidak Aktif')
-     * @return bool
+     * @param  string  $status  ('Aktif' or 'Tidak Aktif')
      */
     public function updateUser(
         int $userId,
@@ -219,11 +216,12 @@ class UserModel
         string $email,
         string $status
     ): bool {
-        $query = "UPDATE tbl_user SET nama = ?, roleId = ?, namaJurusan = ?, email = ?, status = ? WHERE userId = ?";
+        $query = 'UPDATE tbl_user SET nama = ?, roleId = ?, namaJurusan = ?, email = ?, status = ? WHERE userId = ?';
         $stmt = mysqli_prepare($this->db, $query);
 
         if ($stmt === false) {
-            error_log('UserModel::updateUser - Prepare failed: ' . mysqli_error($this->db));
+            error_log('UserModel::updateUser - Prepare failed: '.mysqli_error($this->db));
+
             return false;
         }
 
@@ -231,10 +229,12 @@ class UserModel
 
         if (mysqli_stmt_execute($stmt)) {
             mysqli_stmt_close($stmt);
+
             return true;
         } else {
-            error_log('UserModel::updateUser - Execute failed: ' . mysqli_stmt_error($stmt));
+            error_log('UserModel::updateUser - Execute failed: '.mysqli_stmt_error($stmt));
             mysqli_stmt_close($stmt);
+
             return false;
         }
     }
@@ -253,11 +253,12 @@ class UserModel
 
         $passwordHash = password_hash($newPassword, PASSWORD_BCRYPT);
 
-        $query = "UPDATE tbl_user SET password = ? WHERE userId = ?";
+        $query = 'UPDATE tbl_user SET password = ? WHERE userId = ?';
         $stmt = mysqli_prepare($this->db, $query);
 
         if ($stmt === false) {
-            error_log('UserModel::updateUserPassword - Prepare failed: ' . mysqli_error($this->db));
+            error_log('UserModel::updateUserPassword - Prepare failed: '.mysqli_error($this->db));
+
             return false;
         }
 
@@ -265,21 +266,24 @@ class UserModel
 
         if (mysqli_stmt_execute($stmt)) {
             mysqli_stmt_close($stmt);
+
             return true;
         } else {
-            error_log('UserModel::updateUserPassword - Execute failed: ' . mysqli_stmt_error($stmt));
+            error_log('UserModel::updateUserPassword - Execute failed: '.mysqli_stmt_error($stmt));
             mysqli_stmt_close($stmt);
+
             return false;
         }
     }
 
     public function deleteUser(int $userId): bool
     {
-        $query = "DELETE FROM tbl_user WHERE userId = ?";
+        $query = 'DELETE FROM tbl_user WHERE userId = ?';
         $stmt = mysqli_prepare($this->db, $query);
 
         if ($stmt === false) {
-            error_log('UserModel::deleteUser - Prepare failed: ' . mysqli_error($this->db));
+            error_log('UserModel::deleteUser - Prepare failed: '.mysqli_error($this->db));
+
             return false;
         }
 
@@ -287,10 +291,12 @@ class UserModel
 
         if (mysqli_stmt_execute($stmt)) {
             mysqli_stmt_close($stmt);
+
             return true;
         } else {
-            error_log('UserModel::deleteUser - Execute failed: ' . mysqli_stmt_error($stmt));
+            error_log('UserModel::deleteUser - Execute failed: '.mysqli_stmt_error($stmt));
             mysqli_stmt_close($stmt);
+
             return false;
         }
     }
@@ -301,11 +307,12 @@ class UserModel
 
     public function getAllRoles(): array
     {
-        $query = "SELECT roleId, namaRole FROM tbl_role ORDER BY namaRole ASC";
+        $query = 'SELECT roleId, namaRole FROM tbl_role ORDER BY namaRole ASC';
         $result = mysqli_query($this->db, $query);
 
         if ($result === false) {
-            error_log('UserModel::getAllRoles - Query failed: ' . mysqli_error($this->db));
+            error_log('UserModel::getAllRoles - Query failed: '.mysqli_error($this->db));
+
             return [];
         }
 
@@ -314,17 +321,18 @@ class UserModel
             $roles[] = $row;
         }
         mysqli_free_result($result);
+
         return $roles;
     }
 
     public function getUsersByRole(string $roleName): array
     {
-        $query = "SELECT u.userId, u.nama, u.email, u.roleId
+        $query = 'SELECT u.userId, u.nama, u.email, u.roleId
                   FROM tbl_user u
                   JOIN tbl_role r ON u.roleId = r.roleId
-                  WHERE r.namaRole = ?";
+                  WHERE r.namaRole = ?';
         $stmt = mysqli_prepare($this->db, $query);
-        mysqli_stmt_bind_param($stmt, "s", $roleName);
+        mysqli_stmt_bind_param($stmt, 's', $roleName);
         mysqli_stmt_execute($stmt);
         $result = mysqli_stmt_get_result($stmt);
 
@@ -333,24 +341,23 @@ class UserModel
             $users[] = $row;
         }
         mysqli_stmt_close($stmt);
+
         return $users;
     }
-    
+
     /**
      * Get user ID by email address.
-     *
-     * @param string $email
-     * @return int|null
      */
     public function getUserIdByEmail(string $email): ?int
     {
         $query = "SELECT userId FROM {$this->table} WHERE email = ?";
         $stmt = mysqli_prepare($this->db, $query);
-        mysqli_stmt_bind_param($stmt, "s", $email);
+        mysqli_stmt_bind_param($stmt, 's', $email);
         mysqli_stmt_execute($stmt);
         $result = mysqli_stmt_get_result($stmt);
         $user = mysqli_fetch_assoc($result);
         mysqli_stmt_close($stmt);
+
         return $user['userId'] ?? null;
     }
 }

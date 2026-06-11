@@ -32,12 +32,13 @@ class KegiatanController extends Controller
         })->toArray();
 
         $jurusan_list = Jurusan::orderBy('nama_jurusan')->pluck('nama_jurusan')->toArray();
+
         return view('wadir.kegiatan.index', compact('list_kegiatan', 'jurusan_list'));
     }
 
     public function show($id)
     {
-        $kegiatan = (new KegiatanService())->getDetailLengkap($id);
+        $kegiatan = (new KegiatanService)->getDetailLengkap($id);
         $status = $kegiatan->statusUtama->nama_status_usulan ?? 'Menunggu';
 
         $kegiatan_data = [
@@ -105,7 +106,7 @@ class KegiatanController extends Controller
 
     public function store(Request $request, $id)
     {
-        $workflowService = new WorkflowService();
+        $workflowService = new WorkflowService;
         $workflowService->moveToNextPosition($id, WorkflowService::POSITION_WADIR);
 
         return redirect()->route('wadir.dashboard')->with('success', 'Persetujuan Wadir berhasil disimpan.');

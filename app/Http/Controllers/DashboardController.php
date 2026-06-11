@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Models\Kegiatan;
+use App\Services\KegiatanService;
+use App\Services\WorkflowService;
 use Illuminate\Support\Facades\Session;
 
 class DashboardController extends Controller
@@ -11,7 +13,7 @@ class DashboardController extends Controller
     {
         $role = Session::get('role');
 
-        if (!$role) {
+        if (! $role) {
             return redirect('/');
         }
 
@@ -37,11 +39,11 @@ class DashboardController extends Controller
 
     public function adminDashboard()
     {
-        $jurusan = \Illuminate\Support\Facades\Session::get('jurusan');
-        $role = \Illuminate\Support\Facades\Session::get('role') ?? 'admin';
+        $jurusan = Session::get('jurusan');
+        $role = Session::get('role') ?? 'admin';
 
         // DB Integration for Admin Dashboard
-        $kegiatanService = new \App\Services\KegiatanService();
+        $kegiatanService = new KegiatanService;
         $stats = $kegiatanService->getDashboardStats($jurusan, $role);
 
         // Notifications (Mock for now since notifications service isn't specified in requirements)
@@ -52,8 +54,8 @@ class DashboardController extends Controller
                 'message' => 'Integrasi database berhasil.',
                 'time' => 'Baru saja',
                 'type' => 'success',
-                'icon' => 'fa-check-circle'
-            ]
+                'icon' => 'fa-check-circle',
+            ],
         ];
 
         $tahapan_kak = ['Draft', 'Review', 'Revisi', 'Disetujui'];
@@ -62,7 +64,7 @@ class DashboardController extends Controller
             'Draft' => 'fa-edit',
             'Review' => 'fa-search',
             'Revisi' => 'fa-undo',
-            'Disetujui' => 'fa-check'
+            'Disetujui' => 'fa-check',
         ];
 
         $tahapan_lpj = ['Draft', 'Review', 'Revisi', 'Disetujui'];
@@ -71,45 +73,45 @@ class DashboardController extends Controller
             'Draft' => 'fa-edit',
             'Review' => 'fa-search',
             'Revisi' => 'fa-undo',
-            'Disetujui' => 'fa-check'
+            'Disetujui' => 'fa-check',
         ];
 
         // Ambil Kegiatan milik Admin (sesuai jurusan jika ada, fallback ke user_id)
-        $userId = \Illuminate\Support\Facades\Session::get('user_id') ?? 1;
-        
-        $listKakQuery = \App\Models\Kegiatan::with(['statusUtama', 'user']);
-        if (!empty($jurusan)) {
+        $userId = Session::get('user_id') ?? 1;
+
+        $listKakQuery = Kegiatan::with(['statusUtama', 'user']);
+        if (! empty($jurusan)) {
             $listKakQuery->where('jurusan_penyelenggara', $jurusan);
         } else {
             $listKakQuery->where('user_id', $userId);
         }
         $list_kak_db = $listKakQuery->latest()->get();
 
-        $list_kak = $list_kak_db->map(function($k) {
+        $list_kak = $list_kak_db->map(function ($k) {
             return [
                 'id' => $k->kegiatan_id,
                 'nama' => $k->nama_kegiatan,
                 'nama_mahasiswa' => $k->user->nama ?? $k->pemilik_kegiatan,
                 'jurusan' => $k->jurusan_penyelenggara,
                 'tanggal_pengajuan' => $k->created_at,
-                'status' => $k->statusUtama->nama_status_usulan ?? 'Menunggu'
+                'status' => $k->statusUtama->nama_status_usulan ?? 'Menunggu',
             ];
         })->toArray();
 
-        $listLpjQuery = \App\Models\Kegiatan::with(['statusUtama', 'user', 'lpj'])
+        $listLpjQuery = Kegiatan::with(['statusUtama', 'user', 'lpj'])
             ->whereIn('status_utama_id', [
-                \App\Services\WorkflowService::STATUS_DANA_DIBERIKAN,
+                WorkflowService::STATUS_DANA_DIBERIKAN,
                 6,
-                8
+                8,
             ]);
-        if (!empty($jurusan)) {
+        if (! empty($jurusan)) {
             $listLpjQuery->where('jurusan_penyelenggara', $jurusan);
         } else {
             $listLpjQuery->where('user_id', $userId);
         }
         $list_lpj_db = $listLpjQuery->latest()->get();
 
-        $list_lpj = $list_lpj_db->map(function($k) {
+        $list_lpj = $list_lpj_db->map(function ($k) {
             $statusLabel = 'menunggu_upload';
             if ($k->status_utama_id == 8) {
                 $statusLabel = 'selesai';
@@ -129,12 +131,12 @@ class DashboardController extends Controller
 
             return [
                 'id' => $k->kegiatan_id,
-                'nama' => 'LPJ ' . $k->nama_kegiatan,
+                'nama' => 'LPJ '.$k->nama_kegiatan,
                 'nama_mahasiswa' => $k->user->nama ?? $k->pemilik_kegiatan,
                 'jurusan' => $k->jurusan_penyelenggara,
                 'tanggal_pengajuan' => $k->lpj->submitted_at ?? $k->created_at,
                 'tenggatLpj' => $k->lpj && $k->lpj->tenggat_lpj ? $k->lpj->tenggat_lpj->toDateString() : ($k->tanggal_selesai ? $k->tanggal_selesai->copy()->addDays(14)->toDateString() : now()->addDays(14)->toDateString()),
-                'status' => $statusLabel
+                'status' => $statusLabel,
             ];
         })->toArray();
 

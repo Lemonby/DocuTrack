@@ -4,9 +4,9 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
-use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Cookie;
+use Illuminate\Support\Facades\Session;
+use Symfony\Component\HttpFoundation\Response;
 
 class CheckRole
 {
@@ -17,16 +17,18 @@ class CheckRole
     {
         $userRole = Session::get('role');
 
-        if (!$userRole) {
+        if (! $userRole) {
             if ($request->hasCookie('was_logged_in')) {
                 // Clear the cookie so the expired message only appears once
                 Cookie::queue(Cookie::forget('was_logged_in'));
+
                 return redirect('/')->with('login_error', 'Sesi Anda telah berakhir.');
             }
+
             return redirect('/')->with('login_error', 'Silakan login terlebih dahulu.');
         }
 
-        if (!empty($roles) && !in_array($userRole, $roles)) {
+        if (! empty($roles) && ! in_array($userRole, $roles)) {
             abort(403, 'Forbidden / Unauthorized Access');
         }
 

@@ -2,11 +2,11 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
-use App\Models\Kegiatan;
 use App\Models\Kak;
-use App\Models\Rab;
 use App\Models\KategoriRab;
+use App\Models\Kegiatan;
+use App\Models\Rab;
+use App\Models\User;
 use App\Services\WorkflowService;
 use Database\Seeders\MasterDataSeeder;
 use Database\Seeders\RolePermissionSeeder;
@@ -21,6 +21,7 @@ class CetakTest extends TestCase
     use RefreshDatabase;
 
     private User $admin;
+
     private Kegiatan $kegiatan;
 
     protected function setUp(): void
@@ -31,11 +32,11 @@ class CetakTest extends TestCase
         $this->seed(RolePermissionSeeder::class);
 
         $this->admin = User::create([
-            'nama'         => 'Admin Cetak',
-            'email'        => 'admincetak@example.com',
-            'password'     => Hash::make('password123'),
+            'nama' => 'Admin Cetak',
+            'email' => 'admincetak@example.com',
+            'password' => Hash::make('password123'),
             'nama_jurusan' => 'Teknik Informatika dan Komputer',
-            'status'       => 'Aktif',
+            'status' => 'Aktif',
         ]);
         $this->admin->assignRole('Admin');
 
@@ -79,7 +80,7 @@ class CetakTest extends TestCase
     {
         $response = $this->withSession([
             'user_id' => $this->admin->user_id,
-            'role' => 'admin'
+            'role' => 'admin',
         ])->get("/cetak-kak/{$this->kegiatan->kegiatan_id}");
 
         $response->assertStatus(200);

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API\Direktur;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\KegiatanResource;
 use App\Models\Kegiatan;
 use Illuminate\Http\JsonResponse;
 
@@ -44,7 +45,7 @@ class DashboardController extends Controller
     {
         return response()->json([
             'success' => true,
-            'data' => \App\Http\Resources\KegiatanResource::collection(
+            'data' => KegiatanResource::collection(
                 Kegiatan::with(['statusUtama', 'user'])->latest()->take(10)->get()
             ),
         ]);

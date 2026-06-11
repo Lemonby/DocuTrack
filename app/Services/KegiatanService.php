@@ -2,15 +2,17 @@
 
 namespace App\Services;
 
+use App\Models\Iku;
+use App\Models\IndikatorKak;
+use App\Models\Kak;
+use App\Models\KategoriRab;
 use App\Models\Kegiatan;
 use App\Models\LogStatus;
-use App\Models\Kak;
-use App\Models\IndikatorKak;
-use App\Models\KategoriRab;
+use App\Models\ProgressHistory;
 use App\Models\Rab;
 use App\Models\TahapanPelaksanaan;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Session;
 
 class KegiatanService
 {
@@ -25,10 +27,10 @@ class KegiatanService
         }
 
         // Map flat array indicator inputs to nested indicator array
-        if (!empty($data['indikator_nama']) && is_array($data['indikator_nama'])) {
+        if (! empty($data['indikator_nama']) && is_array($data['indikator_nama'])) {
             $data['indikator'] = [];
             foreach ($data['indikator_nama'] as $idx => $nama) {
-                if (!empty($nama)) {
+                if (! empty($nama)) {
                     $data['indikator'][] = [
                         'nama' => $nama,
                         'bulan' => $data['indikator_bulan'][$idx] ?? null,
@@ -63,12 +65,12 @@ class KegiatanService
             $ikuNames = array_filter(array_map('trim', explode(',', $data['indikator_kinerja'] ?? '')));
             $ikuIds = [];
             foreach ($ikuNames as $idx => $name) {
-                $iku = \App\Models\Iku::firstOrCreate(
+                $iku = Iku::firstOrCreate(
                     ['indikator_kinerja' => $name],
                     [
-                        'kode_iku' => 'IKU_' . strtoupper(uniqid()) . '_' . ($idx + 1),
+                        'kode_iku' => 'IKU_'.strtoupper(uniqid()).'_'.($idx + 1),
                         'deskripsi' => $name,
-                        'tahun' => 2020
+                        'tahun' => 2020,
                     ]
                 );
                 $ikuIds[] = $iku->id;
@@ -122,12 +124,12 @@ class KegiatanService
                 'konten_json' => [
                     'judul' => 'Usulan Baru Diajukan',
                     'pesan' => "Usulan baru \"{$kegiatan->nama_kegiatan}\" berhasil diajukan and sedang menunggu verifikasi.",
-                    'link' => "/admin/pengajuan-kegiatan"
-                ]
+                    'link' => '/admin/pengajuan-kegiatan',
+                ],
             ]);
 
             // Create activity log
-            app(\App\Services\ActivityLogService::class)->log(
+            app(ActivityLogService::class)->log(
                 userId: $userId,
                 action: 'SUBMIT_PROPOSAL',
                 category: 'workflow',
@@ -184,8 +186,8 @@ class KegiatanService
             $kegiatan->update($updateData);
 
             // Create activity log
-            $actorUserId = \Illuminate\Support\Facades\Session::get('user_id') ?? auth()->id() ?? $kegiatan->user_id;
-            app(\App\Services\ActivityLogService::class)->log(
+            $actorUserId = Session::get('user_id') ?? auth()->id() ?? $kegiatan->user_id;
+            app(ActivityLogService::class)->log(
                 userId: $actorUserId,
                 action: 'SUBMIT_RINCIAN',
                 category: 'workflow',
@@ -210,10 +212,10 @@ class KegiatanService
         }
 
         // Map flat array indicator inputs to nested indicator array
-        if (!empty($data['indikator_nama']) && is_array($data['indikator_nama'])) {
+        if (! empty($data['indikator_nama']) && is_array($data['indikator_nama'])) {
             $data['indikator'] = [];
             foreach ($data['indikator_nama'] as $idx => $nama) {
-                if (!empty($nama)) {
+                if (! empty($nama)) {
                     $data['indikator'][] = [
                         'nama' => $nama,
                         'bulan' => $data['indikator_bulan'][$idx] ?? null,
@@ -225,12 +227,12 @@ class KegiatanService
 
         return DB::transaction(function () use ($kegiatanId, $data, $userId) {
             $kegiatan = Kegiatan::findOrFail($kegiatanId);
-            
+
             $statusUtamaId = $kegiatan->status_utama_id;
             $posisiId = $kegiatan->posisi_id;
-            
+
             // If the proposal is in revision status, reset it to pending for verification
-            if ((int)$statusUtamaId === WorkflowService::STATUS_REVISI) {
+            if ((int) $statusUtamaId === WorkflowService::STATUS_REVISI) {
                 $statusUtamaId = WorkflowService::STATUS_MENUNGGU;
                 $posisiId = WorkflowService::POSITION_VERIFIKATOR;
             }
@@ -260,12 +262,12 @@ class KegiatanService
             $ikuNames = array_filter(array_map('trim', explode(',', $data['indikator_kinerja'] ?? '')));
             $ikuIds = [];
             foreach ($ikuNames as $idx => $name) {
-                $iku = \App\Models\Iku::firstOrCreate(
+                $iku = Iku::firstOrCreate(
                     ['indikator_kinerja' => $name],
                     [
-                        'kode_iku' => 'IKU_' . strtoupper(uniqid()) . '_' . ($idx + 1),
+                        'kode_iku' => 'IKU_'.strtoupper(uniqid()).'_'.($idx + 1),
                         'deskripsi' => $name,
-                        'tahun' => 2020
+                        'tahun' => 2020,
                     ]
                 );
                 $ikuIds[] = $iku->id;
@@ -322,12 +324,12 @@ class KegiatanService
                 'konten_json' => [
                     'judul' => 'Revisi Usulan Diajukan Ulang',
                     'pesan' => "Revisi usulan \"{$kegiatan->nama_kegiatan}\" berhasil diajukan dan sedang menunggu verifikasi.",
-                    'link' => "/admin/pengajuan-kegiatan"
-                ]
+                    'link' => '/admin/pengajuan-kegiatan',
+                ],
             ]);
 
             // Create activity log
-            app(\App\Services\ActivityLogService::class)->log(
+            app(ActivityLogService::class)->log(
                 userId: $userId,
                 action: 'UPDATE_PROPOSAL',
                 category: 'workflow',
@@ -343,7 +345,7 @@ class KegiatanService
             );
 
             // Add progress history entry for STATUS_MENUNGGU
-            \App\Models\ProgressHistory::create([
+            ProgressHistory::create([
                 'kegiatan_id' => $kegiatan->kegiatan_id,
                 'status_id' => WorkflowService::STATUS_MENUNGGU,
                 'changed_by_user_id' => $userId,
@@ -359,21 +361,21 @@ class KegiatanService
      */
     public function getDashboardStats(?string $jurusan = null, ?string $role = null): array
     {
-        if (!$role) {
+        if (! $role) {
             if (auth()->check()) {
                 $role = auth()->user()->getRoleNames()->first();
             } else {
-                $role = \Illuminate\Support\Facades\Session::get('role');
+                $role = Session::get('role');
             }
         }
-        
+
         $role = $role ?? 'admin';
 
-        if (!$jurusan) {
+        if (! $jurusan) {
             if (auth()->check()) {
                 $jurusan = auth()->user()->nama_jurusan;
             } else {
-                $jurusan = \Illuminate\Support\Facades\Session::get('jurusan');
+                $jurusan = Session::get('jurusan');
             }
         }
 
@@ -394,7 +396,7 @@ class KegiatanService
     {
         $query = Kegiatan::query();
 
-        if (!empty($jurusan)) {
+        if (! empty($jurusan)) {
             $query->where('jurusan_penyelenggara', $jurusan);
         }
 

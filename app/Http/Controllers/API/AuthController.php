@@ -5,13 +5,13 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Resources\UserResource;
-use App\Models\User;
 use App\Models\LogStatus;
+use App\Models\User;
 use App\Services\ActivityLogService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 class AuthController extends Controller
@@ -82,8 +82,8 @@ class AuthController extends Controller
             'konten_json' => [
                 'judul' => 'Login Berhasil',
                 'pesan' => "User {$user->nama} ({$role}) berhasil masuk ke sistem via API.",
-                'link' => '#'
-            ]
+                'link' => '#',
+            ],
         ]);
 
         return response()->json([

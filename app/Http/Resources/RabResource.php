@@ -1,5 +1,7 @@
 <?php
+
 // File: app/Http/Resources/RabResource.php
+
 namespace App\Http\Resources;
 
 use Illuminate\Http\Request;

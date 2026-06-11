@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class ProgressHistory extends Model
 {
     protected $primaryKey = 'progress_history_id';
+
     public $timestamps = false;
 
     protected $fillable = ['kegiatan_id', 'status_id', 'changed_by_user_id', 'created_at'];

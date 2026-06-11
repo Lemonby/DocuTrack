@@ -1,14 +1,18 @@
 <?php
 
+use Illuminate\Auth\AuthenticationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use Illuminate\Auth\AuthenticationException;
-use Illuminate\Validation\ValidationException;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Illuminate\Foundation\Http\Middleware\ValidatePostSize;
+use Illuminate\Http\Exceptions\PostTooLargeException;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
+use Spatie\Permission\Middleware\PermissionMiddleware;
+use Spatie\Permission\Middleware\RoleMiddleware;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -21,8 +25,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->statefulApi();
 
         $middleware->alias([
-            'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
-            'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
+            'role' => RoleMiddleware::class,
+            'permission' => PermissionMiddleware::class,
         ]);
 
         $middleware->redirectGuestsTo(fn (Request $request) => $request->is('api/*') || $request->expectsJson() ? null : '/');
@@ -30,13 +34,13 @@ return Application::configure(basePath: dirname(__DIR__))
         // Pindahkan ValidatePostSize dari global middleware stack ke web & api groups.
         // Ini memastikan session sudah berjalan sebelum batasan ukuran post divalidasi,
         // sehingga kita bisa melakukan redirect back dengan validation errors secara aman.
-        $middleware->remove(\Illuminate\Foundation\Http\Middleware\ValidatePostSize::class);
-        $middleware->appendToGroup('web', \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class);
-        $middleware->appendToGroup('api', \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class);
+        $middleware->remove(ValidatePostSize::class);
+        $middleware->appendToGroup('web', ValidatePostSize::class);
+        $middleware->appendToGroup('api', ValidatePostSize::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Tangani jika file/post data yang diunggah melebihi batas maksimal post_max_size server
-        $exceptions->render(function (\Illuminate\Http\Exceptions\PostTooLargeException $e, Request $request) {
+        $exceptions->render(function (PostTooLargeException $e, Request $request) {
             if ($request->is('api/*') || $request->expectsJson()) {
                 return response()->json([
                     'success' => false,
@@ -53,8 +57,8 @@ return Application::configure(basePath: dirname(__DIR__))
             return redirect()->back()
                 ->withInput($request->except(['surat_pengantar', 'bukti']))
                 ->withErrors([
-                    $errorKey => 'Ukuran file yang diunggah terlalu besar. Maksimal ukuran total unggahan adalah ' . ini_get('post_max_size') . '.',
-                    'error' => 'Ukuran file yang diunggah terlalu besar. Maksimal ukuran total unggahan adalah ' . ini_get('post_max_size') . '.'
+                    $errorKey => 'Ukuran file yang diunggah terlalu besar. Maksimal ukuran total unggahan adalah '.ini_get('post_max_size').'.',
+                    'error' => 'Ukuran file yang diunggah terlalu besar. Maksimal ukuran total unggahan adalah '.ini_get('post_max_size').'.',
                 ]);
         });
 
@@ -81,6 +85,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->render(function (ModelNotFoundException $e, Request $request) {
             if ($request->is('api/*') || $request->expectsJson()) {
                 $model = class_basename($e->getModel());
+
                 return response()->json([
                     'success' => false,
                     'message' => "Data {$model} tidak ditemukan.",

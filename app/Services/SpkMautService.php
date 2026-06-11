@@ -3,11 +3,13 @@
 namespace App\Services;
 
 use App\Models\Kegiatan;
+use App\Models\Kriteria;
+use App\Models\NilaiKegiatanKriteria;
 use Illuminate\Support\Collection;
 
 /**
  * Class SpkMautService
- * 
+ *
  * Layanan khusus untuk menghitung Kinerja & Integritas Jurusan menggunakan Metode MAUT (Multi-Attribute Utility Theory).
  * Layanan ini menghitung 4 kriteria utama (C1, C2, C3, C4) dengan bobot masing-masing 25% (0.25).
  */
@@ -16,14 +18,14 @@ class SpkMautService
     /**
      * Langkah 1: Menghitung nilai kriteria mentah (raw score) untuk satu Kegiatan.
      * Nilai keluaran hasil kriteria ini langsung berskala desimal 0.0 - 1.0.
-     * 
-     * @param Kegiatan $kegiatan Objek kegiatan yang akan dihitung nilainya.
+     *
+     * @param  Kegiatan  $kegiatan  Objek kegiatan yang akan dihitung nilainya.
      * @return array Nilai kriteria mentah C1 s.d C4 skala desimal 0.0 - 1.0.
      */
     public function calculateRawScores(Kegiatan $kegiatan): array
     {
         // Pastikan relasi LPJ dan KAK terisi. Jika tidak ada LPJ, kembalikan nilai 0.
-        if (!$kegiatan->lpj) {
+        if (! $kegiatan->lpj) {
             return [
                 'c1' => 0.0,
                 'c2' => 0.0,
@@ -44,7 +46,7 @@ class SpkMautService
 
         if ($tanggalMulai && $tanggalSelesai && $realisasiMulai && $realisasiSelesai) {
             // Hitung durasi rencana dalam hari
-            $plannedDuration = (int) $tanggalMulai->diffInDays($tanggalSelesai); 
+            $plannedDuration = (int) $tanggalMulai->diffInDays($tanggalSelesai);
             // Hitung durasi realisasi dalam hari
             $realDuration = (int) $realisasiMulai->diffInDays($realisasiSelesai);
             // Selisih absolut durasi
@@ -129,7 +131,7 @@ class SpkMautService
             } else {
                 // Jika terlambat, gunakan regresi linier pengurang 0.05 poin per hari keterlambatan (skala 0-1)
                 $daysLate = $tenggatLpj->diffInDays($submittedAt);
-                $c4 = (double) max(0.0, 1.0 - ($daysLate * 0.05));
+                $c4 = (float) max(0.0, 1.0 - ($daysLate * 0.05));
             }
         }
 
@@ -143,22 +145,20 @@ class SpkMautService
 
     /**
      * Menyinkronkan nilai kriteria mentah dari satu kegiatan ke tabel database.
-     *
-     * @param Kegiatan $kegiatan
      */
     public function syncKegiatanScores(Kegiatan $kegiatan): void
     {
-        if (!$kegiatan->lpj || !$kegiatan->lpj->submitted_at) {
+        if (! $kegiatan->lpj || ! $kegiatan->lpj->submitted_at) {
             return;
         }
 
         $raw = $this->calculateRawScores($kegiatan);
-        $kriterias = \App\Models\Kriteria::all();
+        $kriterias = Kriteria::all();
 
         foreach ($kriterias as $kriteria) {
             $code = strtolower($kriteria->kode_kriteria); // 'c1', 'c2', 'c3', 'c4'
             if (isset($raw[$code])) {
-                \App\Models\NilaiKegiatanKriteria::updateOrCreate(
+                NilaiKegiatanKriteria::updateOrCreate(
                     [
                         'kegiatan_id' => $kegiatan->kegiatan_id,
                         'kriteria_id' => $kriteria->kriteria_id,
@@ -186,17 +186,17 @@ class SpkMautService
     }
 
     /**
-     * Langkah 2 & 3: Menghitung nilai detail kriteria (C1-C4) setelah normalisasi, 
+     * Langkah 2 & 3: Menghitung nilai detail kriteria (C1-C4) setelah normalisasi,
      * serta skor akhir MAUT untuk satu Kegiatan di lingkup jurusannya.
-     * 
-     * @param Kegiatan $kegiatan Objek kegiatan yang akan dihitung nilainya.
-     * @param Collection|null $peerKegiatans Kumpulan kegiatan lain dalam satu jurusan untuk acuan min/max.
+     *
+     * @param  Kegiatan  $kegiatan  Objek kegiatan yang akan dihitung nilainya.
+     * @param  Collection|null  $peerKegiatans  Kumpulan kegiatan lain dalam satu jurusan untuk acuan min/max.
      * @return array Rincian skor C1-C4 (nilai mentah usulan) beserta skor akhir MAUT hasil normalisasi.
      */
     public function calculateScores(Kegiatan $kegiatan, ?Collection $peerKegiatans = null): array
     {
         // Pastikan relasi LPJ dan KAK terisi. Jika tidak ada LPJ, kembalikan nilai 0.
-        if (!$kegiatan->lpj) {
+        if (! $kegiatan->lpj) {
             return [
                 'c1' => 0.0,
                 'c2' => 0.0,
@@ -207,26 +207,26 @@ class SpkMautService
         }
 
         // Ambil nilai mentah dari database untuk kriteria yang terdaftar
-        $kriterias = \App\Models\Kriteria::all();
-        
+        $kriterias = Kriteria::all();
+
         // Pastikan skor disinkronkan terlebih dahulu ke database jika belum ada
-        $scoresMap = \App\Models\NilaiKegiatanKriteria::where('kegiatan_id', $kegiatan->kegiatan_id)
+        $scoresMap = NilaiKegiatanKriteria::where('kegiatan_id', $kegiatan->kegiatan_id)
             ->pluck('nilai_mentah', 'kriteria_id');
 
         if ($scoresMap->isEmpty() && $kegiatan->lpj->submitted_at !== null) {
             $this->syncKegiatanScores($kegiatan);
-            $scoresMap = \App\Models\NilaiKegiatanKriteria::where('kegiatan_id', $kegiatan->kegiatan_id)
+            $scoresMap = NilaiKegiatanKriteria::where('kegiatan_id', $kegiatan->kegiatan_id)
                 ->pluck('nilai_mentah', 'kriteria_id');
         }
 
         $raw = [];
         $finalScore = 0.0;
-        
+
         foreach ($kriterias as $kriteria) {
             $code = strtolower($kriteria->kode_kriteria);
             $val = $scoresMap->get($kriteria->kriteria_id) ?? 0.0;
             $raw[$code] = $val;
-            
+
             // Hitung kontribusi bobot kriteria dinamis
             $finalScore += $kriteria->bobot * $val;
         }
@@ -240,13 +240,13 @@ class SpkMautService
      * Langkah 5: Mendapatkan daftar peringkat Integritas Jurusan (Perankingan Pusat).
      * Hasil perankingan lokal (jurusan) dirata-ratakan untuk merepresentasikan integritas setiap jurusan.
      * Hanya menghitung kegiatan yang SUDAH mengajukan LPJ (lpjs.submitted_at IS NOT NULL).
-     * 
+     *
      * @return Collection Kumpulan data peringkat jurusan terurut secara descending berdasarkan rata-rata skor.
      */
     public function getJurusanRankings(): Collection
     {
         // Ambil kriteria terdaftar di database
-        $kriterias = \App\Models\Kriteria::all();
+        $kriterias = Kriteria::all();
 
         // Ambil semua kegiatan yang LPJ-nya sudah disubmit
         $kegiatans = Kegiatan::with(['kak.ikus', 'lpj'])
@@ -267,6 +267,7 @@ class SpkMautService
                 $scores = $this->calculateScores($kegiatan);
                 $kegiatan->spk_scores = $scores;
                 $kegiatan->final_score = $scores['final_score'];
+
                 return $kegiatan;
             });
 
@@ -337,8 +338,8 @@ class SpkMautService
 
     /**
      * Mendapatkan rincian seluruh kegiatan di suatu jurusan beserta hasil perhitungan MAUT-nya.
-     * 
-     * @param string $jurusan Nama jurusan penyelenggara.
+     *
+     * @param  string  $jurusan  Nama jurusan penyelenggara.
      * @return Collection Daftar kegiatan lengkap dengan skor SPK masing-masing.
      */
     public function getKegiatanScoresByJurusan(string $jurusan): Collection
@@ -356,8 +357,8 @@ class SpkMautService
             $scores = $this->calculateScores($kegiatan);
             $kegiatan->spk_scores = $scores;
             $kegiatan->final_score = $scores['final_score'];
+
             return $kegiatan;
         })->sortByDesc('final_score')->values();
     }
 }
-

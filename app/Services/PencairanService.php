@@ -3,8 +3,9 @@
 namespace App\Services;
 
 use App\Models\Kegiatan;
+use App\Models\LogStatus;
 use App\Models\Lpj;
-use App\Models\LpjItem;
+use App\Models\ProgressHistory;
 use App\Models\TahapanPencairan;
 use Illuminate\Support\Facades\DB;
 
@@ -26,13 +27,13 @@ class PencairanService
                 foreach ($data['tahapan'] as $index => $tahap) {
                     $nominal = (float) $tahap['nominal'];
                     if ($nominal <= 0 || empty($tahap['tanggal'])) {
-                        throw new \InvalidArgumentException("Data tahap " . ($index + 1) . " tidak valid");
+                        throw new \InvalidArgumentException('Data tahap '.($index + 1).' tidak valid');
                     }
 
                     TahapanPencairan::create([
                         'kegiatan_id' => $kegiatanId,
                         'tgl_pencairan' => $tahap['tanggal'],
-                        'termin' => $tahap['termin'] ?? 'Termin ' . ($index + 1),
+                        'termin' => $tahap['termin'] ?? 'Termin '.($index + 1),
                         'nominal' => $nominal,
                         'catatan' => $catatan,
                         'created_by' => $userId,
@@ -77,7 +78,7 @@ class PencairanService
             }
 
             // Record history
-            \App\Models\ProgressHistory::create([
+            ProgressHistory::create([
                 'kegiatan_id' => $kegiatanId,
                 'status_id' => WorkflowService::STATUS_DANA_DIBERIKAN,
                 'changed_by_user_id' => $userId,
@@ -92,7 +93,7 @@ class PencairanService
             );
 
             // Create notification log in log_statuses for the owner
-            \App\Models\LogStatus::create([
+            LogStatus::create([
                 'user_id' => $kegiatan->user_id,
                 'tipe_log' => 'APPROVAL',
                 'id_referensi' => $kegiatanId,
@@ -100,13 +101,13 @@ class PencairanService
                 'konten_json' => [
                     'judul' => 'Dana Kegiatan Cair',
                     'pesan' => "Dana untuk kegiatan \"{$kegiatan->nama_kegiatan}\" telah dicairkan oleh Bendahara. Silakan upload LPJ sebelum tenggat waktu.",
-                    'link' => "/admin/pengajuan-lpj"
-                ]
+                    'link' => '/admin/pengajuan-lpj',
+                ],
             ]);
 
             // Create notification log in log_statuses for the actor (Bendahara)
             if ($userId && $userId !== $kegiatan->user_id) {
-                \App\Models\LogStatus::create([
+                LogStatus::create([
                     'user_id' => $userId,
                     'tipe_log' => 'APPROVAL',
                     'id_referensi' => $kegiatanId,
@@ -114,13 +115,13 @@ class PencairanService
                     'konten_json' => [
                         'judul' => 'Pencairan Dana Berhasil',
                         'pesan' => "Dana untuk kegiatan \"{$kegiatan->nama_kegiatan}\" berhasil dicairkan.",
-                        'link' => "/bendahara/pencairan-dana/show/{$kegiatanId}"
-                    ]
+                        'link' => "/bendahara/pencairan-dana/show/{$kegiatanId}",
+                    ],
                 ]);
             }
 
             // Create activity log
-            app(\App\Services\ActivityLogService::class)->log(
+            app(ActivityLogService::class)->log(
                 userId: $userId,
                 action: 'DISBURSE_FUND',
                 category: 'financial',
@@ -141,6 +142,7 @@ class PencairanService
     {
         $date = new \DateTime($startDate);
         $date->modify('+14 days');
+
         return $date->format('Y-m-d');
     }
 }

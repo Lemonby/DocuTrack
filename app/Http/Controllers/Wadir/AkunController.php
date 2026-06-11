@@ -12,12 +12,14 @@ class AkunController extends Controller
     {
         $userName = Session::get('user_name', 'User');
         $userRole = Session::get('role', 'wadir');
+
         return view('wadir.akun.index', compact('userName', 'userRole'));
     }
 
     public function update(Request $request)
     {
         Session::put('user_name', $request->nama);
+
         return back()->with('success', 'Profil berhasil diperbarui!');
     }
 

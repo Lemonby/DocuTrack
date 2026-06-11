@@ -8,6 +8,7 @@ use App\Http\Resources\KegiatanDetailResource;
 use App\Http\Resources\KegiatanResource;
 use App\Models\Kegiatan;
 use App\Services\KegiatanService;
+use App\Services\WorkflowService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -26,8 +27,8 @@ class PengajuanKegiatanController extends Controller
 
         $kegiatans = Kegiatan::with(['statusUtama', 'user'])
             ->when($jurusan, fn ($q) => $q->byJurusan($jurusan))
-            ->atPosition(\App\Services\WorkflowService::POSITION_ADMIN)
-            ->withStatus(\App\Services\WorkflowService::STATUS_DISETUJUI)
+            ->atPosition(WorkflowService::POSITION_ADMIN)
+            ->withStatus(WorkflowService::STATUS_DISETUJUI)
             ->latest()
             ->paginate(15);
 

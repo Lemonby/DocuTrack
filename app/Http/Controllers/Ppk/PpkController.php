@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Ppk;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Kegiatan;
 use App\Services\KegiatanService;
 use App\Services\WorkflowService;
@@ -12,27 +11,27 @@ class PpkController extends Controller
 {
     public function dashboard()
     {
-        $stats = (new \App\Services\KegiatanService())->getDashboardStats();
+        $stats = (new KegiatanService)->getDashboardStats();
 
         $kegiatanList = Kegiatan::with(['statusUtama', 'user'])
             ->where(function ($q) {
                 $q->where('posisi_id', '>=', WorkflowService::POSITION_PPK)
-                  ->orWhereIn('status_utama_id', [
-                      WorkflowService::STATUS_DANA_DIBERIKAN,
-                      WorkflowService::STATUS_LPJ_DISETUJUI,
-                      WorkflowService::STATUS_SELESAI
-                  ]);
+                    ->orWhereIn('status_utama_id', [
+                        WorkflowService::STATUS_DANA_DIBERIKAN,
+                        WorkflowService::STATUS_LPJ_DISETUJUI,
+                        WorkflowService::STATUS_SELESAI,
+                    ]);
             })
             ->latest()
             ->get();
 
         $list_usulan = $kegiatanList->map(function ($kegiatan) {
             $statusLabel = 'Menunggu';
-            if ($kegiatan->posisi_id > WorkflowService::POSITION_PPK || 
+            if ($kegiatan->posisi_id > WorkflowService::POSITION_PPK ||
                 in_array($kegiatan->status_utama_id, [
                     WorkflowService::STATUS_DANA_DIBERIKAN,
                     WorkflowService::STATUS_LPJ_DISETUJUI,
-                    WorkflowService::STATUS_SELESAI
+                    WorkflowService::STATUS_SELESAI,
                 ])) {
                 $statusLabel = 'Disetujui';
             }
@@ -58,7 +57,7 @@ class PpkController extends Controller
             'Administrasi Niaga',
             'Akuntansi',
         ];
-        
+
         return view('ppk.dashboard', compact('stats', 'list_usulan', 'jurusan_list'));
     }
 }

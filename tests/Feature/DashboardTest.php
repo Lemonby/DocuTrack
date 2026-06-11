@@ -2,9 +2,9 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
 use App\Models\Kegiatan;
 use App\Models\Lpj;
+use App\Models\User;
 use App\Services\WorkflowService;
 use Database\Seeders\MasterDataSeeder;
 use Database\Seeders\RolePermissionSeeder;
@@ -19,7 +19,9 @@ class DashboardTest extends TestCase
     use RefreshDatabase;
 
     private User $admin;
+
     private User $bendahara;
+
     private User $superadmin;
 
     protected function setUp(): void
@@ -30,29 +32,29 @@ class DashboardTest extends TestCase
         $this->seed(RolePermissionSeeder::class);
 
         $this->admin = User::create([
-            'nama'         => 'Admin User',
-            'email'        => 'admin@example.com',
-            'password'     => Hash::make('password123'),
+            'nama' => 'Admin User',
+            'email' => 'admin@example.com',
+            'password' => Hash::make('password123'),
             'nama_jurusan' => 'Teknik Informatika dan Komputer',
-            'status'       => 'Aktif',
+            'status' => 'Aktif',
         ]);
         $this->admin->assignRole('Admin');
 
         $this->bendahara = User::create([
-            'nama'         => 'Bendahara User',
-            'email'        => 'bendahara@example.com',
-            'password'     => Hash::make('password123'),
+            'nama' => 'Bendahara User',
+            'email' => 'bendahara@example.com',
+            'password' => Hash::make('password123'),
             'nama_jurusan' => 'Teknik Informatika dan Komputer',
-            'status'       => 'Aktif',
+            'status' => 'Aktif',
         ]);
         $this->bendahara->assignRole('Bendahara');
 
         $this->superadmin = User::create([
-            'nama'         => 'SuperAdmin User',
-            'email'        => 'superadmin@example.com',
-            'password'     => Hash::make('password123'),
+            'nama' => 'SuperAdmin User',
+            'email' => 'superadmin@example.com',
+            'password' => Hash::make('password123'),
             'nama_jurusan' => 'Teknik Informatika dan Komputer',
-            'status'       => 'Aktif',
+            'status' => 'Aktif',
         ]);
         $this->superadmin->assignRole('SuperAdmin');
     }
@@ -110,7 +112,7 @@ class DashboardTest extends TestCase
 
         $response = $this->withSession([
             'user_id' => $this->admin->user_id,
-            'role' => 'admin'
+            'role' => 'admin',
         ])->get('/admin/dashboard');
 
         $response->assertStatus(200);
@@ -169,11 +171,11 @@ class DashboardTest extends TestCase
     {
         // Kegiatan milik user lain di jurusan yang sama dengan admin
         $otherUserSameJurusan = User::create([
-            'nama'         => 'Other User Same Jurusan',
-            'email'        => 'other.same@example.com',
-            'password'     => Hash::make('password123'),
+            'nama' => 'Other User Same Jurusan',
+            'email' => 'other.same@example.com',
+            'password' => Hash::make('password123'),
             'nama_jurusan' => 'Teknik Informatika dan Komputer',
-            'status'       => 'Aktif',
+            'status' => 'Aktif',
         ]);
 
         $kegiatanSameJurusan = Kegiatan::create([
@@ -190,11 +192,11 @@ class DashboardTest extends TestCase
 
         // Kegiatan di jurusan yang berbeda
         $otherUserDiffJurusan = User::create([
-            'nama'         => 'Other User Diff Jurusan',
-            'email'        => 'other.diff@example.com',
-            'password'     => Hash::make('password123'),
+            'nama' => 'Other User Diff Jurusan',
+            'email' => 'other.diff@example.com',
+            'password' => Hash::make('password123'),
             'nama_jurusan' => 'Teknik Elektro',
-            'status'       => 'Aktif',
+            'status' => 'Aktif',
         ]);
 
         $kegiatanDiffJurusan = Kegiatan::create([
@@ -213,7 +215,7 @@ class DashboardTest extends TestCase
         $response = $this->withSession([
             'user_id' => $this->admin->user_id,
             'role' => 'admin',
-            'jurusan' => 'Teknik Informatika dan Komputer'
+            'jurusan' => 'Teknik Informatika dan Komputer',
         ])->get('/admin/dashboard');
 
         $response->assertStatus(200);

@@ -9,10 +9,9 @@ use mysqli;
  * WadirModel - Wadir Management Model
  *
  * @category Model
- * @package  DocuTrack
+ *
  * @version  2.0.0 - Refactored to remove constructor trap
  */
-
 class WadirModel
 {
     /**
@@ -23,7 +22,7 @@ class WadirModel
     /**
      * Constructor - Dependency Injection untuk database connection
      *
-     * @param mysqli|null $db Database connection (optional for backward compatibility)
+     * @param  mysqli|null  $db  Database connection (optional for backward compatibility)
      */
     public function __construct($db = null)
     {
@@ -34,7 +33,7 @@ class WadirModel
             if (function_exists('db')) {
                 $this->db = db();
             } else {
-                throw new \Exception("Database connection not provided to WadirModel. Ensure bootstrap.php is loaded.");
+                throw new Exception('Database connection not provided to WadirModel. Ensure bootstrap.php is loaded.');
             }
         }
     }
@@ -44,7 +43,7 @@ class WadirModel
      */
     public function getDashboardStats()
     {
-        $query = "SELECT
+        $query = 'SELECT
                     COUNT(*) as total,
                     SUM(CASE
                         WHEN posisiId = 5 AND statusUtamaId != 4 OR statusUtamaId IN (5, 6) AND posisiId IN (1) THEN 1
@@ -58,12 +57,13 @@ class WadirModel
                         WHEN posisiId = 4 THEN 1
                         ELSE 0
                     END) as pending
-                FROM tbl_kegiatan";
+                FROM tbl_kegiatan';
 
         $result = mysqli_query($this->db, $query);
         if ($result) {
             return mysqli_fetch_assoc($result);
         }
+
         return ['total' => 0, 'disetujui' => 0, 'ditolak' => 0, 'menunggu' => 0];
     }
 
@@ -72,7 +72,7 @@ class WadirModel
      */
     public function getDashboardKAK()
     {
-        $query = "SELECT 
+        $query = 'SELECT 
                     k.kegiatanId as id,
                     k.namaKegiatan as nama,
                     k.pemilikKegiatan as pengusul,
@@ -85,7 +85,7 @@ class WadirModel
                 FROM tbl_kegiatan k
                 LEFT JOIN tbl_status_utama s ON k.statusUtamaId = s.statusId
                 WHERE k.posisiId = 3
-                ORDER BY k.createdAt DESC";
+                ORDER BY k.createdAt DESC';
 
         $result = mysqli_query($this->db, $query);
         $data = [];
@@ -99,6 +99,7 @@ class WadirModel
                 $data[] = $row;
             }
         }
+
         return $data;
     }
 
@@ -107,7 +108,7 @@ class WadirModel
      */
     public function getDetailKegiatan($kegiatanId)
     {
-        $query = "SELECT 
+        $query = 'SELECT 
                     k.*, 
                     kak.*,
                     k.tanggalMulai as tanggal_mulai,
@@ -123,50 +124,57 @@ class WadirModel
                 JOIN tbl_kak kak ON k.kegiatanId = kak.kegiatanId
                 LEFT JOIN tbl_user u ON u.userId = k.userId
                 LEFT JOIN tbl_status_utama s ON k.statusUtamaId = s.statusId
-                WHERE k.kegiatanId = ?";
+                WHERE k.kegiatanId = ?';
         $stmt = mysqli_prepare($this->db, $query);
-        mysqli_stmt_bind_param($stmt, "i", $kegiatanId);
+        mysqli_stmt_bind_param($stmt, 'i', $kegiatanId);
         mysqli_stmt_execute($stmt);
+
         return mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
     }
 
     public function getIndikatorByKAK($kakId)
     {
-        $query = "SELECT bulan, indikatorKeberhasilan as nama, targetPersen as target FROM tbl_indikator_kak WHERE kakId = ?";
+        $query = 'SELECT bulan, indikatorKeberhasilan as nama, targetPersen as target FROM tbl_indikator_kak WHERE kakId = ?';
         $stmt = mysqli_prepare($this->db, $query);
-        mysqli_stmt_bind_param($stmt, "i", $kakId);
+        mysqli_stmt_bind_param($stmt, 'i', $kakId);
         mysqli_stmt_execute($stmt);
         $res = mysqli_stmt_get_result($stmt);
         $d = [];
         while ($r = mysqli_fetch_assoc($res)) {
             $d[] = $r;
-        } return $d;
+        }
+
+return $d;
     }
 
     public function getTahapanByKAK($kakId)
     {
-        $query = "SELECT namaTahapan FROM tbl_tahapan_pelaksanaan WHERE kakId = ? ORDER BY tahapanId ASC";
+        $query = 'SELECT namaTahapan FROM tbl_tahapan_pelaksanaan WHERE kakId = ? ORDER BY tahapanId ASC';
         $stmt = mysqli_prepare($this->db, $query);
-        mysqli_stmt_bind_param($stmt, "i", $kakId);
+        mysqli_stmt_bind_param($stmt, 'i', $kakId);
         mysqli_stmt_execute($stmt);
         $res = mysqli_stmt_get_result($stmt);
         $d = [];
         while ($r = mysqli_fetch_assoc($res)) {
             $d[] = $r['namaTahapan'];
-        } return $d;
+        }
+
+return $d;
     }
 
     public function getRABByKAK($kakId)
     {
-        $query = "SELECT r.*, cat.namaKategori FROM tbl_rab r JOIN tbl_kategori_rab cat ON r.kategoriId = cat.kategoriRabId WHERE r.kakId = ? ORDER BY cat.kategoriRabId ASC, r.rabItemId ASC";
+        $query = 'SELECT r.*, cat.namaKategori FROM tbl_rab r JOIN tbl_kategori_rab cat ON r.kategoriId = cat.kategoriRabId WHERE r.kakId = ? ORDER BY cat.kategoriRabId ASC, r.rabItemId ASC';
         $stmt = mysqli_prepare($this->db, $query);
-        mysqli_stmt_bind_param($stmt, "i", $kakId);
+        mysqli_stmt_bind_param($stmt, 'i', $kakId);
         mysqli_stmt_execute($stmt);
         $res = mysqli_stmt_get_result($stmt);
         $d = [];
         while ($r = mysqli_fetch_assoc($res)) {
             $d[$r['namaKategori']][] = $r;
-        } return $d;
+        }
+
+return $d;
     }
 
     /**
@@ -183,41 +191,43 @@ class WadirModel
 
         try {
             // Update status kegiatan
-            $query = "UPDATE tbl_kegiatan SET posisiId = ?, statusUtamaId = ? WHERE kegiatanId = ?";
+            $query = 'UPDATE tbl_kegiatan SET posisiId = ?, statusUtamaId = ? WHERE kegiatanId = ?';
             $stmt = mysqli_prepare($this->db, $query);
-            mysqli_stmt_bind_param($stmt, "iii", $nextPosisi, $statusProses, $kegiatanId);
+            mysqli_stmt_bind_param($stmt, 'iii', $nextPosisi, $statusProses, $kegiatanId);
 
-            if (!mysqli_stmt_execute($stmt)) {
-                throw new Exception("Gagal update kegiatan");
+            if (! mysqli_stmt_execute($stmt)) {
+                throw new Exception('Gagal update kegiatan');
             }
             mysqli_stmt_close($stmt);
 
             // Insert History
-            $historyQuery = "INSERT INTO tbl_progress_history (kegiatanId, statusId, changedByUserId, timestamp) VALUES (?, ?, ?, NOW())";
+            $historyQuery = 'INSERT INTO tbl_progress_history (kegiatanId, statusId, changedByUserId, timestamp) VALUES (?, ?, ?, NOW())';
             $stmtHistory = mysqli_prepare($this->db, $historyQuery);
-            mysqli_stmt_bind_param($stmtHistory, "iii", $kegiatanId, $statusProses, $userId);
+            mysqli_stmt_bind_param($stmtHistory, 'iii', $kegiatanId, $statusProses, $userId);
 
-            if (!mysqli_stmt_execute($stmtHistory)) {
-                 throw new Exception("Gagal catat history");
+            if (! mysqli_stmt_execute($stmtHistory)) {
+                throw new Exception('Gagal catat history');
             }
 
             $historyId = mysqli_insert_id($this->db);
             mysqli_stmt_close($stmtHistory);
 
             // Jika ada rekomendasi, simpan ke tabel komentar
-            if (!empty($rekomendasi)) {
+            if (! empty($rekomendasi)) {
                 $commentQuery = "INSERT INTO tbl_revisi_comment (progressHistoryId, komentarRevisi, targetTabel) VALUES (?, ?, 'wadir_rekomendasi')";
                 $stmtComment = mysqli_prepare($this->db, $commentQuery);
-                mysqli_stmt_bind_param($stmtComment, "is", $historyId, $rekomendasi);
+                mysqli_stmt_bind_param($stmtComment, 'is', $historyId, $rekomendasi);
                 mysqli_stmt_execute($stmtComment);
                 mysqli_stmt_close($stmtComment);
             }
 
             mysqli_commit($this->db);
+
             return true;
         } catch (Exception $e) {
             mysqli_rollback($this->db);
-            error_log("Wadir approveUsulan Error: " . $e->getMessage());
+            error_log('Wadir approveUsulan Error: '.$e->getMessage());
+
             return false;
         }
     }
@@ -262,8 +272,10 @@ class WadirModel
                 $data[] = $row;
             }
         }
+
         return $data;
     }
+
     /**
      * Mengambil data monitoring untuk Wadir dengan filtering dan pagination.
      *
@@ -273,27 +285,27 @@ class WadirModel
      * - 'ditolak': Usulan yang ditolak (statusUtamaId = 4)
      * - 'in process': Usulan yang masih dalam proses
      *
-     * @param int $page Halaman saat ini untuk pagination
-     * @param int $perPage Jumlah item per halaman
-     * @param string $search Kata kunci pencarian (nama kegiatan atau pengusul)
-     * @param string $statusFilter Filter status: 'semua', 'menunggu', 'approved', 'ditolak', 'in process'
-     * @param string $jurusanFilter Filter jurusan: 'semua' atau nama jurusan spesifik
+     * @param  int  $page  Halaman saat ini untuk pagination
+     * @param  int  $perPage  Jumlah item per halaman
+     * @param  string  $search  Kata kunci pencarian (nama kegiatan atau pengusul)
+     * @param  string  $statusFilter  Filter status: 'semua', 'menunggu', 'approved', 'ditolak', 'in process'
+     * @param  string  $jurusanFilter  Filter jurusan: 'semua' atau nama jurusan spesifik
      * @return array Array dengan key 'data' (list kegiatan) dan 'totalItems' (total records)
      */
-   public function getMonitoringData($page, $perPage, $search, $statusFilter, $jurusanFilter)
+    public function getMonitoringData($page, $perPage, $search, $statusFilter, $jurusanFilter)
     {
         $offset = ($page - 1) * $perPage;
 
         // Base Where Clause & Params Construction
-        $whereClause = " WHERE 1=1";
-        $types = "";
+        $whereClause = ' WHERE 1=1';
+        $types = '';
         $params = [];
 
         // Filter pencarian
-        if (!empty($search)) {
-            $whereClause .= " AND (k.namaKegiatan LIKE ? OR k.pemilikKegiatan LIKE ?)";
+        if (! empty($search)) {
+            $whereClause .= ' AND (k.namaKegiatan LIKE ? OR k.pemilikKegiatan LIKE ?)';
             $searchTerm = "%{$search}%";
-            $types .= "ss";
+            $types .= 'ss';
             $params[] = $searchTerm;
             $params[] = $searchTerm;
         }
@@ -301,32 +313,32 @@ class WadirModel
         // Filter status
         if ($statusFilter !== 'semua') {
             if ($statusFilter === 'ditolak') {
-                $whereClause .= " AND k.statusUtamaId = 4";
+                $whereClause .= ' AND k.statusUtamaId = 4';
             } elseif ($statusFilter === 'approved') {
-                $whereClause .= " AND k.posisiId >= 5 AND k.statusUtamaId != 4";
+                $whereClause .= ' AND k.posisiId >= 5 AND k.statusUtamaId != 4';
             } elseif ($statusFilter === 'menunggu') {
                 // FIXED: Menunggu = posisi di PPK (4) DAN statusUtama = 1 (menunggu approval)
-                $whereClause .= " AND k.posisiId = 4 AND k.statusUtamaId = 1";
+                $whereClause .= ' AND k.posisiId = 4 AND k.statusUtamaId = 1';
             } elseif ($statusFilter === 'in process') {
-                $whereClause .= " AND k.statusUtamaId != 4 AND k.posisiId < 5";
+                $whereClause .= ' AND k.statusUtamaId != 4 AND k.posisiId < 5';
             } elseif ($statusFilter === 'lpj') {
                 // Filter untuk LPJ: posisi di 1 atau 6, status 5 atau 6, dan dana sudah cair
-                $whereClause .= " AND k.posisiId IN (1, 6) AND k.statusUtamaId IN (5, 6) AND k.jumlahDicairkan IS NOT NULL";
+                $whereClause .= ' AND k.posisiId IN (1, 6) AND k.statusUtamaId IN (5, 6) AND k.jumlahDicairkan IS NOT NULL';
             }
         }
 
         // Filter jurusan
         if ($jurusanFilter !== 'semua') {
-            $whereClause .= " AND k.jurusanPenyelenggara = ?";
-            $types .= "s";
+            $whereClause .= ' AND k.jurusanPenyelenggara = ?';
+            $types .= 's';
             $params[] = $jurusanFilter;
         }
 
         // 1. Execute Count Query
-        $countQuery = "SELECT COUNT(*) as total FROM tbl_kegiatan k" . $whereClause;
+        $countQuery = 'SELECT COUNT(*) as total FROM tbl_kegiatan k'.$whereClause;
         $stmtCount = mysqli_prepare($this->db, $countQuery);
 
-        if ($types !== "") {
+        if ($types !== '') {
             mysqli_stmt_bind_param($stmtCount, $types, ...$params);
         }
 
@@ -334,7 +346,6 @@ class WadirModel
         $totalResult = mysqli_stmt_get_result($stmtCount);
         $totalItems = ($totalResult) ? mysqli_fetch_assoc($totalResult)['total'] : 0;
         mysqli_stmt_close($stmtCount);
-
 
         // 2. Execute Data Query
         $query = "SELECT 
@@ -365,21 +376,20 @@ class WadirModel
                         ELSE 'In Process'
                     END as status
                   FROM tbl_kegiatan k
-                  LEFT JOIN tbl_lpj l ON k.kegiatanId = l.kegiatanId" . $whereClause;
-                  
+                  LEFT JOIN tbl_lpj l ON k.kegiatanId = l.kegiatanId".$whereClause;
 
         // Add ORDER BY and LIMIT
-        $query .= " ORDER BY k.createdAt DESC LIMIT ? OFFSET ?";
-        
+        $query .= ' ORDER BY k.createdAt DESC LIMIT ? OFFSET ?';
+
         // Add limit/offset to params
-        $typesWithLimit = $types . "ii";
+        $typesWithLimit = $types.'ii';
         $paramsWithLimit = $params;
         $paramsWithLimit[] = $perPage;
         $paramsWithLimit[] = $offset;
 
         $stmt = mysqli_prepare($this->db, $query);
         mysqli_stmt_bind_param($stmt, $typesWithLimit, ...$paramsWithLimit);
-        
+
         mysqli_stmt_execute($stmt);
         $result = mysqli_stmt_get_result($stmt);
 
@@ -393,7 +403,7 @@ class WadirModel
 
         return [
             'data' => $data,
-            'totalItems' => $totalItems
+            'totalItems' => $totalItems,
         ];
     }
 
@@ -407,6 +417,7 @@ class WadirModel
                 $list[] = $row['jurusan'];
             }
         }
+
         return $list;
     }
 }

@@ -3,28 +3,30 @@
 namespace App\Services;
 
 use Exception;
+use Mpdf\Mpdf;
 
 class PdfService
 {
     /**
      * Generate PDF from View
      *
-     * @param string $viewPath Path to the view file (e.g., __DIR__ . '/../views/pdf/template.php')
-     * @param array $data Data to be extracted into the view
-     * @param string $filename Output filename
-     * @param string $mode Output mode: 'I' (Inline), 'D' (Download), 'F' (File), 'S' (String)
-     * @param array $config MPDF configuration options
+     * @param  string  $viewPath  Path to the view file (e.g., __DIR__ . '/../views/pdf/template.php')
+     * @param  array  $data  Data to be extracted into the view
+     * @param  string  $filename  Output filename
+     * @param  string  $mode  Output mode: 'I' (Inline), 'D' (Download), 'F' (File), 'S' (String)
+     * @param  array  $config  MPDF configuration options
      * @return mixed
+     *
      * @throws Exception
      */
     public function generate($viewPath, $data = [], $filename = 'document.pdf', $mode = 'I', $config = [])
     {
         // Check if mPDF is installed
-        if (!class_exists('\Mpdf\Mpdf')) {
-            throw new Exception("mPDF library not found. Please run: composer require mpdf/mpdf");
+        if (! class_exists('\Mpdf\Mpdf')) {
+            throw new Exception('mPDF library not found. Please run: composer require mpdf/mpdf');
         }
 
-        if (!file_exists($viewPath)) {
+        if (! file_exists($viewPath)) {
             throw new Exception("PDF Template not found: {$viewPath}");
         }
 
@@ -35,7 +37,7 @@ class PdfService
             include $viewPath;
         } catch (Exception $e) {
             ob_end_clean();
-            throw new Exception("Error rendering PDF template: " . $e->getMessage());
+            throw new Exception('Error rendering PDF template: '.$e->getMessage());
         }
         $html = ob_get_clean();
 
@@ -51,7 +53,7 @@ class PdfService
             'margin_footer' => 10,
             'orientation' => 'P',
             'default_font' => 'Arial',
-            'tempDir' => sys_get_temp_dir() // Tambahkan temp directory
+            'tempDir' => sys_get_temp_dir(), // Tambahkan temp directory
         ];
 
         $mpdfConfig = array_merge($defaultConfig, $config);
@@ -60,9 +62,9 @@ class PdfService
         try {
             // Increase PCRE backtrack limit to prevent mPDF crash on large HTML/base64 strings
             @ini_set('pcre.backtrack_limit', '10000000');
-            
-            $mpdf = new \Mpdf\Mpdf($mpdfConfig);
-            
+
+            $mpdf = new Mpdf($mpdfConfig);
+
             // Set Metadata
             if (isset($data['pdf_title'])) {
                 $mpdf->SetTitle($data['pdf_title']);
@@ -73,18 +75,19 @@ class PdfService
             $mpdf->SetCreator('DocuTrack System');
 
             $mpdf->WriteHTML($html);
-            
+
             if (app()->environment('testing') && $mode === 'I') {
                 $pdfContent = $mpdf->Output($filename, 'S');
+
                 return response($pdfContent)
                     ->header('Content-Type', 'application/pdf')
-                    ->header('Content-Disposition', 'inline; filename="' . $filename . '"');
+                    ->header('Content-Disposition', 'inline; filename="'.$filename.'"');
             }
 
             return $mpdf->Output($filename, $mode);
-            
+
         } catch (Exception $e) {
-            throw new Exception("mPDF Error: " . $e->getMessage());
+            throw new Exception('mPDF Error: '.$e->getMessage());
         }
     }
 }

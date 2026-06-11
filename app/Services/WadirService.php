@@ -3,15 +3,15 @@
 namespace App\Services;
 
 use App\Models\WadirModel;
-use App\Services\WorkflowService;
-use App\Services\LogStatusService;
 use Exception;
 use Throwable;
 
 class WadirService
 {
     private $model;
+
     private $logStatusService;
+
     private WorkflowService $workflowService;
 
     public function __construct($db)
@@ -65,8 +65,8 @@ class WadirService
     /**
      * Menyetujui usulan dan mengirim notifikasi.
      *
-     * @param int $kegiatanId
-     * @param string $rekomendasi
+     * @param  int  $kegiatanId
+     * @param  string  $rekomendasi
      * @return bool
      */
     public function approveUsulan($kegiatanId, $rekomendasi = '')
@@ -90,7 +90,7 @@ class WadirService
                 }
             } catch (Throwable $e) {
                 // Jangan gagalkan proses approval hanya karena notifikasi gagal
-                error_log("Gagal membuat notifikasi approval Wadir untuk kegiatan ID {$kegiatanId}: " . $e->getMessage());
+                error_log("Gagal membuat notifikasi approval Wadir untuk kegiatan ID {$kegiatanId}: ".$e->getMessage());
             }
         }
 

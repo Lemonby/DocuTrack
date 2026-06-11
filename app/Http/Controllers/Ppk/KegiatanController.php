@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Ppk;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Kegiatan;
 use App\Services\KegiatanService;
 use App\Services\WorkflowService;
+use Illuminate\Http\Request;
 
 class KegiatanController extends Controller
 {
@@ -36,7 +36,7 @@ class KegiatanController extends Controller
             'Administrasi Niaga',
             'Akuntansi',
             'Teknik Mesin',
-            'Teknik Grafika dan Penerbitan'
+            'Teknik Grafika dan Penerbitan',
         ];
 
         return view('ppk.kegiatan.index', compact('list_kegiatan', 'jurusan_list'));
@@ -44,10 +44,10 @@ class KegiatanController extends Controller
 
     public function show($id)
     {
-        $kegiatan = (new KegiatanService())->getDetailLengkap($id);
-        
+        $kegiatan = (new KegiatanService)->getDetailLengkap($id);
+
         $status = $kegiatan->statusUtama->nama_status_usulan ?? 'Menunggu';
-        
+
         $kegiatan_data = [
             'nama_pengusul' => $kegiatan->user->nama ?? $kegiatan->pemilik_kegiatan,
             'nim_nip' => $kegiatan->nim_pelaksana,
@@ -67,7 +67,7 @@ class KegiatanController extends Controller
         ];
 
         $iku_data = $kegiatan->kak ? explode(',', $kegiatan->kak->iku ?? '') : [];
-        
+
         $tahapan_pelaksanaan = [];
         $indikator_keberhasilan = [];
         if ($kegiatan->kak) {
@@ -75,7 +75,7 @@ class KegiatanController extends Controller
                 if ($ind->bulan) {
                     $indikator_keberhasilan[$ind->bulan] = [
                         'deskripsi' => $ind->indikator_keberhasilan,
-                        'target_persen' => $ind->target_persen
+                        'target_persen' => $ind->target_persen,
                     ];
                 }
             }
@@ -95,7 +95,7 @@ class KegiatanController extends Controller
                     'sat1' => $rab->sat1,
                     'vol2' => $rab->vol2,
                     'sat2' => $rab->sat2,
-                    'harga' => $rab->harga
+                    'harga' => $rab->harga,
                 ];
             }
         }
@@ -105,10 +105,10 @@ class KegiatanController extends Controller
 
     public function store(Request $request, $id)
     {
-        $workflowService = new WorkflowService();
+        $workflowService = new WorkflowService;
         // Assume basic approval for now. You can expand based on request logic.
         $workflowService->moveToNextPosition($id, WorkflowService::POSITION_PPK);
-        
-        return redirect()->route('ppk.dashboard')->with('success', 'Usulan #' . $id . ' berhasil diproses.');
+
+        return redirect()->route('ppk.dashboard')->with('success', 'Usulan #'.$id.' berhasil diproses.');
     }
 }

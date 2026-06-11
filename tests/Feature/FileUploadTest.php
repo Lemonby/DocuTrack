@@ -3,25 +3,26 @@
 namespace Tests\Feature;
 
 use App\Services\FileUploadService;
-use Tests\TestCase;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\TestDox;
+use Tests\TestCase;
 
 class FileUploadTest extends TestCase
 {
     private FileUploadService $fileUploadService;
+
     private string $tempUploadPath;
 
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         // Define DOCUTRACK_ROOT if not defined
-        if (!defined('DOCUTRACK_ROOT')) {
+        if (! defined('DOCUTRACK_ROOT')) {
             define('DOCUTRACK_ROOT', base_path());
         }
 
-        $this->fileUploadService = new FileUploadService();
+        $this->fileUploadService = new FileUploadService;
         $this->tempUploadPath = $this->fileUploadService->getUploadBasePath();
     }
 
@@ -36,7 +37,9 @@ class FileUploadTest extends TestCase
 
     private function deleteDirRecursively(string $dir): void
     {
-        if (!is_dir($dir)) return;
+        if (! is_dir($dir)) {
+            return;
+        }
         $files = array_diff(scandir($dir), ['.', '..']);
         foreach ($files as $file) {
             $path = "$dir/$file";
@@ -66,7 +69,7 @@ class FileUploadTest extends TestCase
         $publicPath = $this->fileUploadService->uploadProfileImage($fileArray);
 
         $this->assertStringContainsString('/docutrack/public/uploads/profiles/', $publicPath);
-        $absolutePath = DOCUTRACK_ROOT . str_replace('/docutrack', '', $publicPath);
+        $absolutePath = DOCUTRACK_ROOT.str_replace('/docutrack', '', $publicPath);
         $this->assertFileExists($absolutePath);
         $this->assertEquals('fake-image-content', file_get_contents($absolutePath));
     }
@@ -116,7 +119,7 @@ class FileUploadTest extends TestCase
         $filename = $this->fileUploadService->uploadLpjDocument($fileArray, 45);
 
         $this->assertStringContainsString('bukti_lpj_45_', $filename);
-        $this->assertFileExists($this->tempUploadPath . '/lpj/' . $filename);
+        $this->assertFileExists($this->tempUploadPath.'/lpj/'.$filename);
     }
 
     /**
@@ -140,7 +143,7 @@ class FileUploadTest extends TestCase
         $filename = $this->fileUploadService->uploadSuratPengantar($fileArray);
 
         $this->assertStringContainsString('surat_pengantar_', $filename);
-        $this->assertFileExists($this->tempUploadPath . '/surat/' . $filename);
+        $this->assertFileExists($this->tempUploadPath.'/surat/'.$filename);
     }
 
     /**
@@ -167,7 +170,7 @@ class FileUploadTest extends TestCase
         $this->assertStringContainsString('kak_proposal_', $info['filename']);
         $this->assertEquals('16.00 B', $info['size_formatted']);
 
-        $absolutePath = $this->tempUploadPath . '/kak/' . $info['filename'];
+        $absolutePath = $this->tempUploadPath.'/kak/'.$info['filename'];
         $this->assertFileExists($absolutePath);
 
         // Test getFileInfo
@@ -175,7 +178,7 @@ class FileUploadTest extends TestCase
         $this->assertEquals(16, $fileInfo['size']);
 
         // Test delete
-        $deleted = $this->fileUploadService->delete('kak/' . $info['filename']);
+        $deleted = $this->fileUploadService->delete('kak/'.$info['filename']);
         $this->assertTrue($deleted);
         $this->assertFileDoesNotExist($absolutePath);
     }
@@ -183,13 +186,16 @@ class FileUploadTest extends TestCase
 
 namespace App\Services;
 
-function move_uploaded_file($filename, $destination) {
+function move_uploaded_file($filename, $destination)
+{
     return copy($filename, $destination);
 }
 
-function finfo_file($finfo, $filename) {
+function finfo_file($finfo, $filename)
+{
     if (str_contains($filename, 'pdf')) {
         return 'application/pdf';
     }
+
     return 'image/jpeg';
 }

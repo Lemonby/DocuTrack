@@ -2,27 +2,27 @@
 
 namespace App\Services;
 
-use App\Exceptions\BusinessLogicException;
 use App\Models\kegiatan\KegiatanModel;
 use App\Models\VerifikatorModel;
-use App\Services\LogStatusService;
-use App\Services\ValidationService;
-use App\Services\WorkflowService;
 use Throwable;
 
 class VerifikatorService
 {
     private VerifikatorModel $verifikatorModel;
+
     private LogStatusService $logStatusService;
+
     private ValidationService $validationService;
+
     private KegiatanModel $kegiatanModel;
+
     private WorkflowService $workflowService;
 
     public function __construct($db)
     {
         $this->verifikatorModel = new VerifikatorModel($db);
         $this->logStatusService = new LogStatusService($db);
-        $this->validationService = new ValidationService();
+        $this->validationService = new ValidationService;
         $this->kegiatanModel = new KegiatanModel($db);
         $this->workflowService = new WorkflowService($db);
     }
@@ -81,7 +81,7 @@ class VerifikatorService
         $additionalData = [
             'kodeMak' => $kodeMak,
             'danaDisetujui' => $danaDisetujui,
-            'umpanBalik' => $catatan
+            'umpanBalik' => $catatan,
         ];
 
         $result = $this->workflowService->moveToNextPosition(
@@ -103,9 +103,10 @@ class VerifikatorService
                     );
                 }
             } catch (Throwable $e) {
-                error_log("Gagal membuat notifikasi persetujuan untuk kegiatan ID {$kegiatanId}: " . $e->getMessage());
+                error_log("Gagal membuat notifikasi persetujuan untuk kegiatan ID {$kegiatanId}: ".$e->getMessage());
             }
         }
+
         return $result;
     }
 
@@ -128,11 +129,11 @@ class VerifikatorService
     {
         $this->validationService->validate(['kegiatan_id' => $kegiatanId, 'komentar' => $komentarRevisi], [
             'kegiatan_id' => 'required|numeric',
-            'komentar' => 'required|array'
+            'komentar' => 'required|array',
         ]);
 
         $comments = [];
-        foreach($komentarRevisi as $komentar) {
+        foreach ($komentarRevisi as $komentar) {
             $comments[] = "Field '{$komentar['targetKolom']}': {$komentar['komentar']}";
         }
         $commentString = implode("\n", $comments);

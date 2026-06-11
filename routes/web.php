@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\CaptchaController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CaptchaController;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('beranda');
@@ -11,43 +11,44 @@ Route::get('/', function () {
 Route::get('/captcha', [CaptchaController::class, 'generate']);
 Route::post('/login', [AuthController::class, 'login']);
 
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\Admin\UsulanController;
+use App\Http\Controllers\Admin\AkunController;
 use App\Http\Controllers\Admin\KegiatanController;
 use App\Http\Controllers\Admin\LpjController;
-use App\Http\Controllers\Admin\AkunController;
-use App\Http\Controllers\Bendahara\DashboardController as BendaharaDashboardController;
-use App\Http\Controllers\Bendahara\PencairanDanaController;
-use App\Http\Controllers\Bendahara\LpjController as BendaharaLpjController;
-use App\Http\Controllers\Bendahara\RiwayatController;
+use App\Http\Controllers\Admin\UsulanController;
 use App\Http\Controllers\Bendahara\AkunController as BendaharaAkunController;
-use App\Http\Controllers\Verifikator\VerifikatorController;
-use App\Http\Controllers\Verifikator\TelaahController;
-use App\Http\Controllers\Verifikator\RiwayatController as VerifikatorRiwayatController;
-use App\Http\Controllers\Verifikator\MonitoringController as VerifikatorMonitoringController;
-use App\Http\Controllers\Verifikator\AkunController as VerifikatorAkunController;
-use App\Http\Controllers\Ppk\PpkController;
-use App\Http\Controllers\Ppk\KegiatanController as PpkKegiatanController;
-use App\Http\Controllers\Ppk\RiwayatController as PpkRiwayatController;
-use App\Http\Controllers\Ppk\MonitoringController as PpkMonitoringController;
-use App\Http\Controllers\Ppk\AkunController as PpkAkunController;
-use App\Http\Controllers\Wadir\WadirController;
-use App\Http\Controllers\Wadir\KegiatanController as WadirKegiatanController;
-use App\Http\Controllers\Wadir\RiwayatController as WadirRiwayatController;
-use App\Http\Controllers\Wadir\MonitoringController as WadirMonitoringController;
-use App\Http\Controllers\Wadir\AkunController as WadirAkunController;
+use App\Http\Controllers\Bendahara\DashboardController as BendaharaDashboardController;
+use App\Http\Controllers\Bendahara\LpjController as BendaharaLpjController;
+use App\Http\Controllers\Bendahara\PencairanDanaController;
+use App\Http\Controllers\Bendahara\RiwayatController;
+use App\Http\Controllers\CetakKakController;
+use App\Http\Controllers\CetakLpjController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Direktur\AkunController as DirekturAkunController;
 use App\Http\Controllers\Direktur\DirekturController;
 use App\Http\Controllers\Direktur\IntegritasController;
 use App\Http\Controllers\Direktur\MonitoringController as DirekturMonitoringController;
-use App\Http\Controllers\Direktur\AkunController as DirekturAkunController;
+use App\Http\Controllers\Ppk\AkunController as PpkAkunController;
+use App\Http\Controllers\Ppk\KegiatanController as PpkKegiatanController;
+use App\Http\Controllers\Ppk\MonitoringController as PpkMonitoringController;
+use App\Http\Controllers\Ppk\PpkController;
+use App\Http\Controllers\Ppk\RiwayatController as PpkRiwayatController;
+use App\Http\Controllers\SuperAdmin\AkunController as SuperAdminAkunController;
+use App\Http\Controllers\SuperAdmin\IkuController as SuperAdminIkuController;
 use App\Http\Controllers\SuperAdmin\SuperAdminController;
 use App\Http\Controllers\SuperAdmin\UserManagementController as SuperAdminUserController;
-use App\Http\Controllers\SuperAdmin\IkuController as SuperAdminIkuController;
-use App\Http\Controllers\SuperAdmin\AkunController as SuperAdminAkunController;
-use App\Http\Controllers\CetakKakController;
-use App\Http\Controllers\CetakLpjController;
-use App\Http\Middleware\CheckRole;
+use App\Http\Controllers\Verifikator\AkunController as VerifikatorAkunController;
+use App\Http\Controllers\Verifikator\MonitoringController as VerifikatorMonitoringController;
+use App\Http\Controllers\Verifikator\RiwayatController as VerifikatorRiwayatController;
+use App\Http\Controllers\Verifikator\TelaahController;
+use App\Http\Controllers\Verifikator\VerifikatorController;
+use App\Http\Controllers\Wadir\AkunController as WadirAkunController;
+use App\Http\Controllers\Wadir\KegiatanController as WadirKegiatanController;
+use App\Http\Controllers\Wadir\MonitoringController as WadirMonitoringController;
+use App\Http\Controllers\Wadir\RiwayatController as WadirRiwayatController;
+use App\Http\Controllers\Wadir\WadirController;
+use App\Http\Controllers\WebNotifikasiController;
 use App\Http\Middleware\CheckDepartmentAccess;
+use App\Http\Middleware\CheckRole;
 
 // Authentication required routes
 Route::middleware([CheckRole::class])->group(function () {
@@ -57,12 +58,12 @@ Route::middleware([CheckRole::class])->group(function () {
     Route::get('/cetak-lpj/{id}', [CetakLpjController::class, 'cetak'])->name('cetak.lpj')->middleware(CheckDepartmentAccess::class);
 
     // Web Notification API routes
-    Route::get('/api/notifikasi', [\App\Http\Controllers\WebNotifikasiController::class, 'index']);
-    Route::post('/api/notifikasi/baca/{id}', [\App\Http\Controllers\WebNotifikasiController::class, 'markAsRead']);
-    Route::post('/api/notifikasi/baca-semua', [\App\Http\Controllers\WebNotifikasiController::class, 'markAllAsRead']);
+    Route::get('/api/notifikasi', [WebNotifikasiController::class, 'index']);
+    Route::post('/api/notifikasi/baca/{id}', [WebNotifikasiController::class, 'markAsRead']);
+    Route::post('/api/notifikasi/baca-semua', [WebNotifikasiController::class, 'markAllAsRead']);
 
     // Admin routes
-    Route::prefix('admin')->middleware([CheckRole::class . ':admin', CheckDepartmentAccess::class])->group(function () {
+    Route::prefix('admin')->middleware([CheckRole::class.':admin', CheckDepartmentAccess::class])->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'adminDashboard'])->name('admin.dashboard');
 
         // Usulan (Pengajuan KAK)
@@ -89,7 +90,7 @@ Route::middleware([CheckRole::class])->group(function () {
     });
 
     // ─── BENDAHARA ROUTES ────────────────────────────────────────────
-    Route::prefix('bendahara')->middleware(CheckRole::class . ':bendahara')->group(function () {
+    Route::prefix('bendahara')->middleware(CheckRole::class.':bendahara')->group(function () {
         Route::get('/dashboard', [BendaharaDashboardController::class, 'index'])->name('bendahara.dashboard');
 
         // Pencairan Dana
@@ -114,7 +115,7 @@ Route::middleware([CheckRole::class])->group(function () {
     });
 
     // ─── VERIFIKATOR ROUTES ──────────────────────────────────────────
-    Route::prefix('verifikator')->middleware(CheckRole::class . ':verifikator')->group(function () {
+    Route::prefix('verifikator')->middleware(CheckRole::class.':verifikator')->group(function () {
         Route::get('/dashboard', [VerifikatorController::class, 'dashboard'])->name('verifikator.dashboard');
 
         // Telaah
@@ -135,7 +136,7 @@ Route::middleware([CheckRole::class])->group(function () {
     });
 
     // ─── PPK ROUTES ────────────────────────────────────────────────
-    Route::prefix('ppk')->middleware(CheckRole::class . ':ppk')->group(function () {
+    Route::prefix('ppk')->middleware(CheckRole::class.':ppk')->group(function () {
         Route::get('/dashboard', [PpkController::class, 'dashboard'])->name('ppk.dashboard');
 
         // Kegiatan
@@ -156,7 +157,7 @@ Route::middleware([CheckRole::class])->group(function () {
     });
 
     // ─── WADIR ROUTES ──────────────────────────────────────────────
-    Route::prefix('wadir')->middleware(CheckRole::class . ':wadir')->group(function () {
+    Route::prefix('wadir')->middleware(CheckRole::class.':wadir')->group(function () {
         Route::get('/dashboard', [WadirController::class, 'dashboard'])->name('wadir.dashboard');
         Route::get('/kegiatan', [WadirKegiatanController::class, 'index'])->name('wadir.kegiatan.index');
         Route::get('/kegiatan/show/{id}', [WadirKegiatanController::class, 'show'])->name('wadir.kegiatan.show');
@@ -170,7 +171,7 @@ Route::middleware([CheckRole::class])->group(function () {
     });
 
     // ─── DIREKTUR ROUTES ───────────────────────────────────────────
-    Route::prefix('direktur')->middleware(CheckRole::class . ':direktur')->group(function () {
+    Route::prefix('direktur')->middleware(CheckRole::class.':direktur')->group(function () {
         Route::get('/dashboard', [DirekturController::class, 'dashboard'])->name('direktur.dashboard');
         Route::get('/dashboard/api/dana-per-jurusan', [DirekturController::class, 'getDanaPerJurusan'])->name('direktur.dashboard.api.dana');
         Route::get('/monitoring', [DirekturMonitoringController::class, 'index'])->name('direktur.monitoring.index');
@@ -182,7 +183,7 @@ Route::middleware([CheckRole::class])->group(function () {
     });
 
     // ─── SUPERADMIN ROUTES ─────────────────────────────────────────
-    Route::prefix('superadmin')->middleware(CheckRole::class . ':superadmin')->group(function () {
+    Route::prefix('superadmin')->middleware(CheckRole::class.':superadmin')->group(function () {
         Route::get('/dashboard', [SuperAdminController::class, 'dashboard'])->name('superadmin.dashboard');
         Route::get('/get-ai-analysis', [SuperAdminController::class, 'getAiAnalysis'])->name('superadmin.ai.analysis');
         Route::get('/kelola-akun', [SuperAdminUserController::class, 'index'])->name('superadmin.users.index');

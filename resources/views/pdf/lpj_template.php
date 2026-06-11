@@ -13,17 +13,22 @@ $tanggal_mulai = $kegiatan_data['tanggal_mulai'] ?? date('Y-m-d');
 $tanggal_selesai = $kegiatan_data['tanggal_selesai'] ?? '';
 
 // Ambil tahun dari tanggal mulai untuk Tahun Anggaran
-$tahun_anggaran = (int) date('Y'); 
+$tahun_anggaran = (int) date('Y');
 
-if (!function_exists('formatRupiah')) {
-    function formatRupiah($angka) {
-        return "Rp " . number_format($angka ?? 0, 0, ',', '.');
+if (! function_exists('formatRupiah')) {
+    function formatRupiah($angka)
+    {
+        return 'Rp '.number_format($angka ?? 0, 0, ',', '.');
     }
 }
 
-if (!function_exists('formatTanggal')) {
-    function formatTanggal($date) {
-        if (empty($date) || $date === '0000-00-00') return '-';
+if (! function_exists('formatTanggal')) {
+    function formatTanggal($date)
+    {
+        if (empty($date) || $date === '0000-00-00') {
+            return '-';
+        }
+
         return date('d F Y', strtotime($date));
     }
 }
@@ -278,17 +283,17 @@ $grand_total_rab = 0;
 <div class="cover-page-container">
     <?php
     // Path logo yang benar
-    $logoPath = __DIR__ . '/../../../public/assets/images/logo/logoPnj.jpeg';
-    
-    // Gunakan base64 encoding jika file ada, atau skip jika tidak ada
-    if (file_exists($logoPath)) {
-        $imageData = base64_encode(file_get_contents($logoPath));
-        $src = 'data:image/jpeg;base64,' . $imageData;
-    } else {
-        // Fallback: gunakan URL atau skip
-        $src = '/docutrack/public/assets/images/logo/logoPnj.jpeg';
-    }
-    ?>
+    $logoPath = __DIR__.'/../../../public/assets/images/logo/logoPnj.jpeg';
+
+// Gunakan base64 encoding jika file ada, atau skip jika tidak ada
+if (file_exists($logoPath)) {
+    $imageData = base64_encode(file_get_contents($logoPath));
+    $src = 'data:image/jpeg;base64,'.$imageData;
+} else {
+    // Fallback: gunakan URL atau skip
+    $src = '/docutrack/public/assets/images/logo/logoPnj.jpeg';
+}
+?>
     <img src="<?= $src; ?>" class="cover-logo" alt="Logo PNJ" style="width: 130px;">
 
     <div class="cover-main-title">
@@ -386,41 +391,44 @@ $grand_total_rab = 0;
         </tr>
     </thead>
     <tbody>
-        <?php if (!empty($indikator_data)): ?>
-            <?php $no = 1; foreach ($indikator_data as $item): ?>
+        <?php if (! empty($indikator_data)) { ?>
+            <?php $no = 1;
+            foreach ($indikator_data as $item) { ?>
             <tr>
                 <td class="text-center"><?= $no++; ?></td>
                 <td class="text-center"><?= htmlspecialchars($item['bulan'] ?? '-'); ?></td>
                 <td><?= htmlspecialchars($item['nama'] ?? $item['indikatorKeberhasilan'] ?? '-'); ?></td>
                 <td class="text-center"><?= htmlspecialchars($item['target'] ?? $item['targetPersen'] ?? '0'); ?>%</td>
             </tr>
-            <?php endforeach; ?>
-        <?php else: ?>
+            <?php } ?>
+        <?php } else { ?>
             <tr>
                 <td colspan="4" class="text-center" style="font-style: italic;">Tidak ada data indikator</td>
             </tr>
-        <?php endif; ?>
+        <?php } ?>
     </tbody>
 </table>
 
 <div class="subsection-header">Indikator Kinerja Utama :</div>
 <ul class="iku-list">
-    <?php if (!empty($iku_data)): ?>
-        <?php foreach ($iku_data as $iku_item): ?>
+    <?php if (! empty($iku_data)) { ?>
+        <?php foreach ($iku_data as $iku_item) { ?>
             <li><?= htmlspecialchars($iku_item); ?></li>
-        <?php endforeach; ?>
-    <?php else: ?>
+        <?php } ?>
+    <?php } else { ?>
         <li style="font-style: italic;">Tidak ada IKU yang dipilih</li>
-    <?php endif; ?>
+    <?php } ?>
 </ul>
 
 <div class="page-break"></div>
 
 <div class="section-header">II. Rincian Anggaran Biaya (RAB)</div>
 
-<?php if (!empty($rab_data)): ?>
-    <?php foreach ($rab_data as $kategori => $items): ?>
-        <?php if (empty($items)) continue; ?>
+<?php if (! empty($rab_data)) { ?>
+    <?php foreach ($rab_data as $kategori => $items) { ?>
+        <?php if (empty($items)) {
+            continue;
+        } ?>
         <?php $subtotal = 0; ?>
         
         <div class="subsection-header"><?= htmlspecialchars($kategori); ?></div>
@@ -441,7 +449,7 @@ $grand_total_rab = 0;
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($items as $item): ?>
+                <?php foreach ($items as $item) { ?>
                     <?php
                     $vol1 = $item['vol1'] ?? 0;
                     $vol2 = $item['vol2'] ?? 1;
@@ -460,7 +468,7 @@ $grand_total_rab = 0;
                         <td class="text-center"><?= htmlspecialchars($sat2); ?></td>
                         <td class="text-right"><?= formatRupiah($total_item); ?></td>
                     </tr>
-                <?php endforeach; ?>
+                <?php } ?>
                 <tr class="subtotal-row">
                     <td colspan="6" class="text-right">Sub Total</td>
                     <td class="text-right"><?= formatRupiah($subtotal); ?></td>
@@ -469,16 +477,16 @@ $grand_total_rab = 0;
         </table>
         
         <?php $grand_total_rab += $subtotal; ?>
-    <?php endforeach; ?>
+    <?php } ?>
     
     <table class="rab-table">
         <tr class="grand-total-row">
             <td class="text-right" style="padding: 10px;">Grand Total : <?= formatRupiah($grand_total_rab); ?></td>
         </tr>
     </table>
-<?php else: ?>
+<?php } else { ?>
     <div class="content-text" style="font-style: italic;">Tidak ada data RAB</div>
-<?php endif; ?>
+<?php } ?>
 
 <div class="section-header">III. Jumlah Dana yang Dicairkan</div>
 
@@ -494,7 +502,7 @@ $grand_total_rab = 0;
         <td colspan="3" style="padding-top: 15px;">
             <span class="checkbox" style="<?= ($kegiatan_data['wadir_tujuan'] ?? '') ? 'background-color: #000;' : ''; ?>"></span> Uang Muka
             &nbsp;&nbsp;&nbsp;&nbsp;
-            <span class="checkbox" style="<?= !($kegiatan_data['wadir_tujuan'] ?? '') ? 'background-color: #000;' : ''; ?>"></span> Dana Penuh
+            <span class="checkbox" style="<?= ! ($kegiatan_data['wadir_tujuan'] ?? '') ? 'background-color: #000;' : ''; ?>"></span> Dana Penuh
         </td>
     </tr>
 </table>
@@ -503,10 +511,12 @@ $grand_total_rab = 0;
 
 <div class="section-header">IV. Laporan Realisasi Anggaran (LPJ)</div>
 
-<?php if (!empty($realisasi_data)): ?>
+<?php if (! empty($realisasi_data)) { ?>
     <?php $total_realisasi_kegiatan = 0; ?>
-    <?php foreach ($realisasi_data as $kategori => $items): ?>
-        <?php if (empty($items)) continue; ?>
+    <?php foreach ($realisasi_data as $kategori => $items) { ?>
+        <?php if (empty($items)) {
+            continue;
+        } ?>
         <?php $subtotal_realisasi = 0; ?>
         
         <div class="subsection-header"><?= htmlspecialchars($kategori); ?></div>
@@ -527,7 +537,7 @@ $grand_total_rab = 0;
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($items as $item): ?>
+                <?php foreach ($items as $item) { ?>
                     <?php
                     $vol1 = $item['vol1'] ?? 0;
                     $vol2 = $item['vol2'] ?? 1;
@@ -545,7 +555,7 @@ $grand_total_rab = 0;
                         <td class="text-center"><?= htmlspecialchars($sat2); ?></td>
                         <td class="text-right"><?= formatRupiah($realisasi); ?></td>
                     </tr>
-                <?php endforeach; ?>
+                <?php } ?>
                 <tr class="subtotal-row">
                     <td colspan="6" class="text-right">Sub Total Realisasi</td>
                     <td class="text-right"><?= formatRupiah($subtotal_realisasi); ?></td>
@@ -554,24 +564,24 @@ $grand_total_rab = 0;
         </table>
         
         <?php $total_realisasi_kegiatan += $subtotal_realisasi; ?>
-    <?php endforeach; ?>
+    <?php } ?>
     
     <table class="rab-table">
         <tr class="grand-total-row">
             <td class="text-right" style="padding: 10px;">Grand Total Realisasi : <?= formatRupiah($total_realisasi_kegiatan); ?></td>
         </tr>
     </table>
-<?php else: ?>
+<?php } else { ?>
     <div class="content-text" style="font-style: italic;">Tidak ada data Realisasi</div>
-<?php endif; ?>
+<?php } ?>
 
 <?php
 // Cek apakah ada bukti pembayaran yang diunggah
 $hasImages = false;
-if (!empty($realisasi_data)) {
+if (! empty($realisasi_data)) {
     foreach ($realisasi_data as $kategori => $items) {
         foreach ($items as $item) {
-            if (!empty($item['file_bukti'])) {
+            if (! empty($item['file_bukti'])) {
                 $hasImages = true;
                 break 2;
             }
@@ -580,41 +590,43 @@ if (!empty($realisasi_data)) {
 }
 ?>
 
-<?php if ($hasImages): ?>
+<?php if ($hasImages) { ?>
     <div class="page-break"></div>
     <div class="section-header">V. Lampiran Bukti Pertanggungjawaban (Dokumentasi)</div>
     
     <div style="margin-top: 15px;">
-        <?php foreach ($realisasi_data as $kategori => $items): ?>
-            <?php foreach ($items as $item): ?>
-                <?php 
-                if (empty($item['file_bukti'])) continue; 
-                $buktiPath = storage_path('app/public/' . $item['file_bukti']);
+        <?php foreach ($realisasi_data as $kategori => $items) { ?>
+            <?php foreach ($items as $item) { ?>
+                <?php
+                if (empty($item['file_bukti'])) {
+                    continue;
+                }
+                $buktiPath = storage_path('app/public/'.$item['file_bukti']);
                 $src = null;
                 if (file_exists($buktiPath)) {
                     try {
                         $imageData = base64_encode(file_get_contents($buktiPath));
                         $mime = mime_content_type($buktiPath) ?: 'image/jpeg';
-                        $src = 'data:' . $mime . ';base64,' . $imageData;
-                    } catch (\Exception $e) {
+                        $src = 'data:'.$mime.';base64,'.$imageData;
+                    } catch (Exception $e) {
                         $src = null;
                     }
                 }
                 ?>
                 <div class="bukti-item">
                     <div class="bukti-title"><?= htmlspecialchars($kategori); ?> - Uraian: <?= htmlspecialchars($item['uraian'] ?? '-'); ?></div>
-                    <?php if ($src): ?>
+                    <?php if ($src) { ?>
                         <img src="<?= $src; ?>" class="bukti-image" alt="Bukti Pembayaran">
-                    <?php else: ?>
+                    <?php } else { ?>
                         <div style="padding: 20px; border: 1px dashed #ccc; color: #999; font-style: italic; font-size: 10pt;">
                             Berkas bukti pembayaran tidak ditemukan atau tidak dapat dimuat (<?= htmlspecialchars($item['file_bukti']); ?>)
                         </div>
-                    <?php endif; ?>
+                    <?php } ?>
                 </div>
-            <?php endforeach; ?>
-        <?php endforeach; ?>
+            <?php } ?>
+        <?php } ?>
     </div>
-<?php endif; ?>
+<?php } ?>
 
 </body>
 </html>

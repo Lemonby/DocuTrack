@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\API\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Resources\KakResource;
 use App\Http\Resources\KegiatanDetailResource;
 use App\Models\Kegiatan;
 use App\Services\KegiatanService;

@@ -6,20 +6,19 @@ use App\Http\Controllers\Controller;
 use App\Models\Kegiatan;
 use App\Services\WorkflowService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class RiwayatController extends Controller
 {
     public function index(): JsonResponse
     {
         $kegiatanList = Kegiatan::with(['statusUtama', 'user', 'progressHistories.revisiComments', 'progressHistories.changedBy'])
-            ->where(function($q) {
+            ->where(function ($q) {
                 $q->where('posisi_id', '>', WorkflowService::POSITION_PPK)
-                  ->orWhereIn('status_utama_id', [
-                      WorkflowService::STATUS_DANA_DIBERIKAN,
-                      WorkflowService::STATUS_LPJ_DISETUJUI,
-                      WorkflowService::STATUS_SELESAI
-                  ]);
+                    ->orWhereIn('status_utama_id', [
+                        WorkflowService::STATUS_DANA_DIBERIKAN,
+                        WorkflowService::STATUS_LPJ_DISETUJUI,
+                        WorkflowService::STATUS_SELESAI,
+                    ]);
             })
             ->latest()
             ->get();
@@ -30,14 +29,14 @@ class RiwayatController extends Controller
             $catatan = 'Usulan disetujui.';
             $ppkHistory = $kegiatan->progressHistories->filter(function ($h) {
                 return $h->changedBy && (
-                    $h->changedBy->nama === 'PPK' || 
+                    $h->changedBy->nama === 'PPK' ||
                     (method_exists($h->changedBy, 'hasRole') && $h->changedBy->hasRole('PPK'))
                 );
             })->sortByDesc('created_at')->first();
 
             if ($ppkHistory) {
                 $comment = $ppkHistory->revisiComments->first();
-                if ($comment && !empty($comment->komentar_revisi)) {
+                if ($comment && ! empty($comment->komentar_revisi)) {
                     $catatan = $comment->komentar_revisi;
                 }
             }
@@ -49,7 +48,7 @@ class RiwayatController extends Controller
                 'nim' => $kegiatan->nim_pelaksana,
                 'tanggal_proses' => $kegiatan->updated_at ? $kegiatan->updated_at->format('Y-m-d') : null,
                 'status' => $statusLabel,
-                'catatan' => $catatan
+                'catatan' => $catatan,
             ];
         });
 

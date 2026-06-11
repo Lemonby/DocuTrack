@@ -4,8 +4,11 @@ namespace App\Http\Controllers\Bendahara;
 
 use App\Http\Controllers\Controller;
 use App\Models\Kegiatan;
+use App\Models\LogStatus;
+use App\Models\ProgressHistory;
 use App\Services\KegiatanService;
 use App\Services\WorkflowService;
+use Illuminate\Support\Facades\Session;
 
 class RiwayatController extends Controller
 {
@@ -36,12 +39,13 @@ class RiwayatController extends Controller
                 'status' => $kegiatan->statusUtama->nama_status_usulan ?? 'Dana Diberikan',
             ];
         })->toArray();
+
         return view('bendahara.riwayat.index', compact('list_riwayat'));
     }
 
     public function detail($id)
     {
-        $kegiatan = (new KegiatanService())->getDetailLengkap((int) $id);
+        $kegiatan = (new KegiatanService)->getDetailLengkap((int) $id);
         $status = $kegiatan->statusUtama->nama_status_usulan ?? 'Dana Diberikan';
 
         $kegiatan_data = [
@@ -122,15 +126,15 @@ class RiwayatController extends Controller
         ]);
 
         // Add progress history entry for status 8 (Selesai)
-        \App\Models\ProgressHistory::create([
+        ProgressHistory::create([
             'kegiatan_id' => $kegiatan->kegiatan_id,
             'status_id' => WorkflowService::STATUS_SELESAI, // 8
-            'changed_by_user_id' => \Illuminate\Support\Facades\Session::get('user_id') ?? 1,
+            'changed_by_user_id' => Session::get('user_id') ?? 1,
             'created_at' => now(),
         ]);
 
         // Create log status for Admin (actor) who completes the kegiatan
-        \App\Models\LogStatus::create([
+        LogStatus::create([
             'user_id' => $kegiatan->user_id,
             'tipe_log' => 'APPROVAL',
             'id_referensi' => $kegiatan->kegiatan_id,
@@ -138,8 +142,8 @@ class RiwayatController extends Controller
             'konten_json' => [
                 'judul' => 'Kegiatan Selesai',
                 'pesan' => "Kegiatan \"{$kegiatan->nama_kegiatan}\" telah dinyatakan Selesai.",
-                'link' => "/admin/pengajuan-kegiatan"
-            ]
+                'link' => '/admin/pengajuan-kegiatan',
+            ],
         ]);
 
         return redirect()->back()->with('success_message', 'Kegiatan telah berhasil dinyatakan Selesai!');

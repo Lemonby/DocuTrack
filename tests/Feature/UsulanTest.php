@@ -2,12 +2,14 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
-use App\Models\Kegiatan;
 use App\Models\Kak;
+use App\Models\KategoriRab;
+use App\Models\Kegiatan;
+use App\Models\Lpj;
+use App\Models\LpjItem;
 use App\Models\Rab;
-use App\Models\IndikatorKak;
-use App\Models\LogStatus;
+use App\Models\User;
+use App\Services\WorkflowService;
 use Database\Seeders\MasterDataSeeder;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -38,11 +40,11 @@ class UsulanTest extends TestCase
     {
         // 1. Create an Admin user
         $admin = User::create([
-            'nama'         => 'Admin Test',
-            'email'        => 'admintest@example.com',
-            'password'     => Hash::make('password123'),
+            'nama' => 'Admin Test',
+            'email' => 'admintest@example.com',
+            'password' => Hash::make('password123'),
             'nama_jurusan' => 'Teknik Informatika dan Komputer',
-            'status'       => 'Aktif',
+            'status' => 'Aktif',
         ]);
         $admin->assignRole('Admin');
 
@@ -57,8 +59,8 @@ class UsulanTest extends TestCase
                     'sat1' => 'Rim',
                     'vol2' => 1,
                     'sat2' => 'Rim',
-                    'harga' => 50000
-                ]
+                    'harga' => 50000,
+                ],
             ],
             'Belanja Jasa' => [
                 [
@@ -68,9 +70,9 @@ class UsulanTest extends TestCase
                     'sat1' => 'Orang',
                     'vol2' => 1,
                     'sat2' => 'Orang',
-                    'harga' => 500000
-                ]
-            ]
+                    'harga' => 500000,
+                ],
+            ],
         ]);
 
         $payload = [
@@ -87,29 +89,29 @@ class UsulanTest extends TestCase
             'tahapan' => [
                 'Persiapan panitia',
                 'Pelaksanaan workshop',
-                'Evaluasi dan LPJ'
+                'Evaluasi dan LPJ',
             ],
             // Flat indicators from repeater inputs
             'indikator_nama' => [
                 'Tingkat kehadiran peserta',
-                'Tingkat kepuasan peserta'
+                'Tingkat kepuasan peserta',
             ],
             'indikator_bulan' => [
                 1,
-                2
+                2,
             ],
             'indikator_target' => [
                 90,
-                85
+                85,
             ],
             // Budget data serialized as JSON string
-            'rab_data' => $rabDataJson
+            'rab_data' => $rabDataJson,
         ];
 
         // 3. Post to store route simulating custom session authentication
         $response = $this->withSession([
             'user_id' => $admin->user_id,
-            'role' => 'admin'
+            'role' => 'admin',
         ])->post('/admin/pengajuan-usulan/store', $payload);
 
         // 4. Assert response redirect to usulan index with success message
@@ -130,7 +132,7 @@ class UsulanTest extends TestCase
         // 7. Assert Tahapan Pelaksanaan is stored
         $this->assertDatabaseHas('tahapan_pelaksanaans', [
             'kak_id' => $kak->kak_id,
-            'nama_tahapan' => 'Pelaksanaan workshop'
+            'nama_tahapan' => 'Pelaksanaan workshop',
         ]);
 
         // 8. Assert Indikator Keberhasilan is correctly populated from flat array mapping
@@ -138,13 +140,13 @@ class UsulanTest extends TestCase
             'kak_id' => $kak->kak_id,
             'indikator_keberhasilan' => 'Tingkat kehadiran peserta',
             'bulan' => 1,
-            'target_persen' => 90
+            'target_persen' => 90,
         ]);
         $this->assertDatabaseHas('indikator_kaks', [
             'kak_id' => $kak->kak_id,
             'indikator_keberhasilan' => 'Tingkat kepuasan peserta',
             'bulan' => 2,
-            'target_persen' => 85
+            'target_persen' => 85,
         ]);
 
         // 9. Assert RAB items are stored correctly from decoded JSON
@@ -152,13 +154,13 @@ class UsulanTest extends TestCase
             'kak_id' => $kak->kak_id,
             'uraian' => 'Kertas A4',
             'harga' => 50000,
-            'total_harga' => 50000
+            'total_harga' => 50000,
         ]);
         $this->assertDatabaseHas('rabs', [
             'kak_id' => $kak->kak_id,
             'uraian' => 'Honor Pemateri',
             'harga' => 500000,
-            'total_harga' => 500000
+            'total_harga' => 500000,
         ]);
 
         // 10. Assert submission log is added to log_statuses
@@ -166,7 +168,7 @@ class UsulanTest extends TestCase
             'user_id' => $admin->user_id,
             'tipe_log' => 'SUBMISSION',
             'status' => 'BELUM_DIBACA',
-            'id_referensi' => $kegiatan->kegiatan_id
+            'id_referensi' => $kegiatan->kegiatan_id,
         ]);
     }
 
@@ -179,20 +181,20 @@ class UsulanTest extends TestCase
     {
         // 1. Create users
         $admin = User::create([
-            'nama'         => 'Pengusul TI',
-            'email'        => 'pengusul@example.com',
-            'password'     => Hash::make('password123'),
+            'nama' => 'Pengusul TI',
+            'email' => 'pengusul@example.com',
+            'password' => Hash::make('password123'),
             'nama_jurusan' => 'Teknik Informatika dan Komputer',
-            'status'       => 'Aktif',
+            'status' => 'Aktif',
         ]);
         $admin->assignRole('Admin');
 
         $verifikator = User::create([
-            'nama'         => 'Verifikator TI',
-            'email'        => 'verifikator@example.com',
-            'password'     => Hash::make('password123'),
+            'nama' => 'Verifikator TI',
+            'email' => 'verifikator@example.com',
+            'password' => Hash::make('password123'),
             'nama_jurusan' => 'Teknik Informatika dan Komputer',
-            'status'       => 'Aktif',
+            'status' => 'Aktif',
         ]);
         $verifikator->assignRole('Verifikator');
 
@@ -204,9 +206,9 @@ class UsulanTest extends TestCase
             'nim_pelaksana' => '19200388273',
             'user_id' => $admin->user_id,
             'jurusan_penyelenggara' => 'Teknik Informatika dan Komputer',
-            'status_utama_id' => \App\Services\WorkflowService::STATUS_MENUNGGU,
+            'status_utama_id' => WorkflowService::STATUS_MENUNGGU,
             'wadir_tujuan' => 1,
-            'posisi_id' => \App\Services\WorkflowService::POSITION_VERIFIKATOR,
+            'posisi_id' => WorkflowService::POSITION_VERIFIKATOR,
         ]);
 
         $kak = Kak::create([
@@ -221,12 +223,12 @@ class UsulanTest extends TestCase
             'action' => 'approve',
             'kode_mak' => 'MAK-TIK-2026-99',
             'dana_disetujui' => 2500000,
-            'umpan_balik_verifikator' => 'Usulan lengkap, disetujui untuk diteruskan ke Wadir.'
+            'umpan_balik_verifikator' => 'Usulan lengkap, disetujui untuk diteruskan ke Wadir.',
         ];
 
         $response = $this->withSession([
             'user_id' => $verifikator->user_id,
-            'role' => 'verifikator'
+            'role' => 'verifikator',
         ])->post("/verifikator/telaah/store/{$kegiatan->kegiatan_id}", $payload);
 
         // 4. Assert response redirect to verifikator index
@@ -238,18 +240,18 @@ class UsulanTest extends TestCase
         $this->assertEquals('MAK-TIK-2026-99', $kegiatan->bukti_mak);
         $this->assertEquals(2500000, $kegiatan->dana_di_setujui);
         $this->assertEquals('Usulan lengkap, disetujui untuk diteruskan ke Wadir.', $kegiatan->umpan_balik_verifikator);
-        
+
         // Next workflow position is self::POSITION_ADMIN (1) (goes back to Admin to fill details)
-        $this->assertEquals(\App\Services\WorkflowService::POSITION_ADMIN, $kegiatan->posisi_id);
-        
+        $this->assertEquals(WorkflowService::POSITION_ADMIN, $kegiatan->posisi_id);
+
         // Status becomes self::STATUS_TELAH_DIVERIFIKASI (7) when moving along
-        $this->assertEquals(\App\Services\WorkflowService::STATUS_TELAH_DIVERIFIKASI, $kegiatan->status_utama_id);
+        $this->assertEquals(WorkflowService::STATUS_TELAH_DIVERIFIKASI, $kegiatan->status_utama_id);
 
         // 6. Assert progress history was saved with the verifikator's user ID
         $this->assertDatabaseHas('progress_histories', [
             'kegiatan_id' => $kegiatan->kegiatan_id,
-            'status_id' => \App\Services\WorkflowService::STATUS_TELAH_DIVERIFIKASI,
-            'changed_by_user_id' => $verifikator->user_id
+            'status_id' => WorkflowService::STATUS_TELAH_DIVERIFIKASI,
+            'changed_by_user_id' => $verifikator->user_id,
         ]);
 
         // 7. Assert an APPROVAL notification log is added to log_statuses for the owner
@@ -257,7 +259,7 @@ class UsulanTest extends TestCase
             'user_id' => $admin->user_id,
             'tipe_log' => 'APPROVED',
             'status' => 'BELUM_DIBACA',
-            'id_referensi' => $kegiatan->kegiatan_id
+            'id_referensi' => $kegiatan->kegiatan_id,
         ]);
     }
 
@@ -270,29 +272,29 @@ class UsulanTest extends TestCase
     {
         // 1. Create users
         $admin = User::create([
-            'nama'         => 'Pengusul TI',
-            'email'        => 'pengusul2@example.com',
-            'password'     => Hash::make('password123'),
+            'nama' => 'Pengusul TI',
+            'email' => 'pengusul2@example.com',
+            'password' => Hash::make('password123'),
             'nama_jurusan' => 'Teknik Informatika dan Komputer',
-            'status'       => 'Aktif',
+            'status' => 'Aktif',
         ]);
         $admin->assignRole('Admin');
 
         $ppk = User::create([
-            'nama'         => 'PPK TI',
-            'email'        => 'ppk@example.com',
-            'password'     => Hash::make('password123'),
+            'nama' => 'PPK TI',
+            'email' => 'ppk@example.com',
+            'password' => Hash::make('password123'),
             'nama_jurusan' => 'Teknik Informatika dan Komputer',
-            'status'       => 'Aktif',
+            'status' => 'Aktif',
         ]);
         $ppk->assignRole('PPK');
 
         $wadir = User::create([
-            'nama'         => 'Wadir TI',
-            'email'        => 'wadir@example.com',
-            'password'     => Hash::make('password123'),
+            'nama' => 'Wadir TI',
+            'email' => 'wadir@example.com',
+            'password' => Hash::make('password123'),
             'nama_jurusan' => 'Teknik Informatika dan Komputer',
-            'status'       => 'Aktif',
+            'status' => 'Aktif',
         ]);
         $wadir->assignRole('Wadir');
 
@@ -304,38 +306,38 @@ class UsulanTest extends TestCase
             'nim_pelaksana' => '19200388273',
             'user_id' => $admin->user_id,
             'jurusan_penyelenggara' => 'Teknik Informatika dan Komputer',
-            'status_utama_id' => \App\Services\WorkflowService::STATUS_MENUNGGU,
+            'status_utama_id' => WorkflowService::STATUS_MENUNGGU,
             'wadir_tujuan' => 1,
-            'posisi_id' => \App\Services\WorkflowService::POSITION_PPK,
+            'posisi_id' => WorkflowService::POSITION_PPK,
         ]);
 
         // 3. Post as PPK to store simulating PPK approval
         $response = $this->withSession([
             'user_id' => $ppk->user_id,
-            'role' => 'ppk'
+            'role' => 'ppk',
         ])->post("/ppk/kegiatan/store/{$kegiatan->kegiatan_id}", ['action' => 'approve']);
 
         $response->assertRedirect(route('ppk.dashboard'));
         $kegiatan->refresh();
 
         // Position advances to WADIR (4)
-        $this->assertEquals(\App\Services\WorkflowService::POSITION_WADIR, $kegiatan->posisi_id);
+        $this->assertEquals(WorkflowService::POSITION_WADIR, $kegiatan->posisi_id);
         // Active status is reset to STATUS_MENUNGGU (1)
-        $this->assertEquals(\App\Services\WorkflowService::STATUS_MENUNGGU, $kegiatan->status_utama_id);
+        $this->assertEquals(WorkflowService::STATUS_MENUNGGU, $kegiatan->status_utama_id);
 
         // 4. Post as Wadir to store simulating Wadir approval
         $response = $this->withSession([
             'user_id' => $wadir->user_id,
-            'role' => 'wadir'
+            'role' => 'wadir',
         ])->post("/wadir/kegiatan/store/{$kegiatan->kegiatan_id}", ['action' => 'approve']);
 
         $response->assertRedirect(route('wadir.dashboard'));
         $kegiatan->refresh();
 
         // Position advances to BENDAHARA (5)
-        $this->assertEquals(\App\Services\WorkflowService::POSITION_BENDAHARA, $kegiatan->posisi_id);
+        $this->assertEquals(WorkflowService::POSITION_BENDAHARA, $kegiatan->posisi_id);
         // Active status is reset to STATUS_MENUNGGU (1)
-        $this->assertEquals(\App\Services\WorkflowService::STATUS_MENUNGGU, $kegiatan->status_utama_id);
+        $this->assertEquals(WorkflowService::STATUS_MENUNGGU, $kegiatan->status_utama_id);
     }
 
     /**
@@ -347,11 +349,11 @@ class UsulanTest extends TestCase
     {
         // 1. Create an Admin user
         $admin = User::create([
-            'nama'         => 'Admin Revisi',
-            'email'        => 'adminrevisi@example.com',
-            'password'     => Hash::make('password123'),
+            'nama' => 'Admin Revisi',
+            'email' => 'adminrevisi@example.com',
+            'password' => Hash::make('password123'),
             'nama_jurusan' => 'Teknik Informatika dan Komputer',
-            'status'       => 'Aktif',
+            'status' => 'Aktif',
         ]);
         $admin->assignRole('Admin');
 
@@ -363,9 +365,9 @@ class UsulanTest extends TestCase
             'nim_pelaksana' => '19200388273',
             'user_id' => $admin->user_id,
             'jurusan_penyelenggara' => 'Teknik Informatika dan Komputer',
-            'status_utama_id' => \App\Services\WorkflowService::STATUS_REVISI,
+            'status_utama_id' => WorkflowService::STATUS_REVISI,
             'wadir_tujuan' => 1,
-            'posisi_id' => \App\Services\WorkflowService::POSITION_ADMIN,
+            'posisi_id' => WorkflowService::POSITION_ADMIN,
         ]);
 
         $kak = Kak::create([
@@ -376,7 +378,7 @@ class UsulanTest extends TestCase
             'metode_pelaksanaan' => 'Online',
         ]);
 
-        $kategori = \App\Models\KategoriRab::firstOrCreate(['nama_kategori' => 'Belanja Barang']);
+        $kategori = KategoriRab::firstOrCreate(['nama_kategori' => 'Belanja Barang']);
 
         $oldRab = Rab::create([
             'kak_id' => $kak->kak_id,
@@ -387,7 +389,7 @@ class UsulanTest extends TestCase
             'sat1' => 'Rim',
             'vol2' => 1,
             'sat2' => 'Rim',
-            'harga' => 30000
+            'harga' => 30000,
         ]);
 
         // 3. Prepare mock request payload for revision update
@@ -400,9 +402,9 @@ class UsulanTest extends TestCase
                     'sat1' => 'Rim',
                     'vol2' => 1,
                     'sat2' => 'Rim',
-                    'harga' => 60000
-                ]
-            ]
+                    'harga' => 60000,
+                ],
+            ],
         ]);
 
         $payload = [
@@ -423,18 +425,18 @@ class UsulanTest extends TestCase
                 'Tingkat pemahaman materi',
             ],
             'indikator_bulan' => [
-                3
+                3,
             ],
             'indikator_target' => [
-                95
+                95,
             ],
-            'rab_data' => $rabDataJson
+            'rab_data' => $rabDataJson,
         ];
 
         // 4. Submit PUT request
         $response = $this->withSession([
             'user_id' => $admin->user_id,
-            'role' => 'admin'
+            'role' => 'admin',
         ])->put("/admin/pengajuan-usulan/update/{$kegiatan->kegiatan_id}", $payload);
 
         // 5. Assert redirect and success
@@ -445,27 +447,27 @@ class UsulanTest extends TestCase
         $kegiatan->refresh();
         $this->assertEquals('Seminar Akhir Sukses 2026', $kegiatan->nama_kegiatan);
         $this->assertEquals('Admin Revisi Baru', $kegiatan->pemilik_kegiatan);
-        $this->assertEquals(\App\Services\WorkflowService::STATUS_MENUNGGU, $kegiatan->status_utama_id);
-        $this->assertEquals(\App\Services\WorkflowService::POSITION_VERIFIKATOR, $kegiatan->posisi_id);
+        $this->assertEquals(WorkflowService::STATUS_MENUNGGU, $kegiatan->status_utama_id);
+        $this->assertEquals(WorkflowService::POSITION_VERIFIKATOR, $kegiatan->posisi_id);
 
         $this->assertDatabaseHas('kaks', [
             'kegiatan_id' => $kegiatan->kegiatan_id,
             'gambaran_umum' => 'Gambaran akhir yang jelas sekali.',
-            'metode_pelaksanaan' => 'Hybrid'
+            'metode_pelaksanaan' => 'Hybrid',
         ]);
 
         $this->assertEquals('Meningkatkan IKU 2', $kegiatan->kak->iku);
 
         // Assert old RAB was deleted and new RAB was created
         $this->assertDatabaseMissing('rabs', [
-            'uraian' => 'Kertas Kuno'
+            'uraian' => 'Kertas Kuno',
         ]);
         $this->assertDatabaseHas('rabs', [
             'kak_id' => $kak->kak_id,
             'uraian' => 'Kertas A4 HVS',
             'harga' => 60000,
             'vol1' => 2,
-            'total_harga' => 120000
+            'total_harga' => 120000,
         ]);
 
         // Assert Indikator
@@ -473,20 +475,20 @@ class UsulanTest extends TestCase
             'kak_id' => $kak->kak_id,
             'indikator_keberhasilan' => 'Tingkat pemahaman materi',
             'bulan' => 3,
-            'target_persen' => 95
+            'target_persen' => 95,
         ]);
 
         // Assert Tahapan
         $this->assertDatabaseHas('tahapan_pelaksanaans', [
             'kak_id' => $kak->kak_id,
-            'nama_tahapan' => 'Tahap revisi sukses'
+            'nama_tahapan' => 'Tahap revisi sukses',
         ]);
 
         // Assert Progress history
         $this->assertDatabaseHas('progress_histories', [
             'kegiatan_id' => $kegiatan->kegiatan_id,
-            'status_id' => \App\Services\WorkflowService::STATUS_MENUNGGU,
-            'changed_by_user_id' => $admin->user_id
+            'status_id' => WorkflowService::STATUS_MENUNGGU,
+            'changed_by_user_id' => $admin->user_id,
         ]);
     }
 
@@ -499,20 +501,20 @@ class UsulanTest extends TestCase
     {
         // 1. Create users
         $admin = User::create([
-            'nama'         => 'Pengusul TI',
-            'email'        => 'pengusullpj@example.com',
-            'password'     => Hash::make('password123'),
+            'nama' => 'Pengusul TI',
+            'email' => 'pengusullpj@example.com',
+            'password' => Hash::make('password123'),
             'nama_jurusan' => 'Teknik Informatika dan Komputer',
-            'status'       => 'Aktif',
+            'status' => 'Aktif',
         ]);
         $admin->assignRole('Admin');
 
         $bendahara = User::create([
-            'nama'         => 'Bendahara TI',
-            'email'        => 'bendahara@example.com',
-            'password'     => Hash::make('password123'),
+            'nama' => 'Bendahara TI',
+            'email' => 'bendahara@example.com',
+            'password' => Hash::make('password123'),
             'nama_jurusan' => 'Teknik Informatika dan Komputer',
-            'status'       => 'Aktif',
+            'status' => 'Aktif',
         ]);
         $bendahara->assignRole('Bendahara');
 
@@ -524,9 +526,9 @@ class UsulanTest extends TestCase
             'nim_pelaksana' => '19200388273',
             'user_id' => $admin->user_id,
             'jurusan_penyelenggara' => 'Teknik Informatika dan Komputer',
-            'status_utama_id' => \App\Services\WorkflowService::STATUS_DANA_DIBERIKAN,
+            'status_utama_id' => WorkflowService::STATUS_DANA_DIBERIKAN,
             'wadir_tujuan' => 1,
-            'posisi_id' => \App\Services\WorkflowService::POSITION_BENDAHARA,
+            'posisi_id' => WorkflowService::POSITION_BENDAHARA,
         ]);
 
         $kak = Kak::create([
@@ -536,7 +538,7 @@ class UsulanTest extends TestCase
             'metode_pelaksanaan' => 'Online',
         ]);
 
-        $kategori = \App\Models\KategoriRab::firstOrCreate(['nama_kategori' => 'Belanja Barang']);
+        $kategori = KategoriRab::firstOrCreate(['nama_kategori' => 'Belanja Barang']);
         $rab = Rab::create([
             'kak_id' => $kak->kak_id,
             'kategori_id' => $kategori->kategori_rab_id,
@@ -546,17 +548,17 @@ class UsulanTest extends TestCase
             'sat1' => 'Rim',
             'vol2' => 1,
             'sat2' => 'Rim',
-            'harga' => 40000
+            'harga' => 40000,
         ]);
 
-        $lpj = \App\Models\Lpj::create([
+        $lpj = Lpj::create([
             'kegiatan_id' => $kegiatan->kegiatan_id,
             'status_id' => 1, // Menunggu Verifikasi
             'submitted_at' => now(),
-            'tenggat_lpj' => now()->addDays(14)
+            'tenggat_lpj' => now()->addDays(14),
         ]);
 
-        $lpjItem = \App\Models\LpjItem::create([
+        $lpjItem = LpjItem::create([
             'lpj_id' => $lpj->lpj_id,
             'kategori_id' => $kategori->kategori_rab_id,
             'uraian' => 'Kertas KVS',
@@ -566,7 +568,7 @@ class UsulanTest extends TestCase
             'sat1' => 'Rim',
             'vol1' => 1,
             'vol2' => 1,
-            'harga' => 40000
+            'harga' => 40000,
         ]);
 
         // 3. Post to processes route simulating bendahara action=approve
@@ -574,13 +576,13 @@ class UsulanTest extends TestCase
             'action' => 'approve',
             'notes' => 'Laporan lengkap dan valid.',
             'item_feedback' => [
-                $rab->rab_item_id => 'Bukti kuitansi sudah jelas.'
-            ]
+                $rab->rab_item_id => 'Bukti kuitansi sudah jelas.',
+            ],
         ];
 
         $response = $this->withSession([
             'user_id' => $bendahara->user_id,
-            'role' => 'bendahara'
+            'role' => 'bendahara',
         ])->post("/bendahara/lpj/proses/{$kegiatan->kegiatan_id}", $payload);
 
         // 4. Assert response redirect to bendahara index
@@ -602,14 +604,14 @@ class UsulanTest extends TestCase
         $this->assertDatabaseHas('progress_histories', [
             'kegiatan_id' => $kegiatan->kegiatan_id,
             'status_id' => 6,
-            'changed_by_user_id' => $bendahara->user_id
+            'changed_by_user_id' => $bendahara->user_id,
         ]);
 
         // Assert log_statuses contains approval log
         $this->assertDatabaseHas('log_statuses', [
             'user_id' => $admin->user_id,
             'tipe_log' => 'APPROVAL',
-            'id_referensi' => $kegiatan->kegiatan_id
+            'id_referensi' => $kegiatan->kegiatan_id,
         ]);
     }
 }

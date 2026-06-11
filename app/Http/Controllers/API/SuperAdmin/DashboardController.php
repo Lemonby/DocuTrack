@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\API\SuperAdmin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
 use App\Models\Kegiatan;
 use App\Models\User;
-use App\Models\ActivityLog;
 use Illuminate\Http\JsonResponse;
 
 class DashboardController extends Controller

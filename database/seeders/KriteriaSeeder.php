@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Services\SpkMautService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -45,6 +46,6 @@ class KriteriaSeeder extends Seeder
         ]);
 
         // Sync all existing activities scores into the database
-        resolve(\App\Services\SpkMautService::class)->syncAllKegiatanScores();
+        resolve(SpkMautService::class)->syncAllKegiatanScores();
     }
 }

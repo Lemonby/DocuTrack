@@ -2,12 +2,13 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
-use App\Models\Kegiatan;
-use App\Models\Kak;
 use App\Models\Iku;
+use App\Models\Kak;
+use App\Models\Kegiatan;
 use App\Models\Lpj;
+use App\Models\User;
 use App\Services\SpkMautService;
+use Database\Seeders\KriteriaSeeder;
 use Database\Seeders\MasterDataSeeder;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -17,7 +18,7 @@ use Tests\TestCase;
 
 /**
  * Class IntegritasTest
- * 
+ *
  * Pengujian fitur pemeringkatan Integritas Jurusan menggunakan Metode SPK MAUT.
  * Menguji akurasi matematika kriteria C1, C2, C3, C4, pengurutan ranking, dan otorisasi halaman Direktur.
  */
@@ -40,9 +41,9 @@ class IntegritasTest extends TestCase
         // Jalankan seeder agar role, permission, dan status dasar terbuat di database pengujian
         $this->seed(MasterDataSeeder::class);
         $this->seed(RolePermissionSeeder::class);
-        $this->seed(\Database\Seeders\KriteriaSeeder::class);
+        $this->seed(KriteriaSeeder::class);
 
-        $this->spkService = new SpkMautService();
+        $this->spkService = new SpkMautService;
     }
 
     /**
@@ -244,11 +245,12 @@ class IntegritasTest extends TestCase
     #[TestDox('Memastikan pemeringkatan jurusan dihitung dengan formula MAUT yang benar dan menghasilkan skor yang sesuai dengan contoh riil')]
     public function test_exact_maut_calculation_matches_user_example(): void
     {
-        $mockService = new class extends SpkMautService {
+        $mockService = new class extends SpkMautService
+        {
             public function calculateRawScores(Kegiatan $kegiatan): array
             {
                 $name = $kegiatan->nama_kegiatan;
-                
+
                 if ($name === 'TIKGAMES2024_1') {
                     return ['c1' => 1.00, 'c2' => 1.00, 'c3' => 1.00, 'c4' => 1.00];
                 }
@@ -261,7 +263,7 @@ class IntegritasTest extends TestCase
                 if ($name === 'TIKGAMES2023') {
                     return ['c1' => 0.40, 'c2' => 0.10, 'c3' => 1.00, 'c4' => 1.00];
                 }
-                
+
                 if ($name === 'ELEKTROGAMES2023') {
                     return ['c1' => 0.80, 'c2' => 0.90, 'c3' => 1.00, 'c4' => 1.00];
                 }
@@ -274,7 +276,7 @@ class IntegritasTest extends TestCase
                 if ($name === 'ELEKTROGAMES2021') {
                     return ['c1' => 0.40, 'c2' => 1.00, 'c3' => 0.00, 'c4' => 1.00];
                 }
-                
+
                 if ($name === 'TGPGAMES2020') {
                     return ['c1' => 1.00, 'c2' => 1.00, 'c3' => 1.00, 'c4' => 1.00];
                 }
@@ -284,7 +286,7 @@ class IntegritasTest extends TestCase
                 if ($name === 'TGPGAMES2022') {
                     return ['c1' => 1.00, 'c2' => 0.10, 'c3' => 0.00, 'c4' => 1.00];
                 }
-                
+
                 return parent::calculateRawScores($kegiatan);
             }
         };

@@ -2,14 +2,14 @@
 
 namespace App\Services;
 
-use mysqli;
 use Exception;
 
 class AiSecurityService
 {
     private $db;
+
     private $configFilePath;
-    
+
     // Cache the mode to avoid repeated file reads in a single request
     private $cachedMode = null;
 
@@ -24,29 +24,32 @@ class AiSecurityService
             $this->db = $GLOBALS['conn'];
         }
 
-        $this->configFilePath = DOCUTRACK_ROOT . '/src/Config/security_settings.json';
-        
+        $this->configFilePath = DOCUTRACK_ROOT.'/src/Config/security_settings.json';
+
         // Ensure config file exists with default if not found
-        if (!file_exists($this->configFilePath)) {
+        if (! file_exists($this->configFilePath)) {
             $this->writeConfigFile(['security_mode' => 'silent']);
         }
     }
 
     private function readConfigFile(): array
     {
-        if (!file_exists($this->configFilePath)) {
+        if (! file_exists($this->configFilePath)) {
             return ['security_mode' => 'silent']; // Default if file somehow disappears
         }
         $content = file_get_contents($this->configFilePath);
         if ($content === false) {
-            error_log("AiSecurityService: Failed to read config file.");
+            error_log('AiSecurityService: Failed to read config file.');
+
             return ['security_mode' => 'silent'];
         }
         $config = json_decode($content, true);
         if (json_last_error() !== JSON_ERROR_NONE) {
-            error_log("AiSecurityService: Failed to decode config JSON: " . json_last_error_msg());
+            error_log('AiSecurityService: Failed to decode config JSON: '.json_last_error_msg());
+
             return ['security_mode' => 'silent'];
         }
+
         return $config;
     }
 
@@ -54,18 +57,22 @@ class AiSecurityService
     {
         $jsonContent = json_encode($config, JSON_PRETTY_PRINT);
         if ($jsonContent === false) {
-            error_log("AiSecurityService: Failed to encode config JSON: " . json_last_error_msg());
+            error_log('AiSecurityService: Failed to encode config JSON: '.json_last_error_msg());
+
             return false;
         }
         if (file_put_contents($this->configFilePath, $jsonContent) === false) {
-            error_log("AiSecurityService: Failed to write config file. Check permissions for " . $this->configFilePath);
+            error_log('AiSecurityService: Failed to write config file. Check permissions for '.$this->configFilePath);
+
             return false;
         }
+
         return true;
     }
 
     /**
      * Get Current Security Mode
+     *
      * @return string 'silent', 'block', 'off'
      */
     public function getMode(): string
@@ -77,25 +84,26 @@ class AiSecurityService
         $config = $this->readConfigFile();
         $mode = $config['security_mode'] ?? 'silent';
         $this->cachedMode = $mode;
+
         return $mode;
     }
 
     /**
      * Set Security Mode
-     * @param string $mode
      */
     public function setMode(string $mode): bool
     {
-        if (!in_array($mode, ['silent', 'block', 'off'])) {
+        if (! in_array($mode, ['silent', 'block', 'off'])) {
             return false;
         }
-        
+
         $config = $this->readConfigFile();
         $config['security_mode'] = $mode;
         $success = $this->writeConfigFile($config);
         if ($success) {
             $this->cachedMode = $mode; // Update cache on successful write
         }
+
         return $success;
     }
 
@@ -106,7 +114,7 @@ class AiSecurityService
     public function handleSecurity(): void
     {
         $mode = $this->getMode();
-        
+
         if ($mode === 'off') {
             return;
         }
@@ -114,12 +122,16 @@ class AiSecurityService
         // Scan GET and POST
         $threats = [];
         $resultPost = $this->scanInput($_POST);
-        if ($resultPost['detected']) $threats[] = array_merge($resultPost, ['source' => 'POST']);
-        
-        $resultGet = $this->scanInput($_GET);
-        if ($resultGet['detected']) $threats[] = array_merge($resultGet, ['source' => 'GET']);
+        if ($resultPost['detected']) {
+            $threats[] = array_merge($resultPost, ['source' => 'POST']);
+        }
 
-        if (!empty($threats)) {
+        $resultGet = $this->scanInput($_GET);
+        if ($resultGet['detected']) {
+            $threats[] = array_merge($resultGet, ['source' => 'GET']);
+        }
+
+        if (! empty($threats)) {
             // Only log if DB is available. Silent fail if not.
             if ($this->db) {
                 foreach ($threats as $threat) {
@@ -129,7 +141,7 @@ class AiSecurityService
 
             if ($mode === 'block') {
                 http_response_code(403);
-                die("<h1>403 Forbidden</h1><p>DocuTrack Security Shield has detected a potential threat in your request.</p>");
+                exit('<h1>403 Forbidden</h1><p>DocuTrack Security Shield has detected a potential threat in your request.</p>');
             }
         }
     }
@@ -140,27 +152,28 @@ class AiSecurityService
             $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
             // Sanitize payload for logging (truncate to 500 chars)
             $payload = isset($threat['payload']) ? substr($threat['payload'], 0, 500) : '';
-            
+
             // Check if ai_security_alerts table exists before inserting
             $check = $this->db->query("SHOW TABLES LIKE 'ai_security_alerts'");
             if ($check->num_rows === 0) {
-                 error_log("AiSecurityService: ai_security_alerts table not found. Cannot log threat.");
-                 return; // Fail safe if table not migrated
+                error_log('AiSecurityService: ai_security_alerts table not found. Cannot log threat.');
+
+                return; // Fail safe if table not migrated
             }
 
-            $stmt = $this->db->prepare("INSERT INTO ai_security_alerts (ip_address, input_payload, severity, detection_type) VALUES (?, ?, ?, ?)");
-            $stmt->bind_param("ssss", $ip, $payload, $threat['risk'], $threat['type']);
+            $stmt = $this->db->prepare('INSERT INTO ai_security_alerts (ip_address, input_payload, severity, detection_type) VALUES (?, ?, ?, ?)');
+            $stmt->bind_param('ssss', $ip, $payload, $threat['risk'], $threat['type']);
             $stmt->execute();
         } catch (Exception $e) {
             // Silent fail on log error
-            error_log("AiSecurityService: Error logging threat: " . $e->getMessage());
+            error_log('AiSecurityService: Error logging threat: '.$e->getMessage());
         }
     }
 
     /**
      * Scans input data for malicious patterns (SQL Injection, XSS).
      *
-     * @param array $data Input data to scan (e.g., $_POST, $_GET).
+     * @param  array  $data  Input data to scan (e.g., $_POST, $_GET).
      * @return array Result with keys: detected (bool), type (string), risk (string), payload (string).
      */
     public function scanInput(array $data): array
@@ -168,12 +181,12 @@ class AiSecurityService
         $patterns = [
             'SQL Injection' => [
                 'regex' => '/(union\s+select|drop\s+table|information_schema|--|\s+or\s+1=1)/i',
-                'risk' => 'high'
+                'risk' => 'high',
             ],
             'XSS' => [
                 'regex' => '/(<script|javascript:|onerror=)/i',
-                'risk' => 'medium'
-            ]
+                'risk' => 'medium',
+            ],
         ];
 
         foreach ($data as $key => $value) {
@@ -183,11 +196,12 @@ class AiSecurityService
                 if ($result['detected']) {
                     return $result;
                 }
+
                 continue;
             }
 
             // Skip non-string values
-            if (!is_string($value)) {
+            if (! is_string($value)) {
                 continue;
             }
 
@@ -197,7 +211,7 @@ class AiSecurityService
                         'detected' => true,
                         'type' => $type,
                         'risk' => $config['risk'],
-                        'payload' => $value // Capture the payload for logging
+                        'payload' => $value, // Capture the payload for logging
                     ];
                 }
             }
@@ -206,7 +220,7 @@ class AiSecurityService
         return [
             'detected' => false,
             'type' => '',
-            'risk' => ''
+            'risk' => '',
         ];
     }
 }

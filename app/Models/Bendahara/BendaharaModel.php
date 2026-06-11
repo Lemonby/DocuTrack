@@ -3,17 +3,15 @@
 namespace App\Models\Bendahara;
 
 use Exception;
-use DateTime;
 use mysqli;
 
 /**
  * BendaharaModel - Bendahara Management Model
  *
  * @category Model
- * @package  DocuTrack
+ *
  * @version  2.1.0 - Added support for staged disbursement (tbl_tahapan_pencairan)
  */
-
 class BendaharaModel
 {
     /**
@@ -32,7 +30,7 @@ class BendaharaModel
             if (function_exists('db')) {
                 $this->db = db();
             } else {
-                throw new \Exception("Database connection not provided to BendaharaModel. Ensure bootstrap.php is loaded.");
+                throw new Exception('Database connection not provided to BendaharaModel. Ensure bootstrap.php is loaded.');
             }
         }
     }
@@ -43,13 +41,14 @@ class BendaharaModel
 
     public function getDashboardStats()
     {
-        $query = "SELECT 
+        $query = 'SELECT 
                     SUM(CASE WHEN posisiId = 5 OR tanggalPencairan IS NOT NULL THEN 1 ELSE 0 END) as total,
                     SUM(CASE WHEN posisiId = 5 AND tanggalPencairan IS NULL THEN 1 ELSE 0 END) as menunggu,
                     SUM(CASE WHEN tanggalPencairan IS NOT NULL THEN 1 ELSE 0 END) as dicairkan
-                  FROM tbl_kegiatan";
+                  FROM tbl_kegiatan';
 
         $result = mysqli_query($this->db, $query);
+
         return $result ? mysqli_fetch_assoc($result) : ['total' => 0, 'menunggu' => 0, 'dicairkan' => 0];
     }
 
@@ -85,11 +84,11 @@ class BendaharaModel
             while ($row = mysqli_fetch_assoc($result)) {
                 $row['jurusan'] = $row['jurusan'] ?? '-';
                 $row['prodi'] = $row['prodi'] ?? '-';
-                
+
                 // Dynamic Status Calculation
                 $totalDicairkan = $this->getTotalDicairkanByKegiatan($row['id']);
                 $totalAnggaran = $row['anggaran_disetujui'];
-                
+
                 if ($totalDicairkan >= $totalAnggaran && $totalAnggaran > 0) {
                     $row['status'] = 'Dana Diberikan';
                 } elseif ($totalDicairkan > 0) {
@@ -97,10 +96,11 @@ class BendaharaModel
                 } else {
                     $row['status'] = 'Menunggu';
                 }
-                
+
                 $data[] = $row;
             }
         }
+
         return $data;
     }
 
@@ -109,7 +109,7 @@ class BendaharaModel
         // Query to get history of verifications done by Bendahara
         // Added prodiPenyelenggara to fix missing department name
         // Added nimPelaksana to fix missing NIM
-        $query = "SELECT 
+        $query = 'SELECT 
                     k.kegiatanId as id,
                     k.namaKegiatan as nama,
                     k.pemilikKegiatan as nama_mahasiswa,
@@ -124,10 +124,10 @@ class BendaharaModel
                   LEFT JOIN tbl_user u ON ph.changedByUserId = u.userId
                   -- Filtering for Bendahara context if needed, but for now showing recent history
                   ORDER BY ph.timestamp DESC
-                  LIMIT ?";
+                  LIMIT ?';
 
         $stmt = mysqli_prepare($this->db, $query);
-        mysqli_stmt_bind_param($stmt, "i", $limit);
+        mysqli_stmt_bind_param($stmt, 'i', $limit);
         mysqli_stmt_execute($stmt);
         $result = mysqli_stmt_get_result($stmt);
 
@@ -136,6 +136,7 @@ class BendaharaModel
             $data[] = $row;
         }
         mysqli_stmt_close($stmt);
+
         return $data;
     }
 
@@ -147,13 +148,14 @@ class BendaharaModel
     {
         // Validasi parameter untuk mencegah undefined atau invalid ID
         $kegiatanId = (int) $kegiatanId;
-        
+
         if ($kegiatanId <= 0) {
             error_log("BendaharaModel::getDetailPencairan - Invalid kegiatanId received: $kegiatanId");
+
             return null;
         }
-        
-        $query = "SELECT 
+
+        $query = 'SELECT 
                     k.*,
                     kak.*,
                     k.tanggalMulai as tanggal_mulai,
@@ -170,34 +172,34 @@ class BendaharaModel
                   LEFT JOIN tbl_kak kak ON k.kegiatanId = kak.kegiatanId
                   LEFT JOIN tbl_user u ON u.userId = k.userId
                   LEFT JOIN tbl_status_utama s ON k.statusUtamaId = s.statusId
-                  WHERE k.kegiatanId = ? AND k.posisiId = 5";
+                  WHERE k.kegiatanId = ? AND k.posisiId = 5';
 
         $stmt = mysqli_prepare($this->db, $query);
-        mysqli_stmt_bind_param($stmt, "i", $kegiatanId);
+        mysqli_stmt_bind_param($stmt, 'i', $kegiatanId);
         mysqli_stmt_execute($stmt);
-        
+
         $result = mysqli_stmt_get_result($stmt);
         $data = mysqli_fetch_assoc($result);
-        
+
         // Debug logging
-        if (!$data) {
+        if (! $data) {
             error_log("BendaharaModel::getDetailPencairan - Data not found for kegiatanId: $kegiatanId (posisiId must be 5)");
         }
-        
+
         return $data;
     }
 
     public function getRABByKegiatan($kegiatanId)
     {
-        $query = "SELECT r.*, cat.namaKategori 
+        $query = 'SELECT r.*, cat.namaKategori 
                   FROM tbl_rab r
                   JOIN tbl_kategori_rab cat ON r.kategoriId = cat.kategoriRabId
                   JOIN tbl_kak kak ON r.kakId = kak.kakId
                   WHERE kak.kegiatanId = ?
-                  ORDER BY cat.kategoriRabId ASC, r.rabItemId ASC";
+                  ORDER BY cat.kategoriRabId ASC, r.rabItemId ASC';
 
         $stmt = mysqli_prepare($this->db, $query);
-        mysqli_stmt_bind_param($stmt, "i", $kegiatanId);
+        mysqli_stmt_bind_param($stmt, 'i', $kegiatanId);
         mysqli_stmt_execute($stmt);
         $result = mysqli_stmt_get_result($stmt);
 
@@ -211,37 +213,39 @@ class BendaharaModel
                 'sat1' => $row['sat1'] ?? '',
                 'vol2' => $row['vol2'] ?? 1,
                 'sat2' => $row['sat2'] ?? '',
-                'harga' => $row['harga'] ?? 0
+                'harga' => $row['harga'] ?? 0,
             ];
         }
+
         return $data;
     }
 
     public function getIKUByKegiatan($kegiatanId)
     {
-        $query = "SELECT iku FROM tbl_kak WHERE kegiatanId = ?";
+        $query = 'SELECT iku FROM tbl_kak WHERE kegiatanId = ?';
         $stmt = mysqli_prepare($this->db, $query);
-        mysqli_stmt_bind_param($stmt, "i", $kegiatanId);
+        mysqli_stmt_bind_param($stmt, 'i', $kegiatanId);
         mysqli_stmt_execute($stmt);
         $result = mysqli_stmt_get_result($stmt);
         $row = mysqli_fetch_assoc($result);
 
-        if ($row && !empty($row['iku'])) {
+        if ($row && ! empty($row['iku'])) {
             return explode(',', $row['iku']);
         }
+
         return [];
     }
 
     public function getIndikatorByKegiatan($kegiatanId)
     {
-        $query = "SELECT i.bulan, i.indikatorKeberhasilan as nama, i.targetPersen as target 
+        $query = 'SELECT i.bulan, i.indikatorKeberhasilan as nama, i.targetPersen as target 
                   FROM tbl_indikator_kak i
                   JOIN tbl_kak kak ON i.kakId = kak.kakId
                   WHERE kak.kegiatanId = ?
-                  ORDER BY i.indikatorId ASC";
+                  ORDER BY i.indikatorId ASC';
 
         $stmt = mysqli_prepare($this->db, $query);
-        mysqli_stmt_bind_param($stmt, "i", $kegiatanId);
+        mysqli_stmt_bind_param($stmt, 'i', $kegiatanId);
         mysqli_stmt_execute($stmt);
         $result = mysqli_stmt_get_result($stmt);
 
@@ -249,19 +253,20 @@ class BendaharaModel
         while ($row = mysqli_fetch_assoc($result)) {
             $data[] = $row;
         }
+
         return $data;
     }
 
     public function getTahapanByKegiatan($kegiatanId)
     {
-        $query = "SELECT t.namaTahapan 
+        $query = 'SELECT t.namaTahapan 
                   FROM tbl_tahapan_pelaksanaan t
                   JOIN tbl_kak kak ON t.kakId = kak.kakId
                   WHERE kak.kegiatanId = ?
-                  ORDER BY t.tahapanId ASC";
+                  ORDER BY t.tahapanId ASC';
 
         $stmt = mysqli_prepare($this->db, $query);
-        mysqli_stmt_bind_param($stmt, "i", $kegiatanId);
+        mysqli_stmt_bind_param($stmt, 'i', $kegiatanId);
         mysqli_stmt_execute($stmt);
         $result = mysqli_stmt_get_result($stmt);
 
@@ -269,15 +274,16 @@ class BendaharaModel
         while ($row = mysqli_fetch_assoc($result)) {
             $data[] = $row['namaTahapan'];
         }
+
         return $data;
     }
 
     public function getListJurusan()
     {
-        $query = "SELECT DISTINCT jurusanPenyelenggara as jurusan 
+        $query = 'SELECT DISTINCT jurusanPenyelenggara as jurusan 
                   FROM tbl_kegiatan 
                   WHERE jurusanPenyelenggara IS NOT NULL 
-                  ORDER BY jurusanPenyelenggara ASC";
+                  ORDER BY jurusanPenyelenggara ASC';
 
         $result = mysqli_query($this->db, $query);
         $list = [];
@@ -286,6 +292,7 @@ class BendaharaModel
                 $list[] = $row['jurusan'];
             }
         }
+
         return $list;
     }
 
@@ -298,14 +305,14 @@ class BendaharaModel
      */
     public function simpanPencairanDana($data)
     {
-        $query = "INSERT INTO tbl_tahapan_pencairan 
+        $query = 'INSERT INTO tbl_tahapan_pencairan 
                 (idKegiatan, tglPencairan, termin, nominal, catatan, createdBy) 
-                VALUES (?, ?, ?, ?, ?, ?)";
-        
+                VALUES (?, ?, ?, ?, ?, ?)';
+
         $stmt = mysqli_prepare($this->db, $query);
         mysqli_stmt_bind_param(
             $stmt,
-            "issdsi",
+            'issdsi',
             $data['kegiatan_id'],
             $data['tanggal_pencairan'],
             $data['termin'],
@@ -313,9 +320,10 @@ class BendaharaModel
             $data['catatan'],
             $data['created_by']
         );
-        
+
         $success = mysqli_stmt_execute($stmt);
         mysqli_stmt_close($stmt);
+
         return $success;
     }
 
@@ -325,23 +333,26 @@ class BendaharaModel
     public function getRiwayatPencairan($limit = 50)
     {
         $checkTable = mysqli_query($this->db, "SHOW TABLES LIKE 'tbl_tahapan_pencairan'");
-        if (mysqli_num_rows($checkTable) == 0) return [];
+        if (mysqli_num_rows($checkTable) == 0) {
+            return [];
+        }
 
-        $query = "SELECT t.*, k.namaKegiatan, k.pemilikKegiatan 
+        $query = 'SELECT t.*, k.namaKegiatan, k.pemilikKegiatan 
                 FROM tbl_tahapan_pencairan t
                 JOIN tbl_kegiatan k ON t.idKegiatan = k.kegiatanId
-                ORDER BY t.createdAt DESC LIMIT ?";
-        
+                ORDER BY t.createdAt DESC LIMIT ?';
+
         $stmt = mysqli_prepare($this->db, $query);
-        mysqli_stmt_bind_param($stmt, "i", $limit);
+        mysqli_stmt_bind_param($stmt, 'i', $limit);
         mysqli_stmt_execute($stmt);
         $result = mysqli_stmt_get_result($stmt);
-        
+
         $data = [];
         while ($row = mysqli_fetch_assoc($result)) {
             $data[] = $row;
         }
         mysqli_stmt_close($stmt);
+
         return $data;
     }
 
@@ -353,23 +364,24 @@ class BendaharaModel
         // Check if table exists first to avoid error on fresh DB without migration
         $checkTable = mysqli_query($this->db, "SHOW TABLES LIKE 'tbl_tahapan_pencairan'");
         if (mysqli_num_rows($checkTable) == 0) {
-            return []; 
+            return [];
         }
 
-        $query = "SELECT * FROM tbl_tahapan_pencairan
+        $query = 'SELECT * FROM tbl_tahapan_pencairan
                 WHERE idKegiatan = ? 
-                ORDER BY tglPencairan ASC, createdAt ASC";
-        
+                ORDER BY tglPencairan ASC, createdAt ASC';
+
         $stmt = mysqli_prepare($this->db, $query);
-        mysqli_stmt_bind_param($stmt, "i", $kegiatanId);
+        mysqli_stmt_bind_param($stmt, 'i', $kegiatanId);
         mysqli_stmt_execute($stmt);
         $result = mysqli_stmt_get_result($stmt);
-        
+
         $data = [];
         while ($row = mysqli_fetch_assoc($result)) {
             $data[] = $row;
         }
         mysqli_stmt_close($stmt);
+
         return $data;
     }
 
@@ -382,27 +394,28 @@ class BendaharaModel
         $checkTable = mysqli_query($this->db, "SHOW TABLES LIKE 'tbl_tahapan_pencairan'");
         if (mysqli_num_rows($checkTable) == 0) {
             // Fallback to old column if table doesn't exist
-            $queryOld = "SELECT jumlahDicairkan FROM tbl_kegiatan WHERE kegiatanId = ?";
+            $queryOld = 'SELECT jumlahDicairkan FROM tbl_kegiatan WHERE kegiatanId = ?';
             $stmtOld = mysqli_prepare($this->db, $queryOld);
-            mysqli_stmt_bind_param($stmtOld, "i", $kegiatanId);
+            mysqli_stmt_bind_param($stmtOld, 'i', $kegiatanId);
             mysqli_stmt_execute($stmtOld);
             $res = mysqli_stmt_get_result($stmtOld);
             $row = mysqli_fetch_assoc($res);
             mysqli_stmt_close($stmtOld);
+
             return floatval($row['jumlahDicairkan'] ?? 0);
         }
 
-        $query = "SELECT COALESCE(SUM(nominal), 0) as total 
+        $query = 'SELECT COALESCE(SUM(nominal), 0) as total 
                 FROM tbl_tahapan_pencairan
-                WHERE idKegiatan = ?";
-        
+                WHERE idKegiatan = ?';
+
         $stmt = mysqli_prepare($this->db, $query);
-        mysqli_stmt_bind_param($stmt, "i", $kegiatanId);
+        mysqli_stmt_bind_param($stmt, 'i', $kegiatanId);
         mysqli_stmt_execute($stmt);
         $result = mysqli_stmt_get_result($stmt);
         $row = mysqli_fetch_assoc($result);
         mysqli_stmt_close($stmt);
-        
+
         return floatval($row['total']);
     }
 
@@ -413,25 +426,25 @@ class BendaharaModel
     {
         // Tentukan status berdasarkan total
         // statusUtamaId 5 = Dana diberikan (Lunas)
-        // statusUtamaId 5 but with a specific flag or logic for Partial? 
+        // statusUtamaId 5 but with a specific flag or logic for Partial?
         // Logic: IF totalDicairkan >= totalAnggaran THEN Status = 5 (Dana Diberikan)
         // IF totalDicairkan < totalAnggaran THEN Status could be 5 (Partial) or keep as 5 but UI handles it.
         // Based on Source logic:
         $statusId = ($totalDicairkan >= $totalAnggaran) ? 5 : 5; // Both are 5 ("Dana Diberikan"), but amount differs
-        
+
         // Note: Source code had statusId=6 for partial, but our schema only has 1-5.
         // We will stick to 5 and rely on math for "Partial" display in UI.
-        
-        $query = "UPDATE tbl_kegiatan 
+
+        $query = 'UPDATE tbl_kegiatan 
                 SET jumlahDicairkan = ?, -- Using existing column to store TOTAL
                     statusUtamaId = ?
-                WHERE kegiatanId = ?";
-        
+                WHERE kegiatanId = ?';
+
         $stmt = mysqli_prepare($this->db, $query);
-        mysqli_stmt_bind_param($stmt, "dii", $totalDicairkan, $statusId, $kegiatanId);
+        mysqli_stmt_bind_param($stmt, 'dii', $totalDicairkan, $statusId, $kegiatanId);
         $success = mysqli_stmt_execute($stmt);
         mysqli_stmt_close($stmt);
-        
+
         return $success;
     }
 
@@ -441,16 +454,16 @@ class BendaharaModel
 
     public function getListKegiatanDashboard($limit = 10)
     {
-        $limit = (int)$limit;
+        $limit = (int) $limit;
 
         $checkTable = mysqli_query($this->db, "SHOW TABLES LIKE 'tbl_tahapan_pencairan'");
         $useTahapanTable = (mysqli_num_rows($checkTable) > 0);
 
-        $totalDicairkanSubquery = "";
+        $totalDicairkanSubquery = '';
         if ($useTahapanTable) {
-            $totalDicairkanSubquery = ", (SELECT COALESCE(SUM(tp.nominal), 0) FROM tbl_tahapan_pencairan tp WHERE tp.idKegiatan = k.kegiatanId) as total_dicairkan";
+            $totalDicairkanSubquery = ', (SELECT COALESCE(SUM(tp.nominal), 0) FROM tbl_tahapan_pencairan tp WHERE tp.idKegiatan = k.kegiatanId) as total_dicairkan';
         } else {
-            $totalDicairkanSubquery = ", k.jumlahDicairkan as total_dicairkan";
+            $totalDicairkanSubquery = ', k.jumlahDicairkan as total_dicairkan';
         }
 
         $query = "SELECT k.*, s.namaStatusUsulan as status_text{$totalDicairkanSubquery}
@@ -459,17 +472,18 @@ class BendaharaModel
                   WHERE k.posisiId = 5 AND k.statusUtamaId != 4
                   ORDER BY k.createdAt DESC 
                   LIMIT ?";
-        
+
         $stmt = mysqli_prepare($this->db, $query);
-        mysqli_stmt_bind_param($stmt, "i", $limit);
+        mysqli_stmt_bind_param($stmt, 'i', $limit);
         mysqli_stmt_execute($stmt);
         $result = mysqli_stmt_get_result($stmt);
-        
+
         $data = [];
         while ($row = mysqli_fetch_assoc($result)) {
             $data[] = $row;
         }
         mysqli_stmt_close($stmt);
+
         return $data;
     }
 
@@ -477,14 +491,14 @@ class BendaharaModel
     {
         // Modified to show ALL recent LPJs, not just 'Menunggu' (statusId=1)
         // This fixes the empty dashboard issue.
-        $query = "SELECT l.*, k.namaKegiatan, k.pemilikKegiatan, k.nimPelaksana, 
+        $query = 'SELECT l.*, k.namaKegiatan, k.pemilikKegiatan, k.nimPelaksana, 
                          k.prodiPenyelenggara, k.jurusanPenyelenggara, k.userId,
                          s.namaStatusUsulan as status_text
                   FROM tbl_lpj l
                   JOIN tbl_kegiatan k ON l.kegiatanId = k.kegiatanId
                   LEFT JOIN tbl_status_utama s ON l.statusId = s.statusId
                   WHERE l.statusId != 4
-                  ORDER BY l.submittedAt DESC LIMIT 20"; // Limit for dashboard performance
+                  ORDER BY l.submittedAt DESC LIMIT 20'; // Limit for dashboard performance
 
         $result = mysqli_query($this->db, $query);
         $data = [];
@@ -493,6 +507,7 @@ class BendaharaModel
                 $data[] = $row;
             }
         }
+
         return $data;
     }
 
@@ -501,10 +516,10 @@ class BendaharaModel
      */
     public function getDetailLPJ($lpjId)
     {
-        error_log("=== BENDAHARA MODEL: getDetailLPJ ===");
-        error_log("LPJ ID: " . $lpjId);
-        
-        $query = "SELECT l.*, 
+        error_log('=== BENDAHARA MODEL: getDetailLPJ ===');
+        error_log('LPJ ID: '.$lpjId);
+
+        $query = 'SELECT l.*, 
                     k.namaKegiatan, 
                     k.pemilikKegiatan, k.nimPelaksana, 
                     k.prodiPenyelenggara, 
@@ -514,20 +529,20 @@ class BendaharaModel
                   FROM tbl_lpj l
                   JOIN tbl_kegiatan k ON l.kegiatanId = k.kegiatanId
                   LEFT JOIN tbl_kak kak ON k.kegiatanId = kak.kegiatanId
-                  WHERE l.lpjId = ?";
-        
+                  WHERE l.lpjId = ?';
+
         $stmt = mysqli_prepare($this->db, $query);
-        mysqli_stmt_bind_param($stmt, "i", $lpjId);
+        mysqli_stmt_bind_param($stmt, 'i', $lpjId);
         mysqli_stmt_execute($stmt);
         $result = mysqli_stmt_get_result($stmt);
         $data = mysqli_fetch_assoc($result);
-        
+
         if ($data) {
-            error_log("LPJ found: " . $data['namaKegiatan']);
+            error_log('LPJ found: '.$data['namaKegiatan']);
         } else {
-            error_log("LPJ NOT FOUND for lpjId=" . $lpjId);
+            error_log('LPJ NOT FOUND for lpjId='.$lpjId);
         }
-        
+
         return $data;
     }
 
@@ -536,25 +551,26 @@ class BendaharaModel
      */
     public function getLPJItems($lpjId)
     {
-        error_log("=== BENDAHARA MODEL: getLPJItems ===");
-        error_log("LPJ ID: " . $lpjId);
-        
-        $query = "SELECT * FROM tbl_lpj_item WHERE lpjId = ? ORDER BY lpjItemId ASC";
+        error_log('=== BENDAHARA MODEL: getLPJItems ===');
+        error_log('LPJ ID: '.$lpjId);
+
+        $query = 'SELECT * FROM tbl_lpj_item WHERE lpjId = ? ORDER BY lpjItemId ASC';
         $stmt = mysqli_prepare($this->db, $query);
-        mysqli_stmt_bind_param($stmt, "i", $lpjId);
+        mysqli_stmt_bind_param($stmt, 'i', $lpjId);
         mysqli_stmt_execute($stmt);
         $result = mysqli_stmt_get_result($stmt);
-        
+
         $data = [];
         while ($row = mysqli_fetch_assoc($result)) {
-            error_log("Item: " . ($row['uraian'] ?? 'N/A') . 
-                     " | realisasi: " . ($row['realisasi'] ?? 'NULL') . 
-                     " | subTotal: " . ($row['subTotal'] ?? 'NULL') .
-                     " | totalHarga: " . ($row['totalHarga'] ?? 'NULL'));
+            error_log('Item: '.($row['uraian'] ?? 'N/A').
+                     ' | realisasi: '.($row['realisasi'] ?? 'NULL').
+                     ' | subTotal: '.($row['subTotal'] ?? 'NULL').
+                     ' | totalHarga: '.($row['totalHarga'] ?? 'NULL'));
             $data[] = $row;
         }
-        
-        error_log("Total items found: " . count($data));
+
+        error_log('Total items found: '.count($data));
+
         return $data;
     }
 
@@ -564,26 +580,26 @@ class BendaharaModel
     public function approveLPJ($lpjId)
     {
         // 1. Update status di tbl_lpj (Status 3 = Disetujui)
-        $query = "UPDATE tbl_lpj SET statusId = 3, approvedAt = NOW() WHERE lpjId = ?";
+        $query = 'UPDATE tbl_lpj SET statusId = 3, approvedAt = NOW() WHERE lpjId = ?';
         $stmt = mysqli_prepare($this->db, $query);
-        mysqli_stmt_bind_param($stmt, "i", $lpjId);
+        mysqli_stmt_bind_param($stmt, 'i', $lpjId);
         $success = mysqli_stmt_execute($stmt);
         mysqli_stmt_close($stmt);
-        
+
         if ($success) {
             // 2. Log ke progress history
             $lpj = $this->getDetailLPJ($lpjId);
             $kegiatanId = $lpj['kegiatanId'] ?? 0;
             $userId = $_SESSION['user_id'] ?? null;
             if ($kegiatanId && $userId) {
-                $histQuery = "INSERT INTO tbl_progress_history (kegiatanId, statusId, changedByUserId, timestamp) VALUES (?, 3, ?, NOW())";
+                $histQuery = 'INSERT INTO tbl_progress_history (kegiatanId, statusId, changedByUserId, timestamp) VALUES (?, 3, ?, NOW())';
                 $stmtH = mysqli_prepare($this->db, $histQuery);
-                mysqli_stmt_bind_param($stmtH, "ii", $kegiatanId, $userId);
+                mysqli_stmt_bind_param($stmtH, 'ii', $kegiatanId, $userId);
                 mysqli_stmt_execute($stmtH);
                 mysqli_stmt_close($stmtH);
             }
         }
-        
+
         return $success;
     }
 
@@ -596,11 +612,11 @@ class BendaharaModel
         try {
             // 1. Update status di tbl_lpj (Status 2 = Revisi)
             $statusRevisi = 2;
-            $query = "UPDATE tbl_lpj SET statusId = ?, komentarRevisi = ? WHERE lpjId = ?";
+            $query = 'UPDATE tbl_lpj SET statusId = ?, komentarRevisi = ? WHERE lpjId = ?';
             $stmt = mysqli_prepare($this->db, $query);
-            mysqli_stmt_bind_param($stmt, "isi", $statusRevisi, $catatanUmum, $lpjId);
-            if (!mysqli_stmt_execute($stmt)) {
-                throw new Exception("Gagal update status LPJ.");
+            mysqli_stmt_bind_param($stmt, 'isi', $statusRevisi, $catatanUmum, $lpjId);
+            if (! mysqli_stmt_execute($stmt)) {
+                throw new Exception('Gagal update status LPJ.');
             }
             mysqli_stmt_close($stmt);
 
@@ -613,9 +629,9 @@ class BendaharaModel
             $kegiatanId = $lpj['kegiatanId'] ?? 0;
             $userId = $_SESSION['user_id'] ?? null;
             if ($kegiatanId && $userId) {
-                $histQuery = "INSERT INTO tbl_progress_history (kegiatanId, statusId, changedByUserId, timestamp) VALUES (?, ?, ?, NOW())";
+                $histQuery = 'INSERT INTO tbl_progress_history (kegiatanId, statusId, changedByUserId, timestamp) VALUES (?, ?, ?, NOW())';
                 $stmtH = mysqli_prepare($this->db, $histQuery);
-                mysqli_stmt_bind_param($stmtH, "iii", $kegiatanId, $statusRevisi, $userId);
+                mysqli_stmt_bind_param($stmtH, 'iii', $kegiatanId, $statusRevisi, $userId);
                 mysqli_stmt_execute($stmtH);
                 mysqli_stmt_close($stmtH);
             }
@@ -623,7 +639,8 @@ class BendaharaModel
             return true;
         } catch (Exception $e) {
             mysqli_rollback($this->db);
-            error_log("❌ reviseLPJ Error: " . $e->getMessage());
+            error_log('❌ reviseLPJ Error: '.$e->getMessage());
+
             return false;
         }
     }
@@ -634,9 +651,9 @@ class BendaharaModel
     public function rejectLPJ($lpjId, $alasan)
     {
         $statusDitolak = 4;
-        $query = "UPDATE tbl_lpj SET statusId = ?, komentarPenolakan = ? WHERE lpjId = ?";
+        $query = 'UPDATE tbl_lpj SET statusId = ?, komentarPenolakan = ? WHERE lpjId = ?';
         $stmt = mysqli_prepare($this->db, $query);
-        mysqli_stmt_bind_param($stmt, "isi", $statusDitolak, $alasan, $lpjId);
+        mysqli_stmt_bind_param($stmt, 'isi', $statusDitolak, $alasan, $lpjId);
         $success = mysqli_stmt_execute($stmt);
         mysqli_stmt_close($stmt);
 
@@ -645,9 +662,9 @@ class BendaharaModel
             $kegiatanId = $lpj['kegiatanId'] ?? 0;
             $userId = $_SESSION['user_id'] ?? null;
             if ($kegiatanId && $userId) {
-                $histQuery = "INSERT INTO tbl_progress_history (kegiatanId, statusId, changedByUserId, timestamp) VALUES (?, ?, ?, NOW())";
+                $histQuery = 'INSERT INTO tbl_progress_history (kegiatanId, statusId, changedByUserId, timestamp) VALUES (?, ?, ?, NOW())';
                 $stmtH = mysqli_prepare($this->db, $histQuery);
-                mysqli_stmt_bind_param($stmtH, "iii", $kegiatanId, $statusDitolak, $userId);
+                mysqli_stmt_bind_param($stmtH, 'iii', $kegiatanId, $statusDitolak, $userId);
                 mysqli_stmt_execute($stmtH);
                 mysqli_stmt_close($stmtH);
             }

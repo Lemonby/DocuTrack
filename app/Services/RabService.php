@@ -2,10 +2,8 @@
 
 namespace App\Services;
 
-use App\Model\RabModel;
-use App\Exceptions\ValidationException;
 use App\Exceptions\BusinessLogicException;
-use Exception;
+use App\Model\RabModel;
 
 /**
  * RabService - Business logic untuk RAB (Rencana Anggaran Biaya)
@@ -13,7 +11,7 @@ use Exception;
  * Service layer untuk RAB calculations, validations, dan business rules.
  *
  * @category Service
- * @package  DocuTrack\Services
+ *
  * @version  2.0.0
  */
 class RabService
@@ -31,7 +29,7 @@ class RabService
     /**
      * Constructor
      *
-     * @param mysqli $db Database connection
+     * @param  mysqli  $db  Database connection
      */
     public function __construct($db)
     {
@@ -42,21 +40,21 @@ class RabService
     /**
      * Get RAB grouped by category
      *
-     * @param int $kakId
+     * @param  int  $kakId
      * @return array
      */
     public function getRABByKAK($kakId)
     {
-        $query = "SELECT 
+        $query = 'SELECT 
                     r.*, 
                     cat.namaKategori 
                 FROM tbl_rab r
                 JOIN tbl_kategori_rab cat ON r.kategoriId = cat.kategoriRabId
                 WHERE r.kakId = ?
-                ORDER BY cat.kategoriRabId ASC, r.rabItemId ASC";
+                ORDER BY cat.kategoriRabId ASC, r.rabItemId ASC';
 
         $stmt = mysqli_prepare($this->db, $query);
-        mysqli_stmt_bind_param($stmt, "i", $kakId);
+        mysqli_stmt_bind_param($stmt, 'i', $kakId);
         mysqli_stmt_execute($stmt);
         $result = mysqli_stmt_get_result($stmt);
 
@@ -65,18 +63,19 @@ class RabService
             $data[$row['namaKategori']][] = $row;
         }
         mysqli_stmt_close($stmt);
+
         return $data;
     }
 
     /**
      * Get RAB for LPJ (with empty bukti fields)
      *
-     * @param int $kakId
+     * @param  int  $kakId
      * @return array
      */
     public function getRABForLPJ($kakId)
     {
-        $query = "SELECT 
+        $query = 'SELECT 
                     r.rabItemId as id,
                     r.uraian,
                     r.rincian,
@@ -92,10 +91,10 @@ class RabService
                 FROM tbl_rab r
                 JOIN tbl_kategori_rab cat ON r.kategoriId = cat.kategoriRabId
                 WHERE r.kakId = ?
-                ORDER BY cat.kategoriRabId ASC, r.rabItemId ASC";
+                ORDER BY cat.kategoriRabId ASC, r.rabItemId ASC';
 
         $stmt = mysqli_prepare($this->db, $query);
-        mysqli_stmt_bind_param($stmt, "i", $kakId);
+        mysqli_stmt_bind_param($stmt, 'i', $kakId);
         mysqli_stmt_execute($stmt);
         $result = mysqli_stmt_get_result($stmt);
 
@@ -104,6 +103,7 @@ class RabService
             $data[$row['namaKategori']][] = $row;
         }
         mysqli_stmt_close($stmt);
+
         return $data;
     }
 
@@ -112,15 +112,15 @@ class RabService
      *
      * Business logic: Sum all RAB items for a KAK
      *
-     * @param int $kakId
+     * @param  int  $kakId
      * @return float
      */
     public function calculateTotalRAB($kakId)
     {
-        $query = "SELECT SUM(totalHarga) as total FROM tbl_rab WHERE kakId = ?";
+        $query = 'SELECT SUM(totalHarga) as total FROM tbl_rab WHERE kakId = ?';
 
         $stmt = mysqli_prepare($this->db, $query);
-        mysqli_stmt_bind_param($stmt, "i", $kakId);
+        mysqli_stmt_bind_param($stmt, 'i', $kakId);
         mysqli_stmt_execute($stmt);
         $result = mysqli_stmt_get_result($stmt);
         $row = mysqli_fetch_assoc($result);
@@ -134,8 +134,9 @@ class RabService
      *
      * Business rule: Total RAB tidak boleh melebihi plafon jurusan
      *
-     * @param int $kakId
-     * @param string $jurusanId
+     * @param  int  $kakId
+     * @param  string  $jurusanId
+     *
      * @throws BusinessLogicException
      */
     public function validateRABAgainstPlafon($kakId, $jurusanId)
@@ -145,12 +146,12 @@ class RabService
 
         if ($totalRab > $plafon) {
             throw new BusinessLogicException(
-                "Total RAB (Rp " . number_format($totalRab, 0, ',', '.') .
-                ") melebihi plafon jurusan (Rp " . number_format($plafon, 0, ',', '.') . ")",
+                'Total RAB (Rp '.number_format($totalRab, 0, ',', '.').
+                ') melebihi plafon jurusan (Rp '.number_format($plafon, 0, ',', '.').')',
                 [
                     'total_rab' => $totalRab,
                     'plafon' => $plafon,
-                    'jurusan_id' => $jurusanId
+                    'jurusan_id' => $jurusanId,
                 ]
             );
         }
@@ -159,17 +160,17 @@ class RabService
     /**
      * Get jurusan plafon (placeholder - adjust according to real table)
      *
-     * @param string $jurusanId
+     * @param  string  $jurusanId
      * @return float
      */
     private function getJurusanPlafon($jurusanId)
     {
         // TODO: Query from tbl_jurusan or tbl_plafon_jurusan
         // For now, return default value
-        $query = "SELECT plafon FROM tbl_jurusan WHERE namaJurusan = ? LIMIT 1";
+        $query = 'SELECT plafon FROM tbl_jurusan WHERE namaJurusan = ? LIMIT 1';
 
         $stmt = mysqli_prepare($this->db, $query);
-        mysqli_stmt_bind_param($stmt, "s", $jurusanId);
+        mysqli_stmt_bind_param($stmt, 's', $jurusanId);
         mysqli_stmt_execute($stmt);
         $result = mysqli_stmt_get_result($stmt);
         $row = mysqli_fetch_assoc($result);
@@ -182,7 +183,7 @@ class RabService
     /**
      * Format RAB items for display
      *
-     * @param array $rabItems
+     * @param  array  $rabItems
      * @return array
      */
     public function formatRABForDisplay($rabItems)
@@ -194,16 +195,16 @@ class RabService
                 return [
                     'uraian' => $item['uraian'],
                     'rincian' => $item['rincian'],
-                    'volume' => $item['vol1'] . ' ' . $item['sat1'] .
-                               ($item['vol2'] > 1 ? ' x ' . $item['vol2'] . ' ' . $item['sat2'] : ''),
-                    'harga_satuan' => 'Rp ' . number_format($item['harga'], 0, ',', '.'),
-                    'total' => 'Rp ' . number_format($item['totalHarga'], 0, ',', '.')
+                    'volume' => $item['vol1'].' '.$item['sat1'].
+                               ($item['vol2'] > 1 ? ' x '.$item['vol2'].' '.$item['sat2'] : ''),
+                    'harga_satuan' => 'Rp '.number_format($item['harga'], 0, ',', '.'),
+                    'total' => 'Rp '.number_format($item['totalHarga'], 0, ',', '.'),
                 ];
             }, $items);
 
             $formatted[$kategori] = [
                 'items' => $formattedItems,
-                'subtotal' => array_sum(array_column($items, 'totalHarga'))
+                'subtotal' => array_sum(array_column($items, 'totalHarga')),
             ];
         }
 

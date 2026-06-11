@@ -2,23 +2,23 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Services\KegiatanService;
 use App\Services\PdfService;
+use Illuminate\Http\Response;
 
 class CetakLpjController extends Controller
 {
     /**
      * Generate LPJ PDF for a specific kegiatan.
      *
-     * @param int $id
-     * @return \Illuminate\Http\Response
+     * @param  int  $id
+     * @return Response
      */
     public function cetak($id)
     {
-        $kegiatan = (new KegiatanService())->getDetailLengkap($id);
+        $kegiatan = (new KegiatanService)->getDetailLengkap($id);
 
-        if (!$kegiatan || !$kegiatan->lpj) {
+        if (! $kegiatan || ! $kegiatan->lpj) {
             abort(404, 'Data LPJ tidak ditemukan');
         }
 
@@ -47,7 +47,7 @@ class CetakLpjController extends Controller
                 $indikator_data[] = [
                     'bulan' => $ind->bulan,
                     'nama' => $ind->indikator_keberhasilan,
-                    'target' => $ind->target_persen
+                    'target' => $ind->target_persen,
                 ];
             }
         }
@@ -63,7 +63,7 @@ class CetakLpjController extends Controller
                     'sat1' => $rab->sat1,
                     'vol2' => $rab->vol2,
                     'sat2' => $rab->sat2,
-                    'harga' => $rab->harga
+                    'harga' => $rab->harga,
                 ];
             }
         }
@@ -92,9 +92,9 @@ class CetakLpjController extends Controller
 
         $grand_total_realisasi = (float) ($lpj->grand_total_realisasi ?? 0);
 
-        $pdfService = new PdfService();
-        $filename = 'LPJ_' . str_replace([' ', '/', '\\', ':', '*', '?', '"', '<', '>', '|'], '_', $kegiatan->nama_kegiatan) . '.pdf';
-        
+        $pdfService = new PdfService;
+        $filename = 'LPJ_'.str_replace([' ', '/', '\\', ':', '*', '?', '"', '<', '>', '|'], '_', $kegiatan->nama_kegiatan).'.pdf';
+
         return $pdfService->generate(
             resource_path('views/pdf/lpj_template.php'),
             compact('kegiatan_data', 'iku_data', 'indikator_data', 'rab_data', 'kode_mak', 'realisasi_data', 'grand_total_realisasi', 'lpj'),

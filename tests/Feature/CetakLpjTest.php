@@ -2,20 +2,20 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
-use App\Models\Kegiatan;
 use App\Models\Kak;
-use App\Models\Rab;
+use App\Models\KategoriRab;
+use App\Models\Kegiatan;
 use App\Models\Lpj;
 use App\Models\LpjItem;
-use App\Models\KategoriRab;
+use App\Models\Rab;
+use App\Models\User;
 use App\Services\WorkflowService;
 use Database\Seeders\MasterDataSeeder;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Http\UploadedFile;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\TestDox;
 use Tests\TestCase;
@@ -25,7 +25,9 @@ class CetakLpjTest extends TestCase
     use RefreshDatabase;
 
     private User $admin;
+
     private Kegiatan $kegiatan;
+
     private KategoriRab $kategori;
 
     protected function setUp(): void
@@ -36,11 +38,11 @@ class CetakLpjTest extends TestCase
         $this->seed(RolePermissionSeeder::class);
 
         $this->admin = User::create([
-            'nama'         => 'Admin Cetak LPJ',
-            'email'        => 'admincetaklpj@example.com',
-            'password'     => Hash::make('password123'),
+            'nama' => 'Admin Cetak LPJ',
+            'email' => 'admincetaklpj@example.com',
+            'password' => Hash::make('password123'),
             'nama_jurusan' => 'Teknik Informatika dan Komputer',
-            'status'       => 'Aktif',
+            'status' => 'Aktif',
         ]);
         $this->admin->assignRole('Admin');
 
@@ -64,7 +66,7 @@ class CetakLpjTest extends TestCase
         ]);
 
         $this->kategori = KategoriRab::firstOrCreate(['nama_kategori' => 'Belanja Barang']);
-        
+
         Rab::create([
             'kak_id' => $kak->kak_id,
             'kategori_id' => $this->kategori->kategori_rab_id,
@@ -84,7 +86,7 @@ class CetakLpjTest extends TestCase
     public function test_cetak_lpj_requires_authentication(): void
     {
         $response = $this->get("/cetak-lpj/{$this->kegiatan->kegiatan_id}");
-        
+
         // redirect to login or forbidden depends on CheckRole middleware
         $response->assertRedirect('/');
     }
@@ -98,7 +100,7 @@ class CetakLpjTest extends TestCase
     {
         $response = $this->withSession([
             'user_id' => $this->admin->user_id,
-            'role' => 'admin'
+            'role' => 'admin',
         ])->get("/cetak-lpj/{$this->kegiatan->kegiatan_id}");
 
         $response->assertStatus(404);
@@ -139,7 +141,7 @@ class CetakLpjTest extends TestCase
 
         $response = $this->withSession([
             'user_id' => $this->admin->user_id,
-            'role' => 'admin'
+            'role' => 'admin',
         ])->get("/cetak-lpj/{$this->kegiatan->kegiatan_id}");
 
         $response->assertStatus(200);

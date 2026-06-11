@@ -7,24 +7,36 @@ use App\Models\LogStatus;
 use App\Models\ProgressHistory;
 use App\Models\RevisiComment;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Session;
 
 class WorkflowService
 {
     // Workflow positions (maps to role ordering)
     const POSITION_ADMIN = 1;
+
     const POSITION_VERIFIKATOR = 2;
+
     const POSITION_PPK = 3;
+
     const POSITION_WADIR = 4;
+
     const POSITION_BENDAHARA = 5;
 
     // Status constants
     const STATUS_MENUNGGU = 1;
+
     const STATUS_REVISI = 2;
+
     const STATUS_DISETUJUI = 3;
+
     const STATUS_DITOLAK = 4;
+
     const STATUS_DANA_DIBERIKAN = 5;
+
     const STATUS_LPJ_DISETUJUI = 6;
+
     const STATUS_TELAH_DIVERIFIKASI = 7;
+
     const STATUS_SELESAI = 8;
 
     private const WORKFLOW_ROUTING = [
@@ -106,14 +118,14 @@ class WorkflowService
                 'konten_json' => [
                     'judul' => 'Usulan Disetujui',
                     'pesan' => "Usulan \"{$kegiatan->nama_kegiatan}\" telah disetujui oleh {$roleName}.",
-                    'link' => "/admin/pengajuan-kegiatan"
-                ]
+                    'link' => '/admin/pengajuan-kegiatan',
+                ],
             ]);
 
             // Create log status for the actor (Verifikator/PPK/Wadir)
-            $actorUserId = \Illuminate\Support\Facades\Session::get('user_id') ?? auth()->id();
+            $actorUserId = Session::get('user_id') ?? auth()->id();
             if ($actorUserId && $actorUserId !== $kegiatan->user_id) {
-                $actorLink = match($currentPosition) {
+                $actorLink = match ($currentPosition) {
                     self::POSITION_VERIFIKATOR => "/verifikator/telaah/show/{$kegiatanId}",
                     self::POSITION_PPK => "/ppk/kegiatan/show/{$kegiatanId}",
                     self::POSITION_WADIR => "/wadir/kegiatan/show/{$kegiatanId}",
@@ -127,13 +139,13 @@ class WorkflowService
                     'konten_json' => [
                         'judul' => 'Persetujuan Berhasil',
                         'pesan' => "Anda telah menyetujui usulan \"{$kegiatan->nama_kegiatan}\" sebagai {$roleName}.",
-                        'link' => $actorLink
-                    ]
+                        'link' => $actorLink,
+                    ],
                 ]);
             }
 
             // Create activity log
-            app(\App\Services\ActivityLogService::class)->log(
+            app(ActivityLogService::class)->log(
                 userId: $actorUserId ?? $kegiatan->user_id,
                 action: 'APPROVE_KEGIATAN',
                 category: 'workflow',
@@ -179,14 +191,14 @@ class WorkflowService
                 'konten_json' => [
                     'judul' => 'Usulan Ditolak',
                     'pesan' => "Usulan \"{$kegiatan->nama_kegiatan}\" telah ditolak oleh {$roleName}. Alasan: {$reason}",
-                    'link' => "/admin/pengajuan-kegiatan"
-                ]
+                    'link' => '/admin/pengajuan-kegiatan',
+                ],
             ]);
 
             // Create log status for the actor (Verifikator/PPK/Wadir)
-            $actorUserId = \Illuminate\Support\Facades\Session::get('user_id') ?? auth()->id();
+            $actorUserId = Session::get('user_id') ?? auth()->id();
             if ($actorUserId && $actorUserId !== $kegiatan->user_id) {
-                $actorLink = match($currentPosition) {
+                $actorLink = match ($currentPosition) {
                     self::POSITION_VERIFIKATOR => "/verifikator/telaah/show/{$kegiatanId}",
                     self::POSITION_PPK => "/ppk/kegiatan/show/{$kegiatanId}",
                     self::POSITION_WADIR => "/wadir/kegiatan/show/{$kegiatanId}",
@@ -200,13 +212,13 @@ class WorkflowService
                     'konten_json' => [
                         'judul' => 'Penolakan Berhasil',
                         'pesan' => "Anda telah menolak usulan \"{$kegiatan->nama_kegiatan}\" sebagai {$roleName}.",
-                        'link' => $actorLink
-                    ]
+                        'link' => $actorLink,
+                    ],
                 ]);
             }
 
             // Create activity log
-            app(\App\Services\ActivityLogService::class)->log(
+            app(ActivityLogService::class)->log(
                 userId: $actorUserId ?? $kegiatan->user_id,
                 action: 'REJECT_KEGIATAN',
                 category: 'workflow',
@@ -262,14 +274,14 @@ class WorkflowService
                 'konten_json' => [
                     'judul' => 'Revisi Diperlukan',
                     'pesan' => "Usulan \"{$kegiatan->nama_kegiatan}\" memerlukan revisi dari {$roleName}. Catatan: {$comments}",
-                    'link' => "/admin/pengajuan-kegiatan"
-                ]
+                    'link' => '/admin/pengajuan-kegiatan',
+                ],
             ]);
 
             // Create activity log for the verifikator/reviewer who requested the revision
-            $actorUserId = \Illuminate\Support\Facades\Session::get('user_id') ?? auth()->id();
+            $actorUserId = Session::get('user_id') ?? auth()->id();
             if ($actorUserId && $actorUserId !== $kegiatan->user_id) {
-                $actorLink = match($currentPosition) {
+                $actorLink = match ($currentPosition) {
                     self::POSITION_VERIFIKATOR => "/verifikator/telaah/show/{$kegiatanId}",
                     self::POSITION_PPK => "/ppk/kegiatan/show/{$kegiatanId}",
                     self::POSITION_WADIR => "/wadir/kegiatan/show/{$kegiatanId}",
@@ -283,13 +295,13 @@ class WorkflowService
                     'konten_json' => [
                         'judul' => 'Revisi KAK Berhasil Dikirim',
                         'pesan' => "Permintaan revisi untuk usulan \"{$kegiatan->nama_kegiatan}\" berhasil dikirim. Catatan: {$comments}",
-                        'link' => $actorLink
-                    ]
+                        'link' => $actorLink,
+                    ],
                 ]);
             }
 
             // Create activity log
-            app(\App\Services\ActivityLogService::class)->log(
+            app(ActivityLogService::class)->log(
                 userId: $actorUserId ?? $kegiatan->user_id,
                 action: 'REQUEST_REVISION',
                 category: 'workflow',
@@ -305,7 +317,8 @@ class WorkflowService
 
     private function recordHistory(int $kegiatanId, int $statusId, ?int $userId): ProgressHistory
     {
-        $realUserId = \Illuminate\Support\Facades\Session::get('user_id') ?? $userId ?? 1;
+        $realUserId = Session::get('user_id') ?? $userId ?? 1;
+
         return ProgressHistory::create([
             'kegiatan_id' => $kegiatanId,
             'status_id' => $statusId,

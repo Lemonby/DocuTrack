@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Core\Database;
-use mysqli;
 
 class DirekturModel
 {
@@ -19,7 +18,7 @@ class DirekturModel
      */
     public function getStatistikUmum(): array
     {
-        $query = "
+        $query = '
             SELECT 
                 COUNT(*) as total,
                 SUM(CASE WHEN (k.posisiId >= 5 OR (k.posisiId = 1 AND k.statusUtamaId IN (5, 6) AND k.jumlahDicairkan IS NOT NULL)) AND l.statusId = 3 THEN 1 ELSE 0 END) as disetujui,
@@ -29,14 +28,14 @@ class DirekturModel
                 SUM(CASE WHEN k.statusUtamaId = 1 THEN 1 ELSE 0 END) as menunggu
             FROM tbl_kegiatan k
             LEFT JOIN tbl_lpj l ON k.kegiatanId = l.kegiatanId
-        ";
+        ';
 
         $result = $this->db->query($query);
-        
-        if (!$result) {
-            throw new \Exception("Database error: " . $this->db->error);
+
+        if (! $result) {
+            throw new \Exception('Database error: '.$this->db->error);
         }
-        
+
         if ($result->num_rows > 0) {
             return $result->fetch_assoc();
         }
@@ -46,7 +45,7 @@ class DirekturModel
             'disetujui' => 0,
             'ditolak' => 0,
             'menunggu' => 0,
-            'revisi' => 0
+            'revisi' => 0,
         ];
     }
 
@@ -69,30 +68,30 @@ class DirekturModel
         ";
 
         $result = $this->db->query($query);
-        
-        if (!$result) {
-            throw new \Exception("Database error: " . $this->db->error);
+
+        if (! $result) {
+            throw new \Exception('Database error: '.$this->db->error);
         }
-        
+
         $labels = [];
         $data = [];
 
         if ($result->num_rows > 0) {
             while ($row = $result->fetch_assoc()) {
                 $labels[] = $row['namaJurusan'];
-                $data[] = (int)$row['jumlah_usulan'];
+                $data[] = (int) $row['jumlah_usulan'];
             }
         }
 
         return [
             'labels' => $labels,
-            'data' => $data
+            'data' => $data,
         ];
     }
 
     /**
      * Get total dana keluar per jurusan
-     * 
+     *
      * Menggunakan kolom danaDisetujui dari tbl_kegiatan yang merupakan
      * sum dari total dana yang diajukan untuk setiap kegiatan yang sudah disetujui.
      */
@@ -103,7 +102,7 @@ class DirekturModel
         // Kondisi:
         // - statusUtamaId = 3 (Disetujui) ATAU
         // - statusUtamaId IN (5,6) dengan posisiId IN (1,5) (Dana sudah cair/selesai)
-        $query = "
+        $query = '
             SELECT 
                 j.namaJurusan,
                 COALESCE(SUM(k.danaDisetujui), 0) as total_dana
@@ -118,21 +117,21 @@ class DirekturModel
             GROUP BY j.namaJurusan
             HAVING total_dana > 0
             ORDER BY total_dana DESC
-        ";
+        ';
 
         $result = $this->db->query($query);
-        
-        if (!$result) {
-            throw new \Exception("Database error: " . $this->db->error);
+
+        if (! $result) {
+            throw new \Exception('Database error: '.$this->db->error);
         }
-        
+
         $labels = [];
         $data = [];
 
         if ($result->num_rows > 0) {
             while ($row = $result->fetch_assoc()) {
                 $labels[] = $row['namaJurusan'];
-                $data[] = (int)$row['total_dana'];
+                $data[] = (int) $row['total_dana'];
             }
         }
 
@@ -140,13 +139,13 @@ class DirekturModel
         if (empty($labels)) {
             return [
                 'labels' => ['Belum ada data'],
-                'data' => [0]
+                'data' => [0],
             ];
         }
 
         return [
             'labels' => $labels,
-            'data' => $data
+            'data' => $data,
         ];
     }
 
@@ -155,13 +154,13 @@ class DirekturModel
      */
     public function getListJurusan(): array
     {
-        $query = "SELECT namaJurusan FROM tbl_jurusan ORDER BY namaJurusan ASC";
+        $query = 'SELECT namaJurusan FROM tbl_jurusan ORDER BY namaJurusan ASC';
         $result = $this->db->query($query);
-        
-        if (!$result) {
-            throw new \Exception("Database error: " . $this->db->error);
+
+        if (! $result) {
+            throw new \Exception('Database error: '.$this->db->error);
         }
-        
+
         $jurusanList = [];
 
         if ($result->num_rows > 0) {
@@ -178,7 +177,7 @@ class DirekturModel
      */
     public function getDataKegiatanForChart(): array
     {
-        $query = "
+        $query = '
             SELECT 
                 k.kegiatanId,
                 k.namaKegiatan,
@@ -188,14 +187,14 @@ class DirekturModel
             FROM tbl_kegiatan k
             LEFT JOIN tbl_status_utama s ON k.statusUtamaId = s.statusId
             ORDER BY k.createdAt DESC
-        ";
+        ';
 
         $result = $this->db->query($query);
-        
-        if (!$result) {
-            throw new \Exception("Database error: " . $this->db->error);
+
+        if (! $result) {
+            throw new \Exception('Database error: '.$this->db->error);
         }
-        
+
         $kegiatanList = [];
 
         if ($result->num_rows > 0) {
@@ -231,18 +230,19 @@ class DirekturModel
         ";
 
         $result = $this->db->query($query);
-        
-        if (!$result) {
-            throw new \Exception("Database error: " . $this->db->error);
+
+        if (! $result) {
+            throw new \Exception('Database error: '.$this->db->error);
         }
-        
+
         if ($result->num_rows > 0) {
             $row = $result->fetch_assoc();
+
             return [
-                'total_jurusan' => (int)($row['total_jurusan'] ?? 0),
-                'total_usulan' => (int)($row['total_usulan'] ?? 0),
-                'max_usulan' => (int)($row['max_usulan'] ?? 0),
-                'avg_usulan' => round($row['avg_usulan'] ?? 0, 1)
+                'total_jurusan' => (int) ($row['total_jurusan'] ?? 0),
+                'total_usulan' => (int) ($row['total_usulan'] ?? 0),
+                'max_usulan' => (int) ($row['max_usulan'] ?? 0),
+                'avg_usulan' => round($row['avg_usulan'] ?? 0, 1),
             ];
         }
 
@@ -250,7 +250,7 @@ class DirekturModel
             'total_jurusan' => 0,
             'total_usulan' => 0,
             'max_usulan' => 0,
-            'avg_usulan' => 0
+            'avg_usulan' => 0,
         ];
     }
 
@@ -264,8 +264,8 @@ class DirekturModel
         $params = [];
         $types = '';
 
-        if (!empty($search)) {
-            $conditions[] = "(k.namaKegiatan LIKE ? OR k.pemilikKegiatan LIKE ? OR k.nimPelaksana LIKE ?)";
+        if (! empty($search)) {
+            $conditions[] = '(k.namaKegiatan LIKE ? OR k.pemilikKegiatan LIKE ? OR k.nimPelaksana LIKE ?)';
             $searchParam = "%$search%";
             $params[] = $searchParam;
             $params[] = $searchParam;
@@ -273,33 +273,33 @@ class DirekturModel
             $types .= 'sss';
         }
 
-        if (!empty($jurusan)) {
-            $conditions[] = "k.jurusanPenyelenggara = ?";
+        if (! empty($jurusan)) {
+            $conditions[] = 'k.jurusanPenyelenggara = ?';
             $params[] = $jurusan;
             $types .= 's';
         }
 
-        $whereClause = !empty($conditions) ? 'WHERE ' . implode(' AND ', $conditions) : '';
+        $whereClause = ! empty($conditions) ? 'WHERE '.implode(' AND ', $conditions) : '';
 
         // Get total count
         $countQuery = "SELECT COUNT(*) as total FROM tbl_kegiatan k $whereClause";
-        
-        if (!empty($params)) {
+
+        if (! empty($params)) {
             $countStmt = $this->db->prepare($countQuery);
-            if (!$countStmt) {
-                throw new \Exception("Prepare failed: " . $this->db->error);
+            if (! $countStmt) {
+                throw new \Exception('Prepare failed: '.$this->db->error);
             }
             $countStmt->bind_param($types, ...$params);
             $countStmt->execute();
             $countResult = $countStmt->get_result();
-            $totalItems = (int)$countResult->fetch_assoc()['total'];
+            $totalItems = (int) $countResult->fetch_assoc()['total'];
             $countStmt->close();
         } else {
             $countResult = $this->db->query($countQuery);
-            if (!$countResult) {
-                throw new \Exception("Query failed: " . $this->db->error);
+            if (! $countResult) {
+                throw new \Exception('Query failed: '.$this->db->error);
             }
-            $totalItems = (int)$countResult->fetch_assoc()['total'];
+            $totalItems = (int) $countResult->fetch_assoc()['total'];
         }
 
         // ✅ FIXED: Tambahkan kolom estimasi_dana dan lengkapi query dengan ORDER BY & LIMIT
@@ -338,18 +338,18 @@ class DirekturModel
                   LIMIT ? OFFSET ?";
 
         $stmt = $this->db->prepare($query);
-        if (!$stmt) {
-            throw new \Exception("Prepare failed: " . $this->db->error);
+        if (! $stmt) {
+            throw new \Exception('Prepare failed: '.$this->db->error);
         }
-        
+
         // ✅ FIXED: Sekarang bind params match dengan placeholder di query
         $bindParams = $params;
         $bindParams[] = $perPage;
         $bindParams[] = $offset;
-        $bindTypes = $types . 'ii';
-        
+        $bindTypes = $types.'ii';
+
         $stmt->bind_param($bindTypes, ...$bindParams);
-        
+
         $stmt->execute();
         $result = $stmt->get_result();
 
@@ -366,7 +366,7 @@ class DirekturModel
             'total' => $totalItems,
             'page' => $page,
             'per_page' => $perPage,
-            'total_pages' => $totalItems > 0 ? (int)ceil($totalItems / $perPage) : 0
+            'total_pages' => $totalItems > 0 ? (int) ceil($totalItems / $perPage) : 0,
         ];
     }
 
@@ -380,11 +380,11 @@ class DirekturModel
      * - 'in process': Usulan yang masih dalam proses
      * - 'lpj': Usulan yang dalam tahap LPJ
      *
-     * @param int $page Halaman saat ini untuk pagination
-     * @param int $perPage Jumlah item per halaman
-     * @param string $search Kata kunci pencarian (nama kegiatan atau pengusul)
-     * @param string $statusFilter Filter status: 'semua', 'menunggu', 'approved', 'ditolak', 'in process', 'lpj'
-     * @param string $jurusanFilter Filter jurusan: 'semua' atau nama jurusan spesifik
+     * @param  int  $page  Halaman saat ini untuk pagination
+     * @param  int  $perPage  Jumlah item per halaman
+     * @param  string  $search  Kata kunci pencarian (nama kegiatan atau pengusul)
+     * @param  string  $statusFilter  Filter status: 'semua', 'menunggu', 'approved', 'ditolak', 'in process', 'lpj'
+     * @param  string  $jurusanFilter  Filter jurusan: 'semua' atau nama jurusan spesifik
      * @return array Array dengan key 'data' (list kegiatan) dan 'totalItems' (total records)
      */
     public function getMonitoringData($page, $perPage, $search, $statusFilter, $jurusanFilter)
@@ -392,15 +392,15 @@ class DirekturModel
         $offset = ($page - 1) * $perPage;
 
         // Base Where Clause & Params Construction
-        $whereClause = " WHERE 1=1";
-        $types = "";
+        $whereClause = ' WHERE 1=1';
+        $types = '';
         $params = [];
 
         // Filter pencarian
-        if (!empty($search)) {
-            $whereClause .= " AND (k.namaKegiatan LIKE ? OR k.pemilikKegiatan LIKE ?)";
+        if (! empty($search)) {
+            $whereClause .= ' AND (k.namaKegiatan LIKE ? OR k.pemilikKegiatan LIKE ?)';
             $searchTerm = "%{$search}%";
-            $types .= "ss";
+            $types .= 'ss';
             $params[] = $searchTerm;
             $params[] = $searchTerm;
         }
@@ -408,31 +408,31 @@ class DirekturModel
         // Filter status
         if ($statusFilter !== 'semua') {
             if ($statusFilter === 'ditolak') {
-                $whereClause .= " AND k.statusUtamaId = 4";
+                $whereClause .= ' AND k.statusUtamaId = 4';
             } elseif ($statusFilter === 'approved') {
-                $whereClause .= " AND k.posisiId >= 5 AND k.statusUtamaId != 4";
+                $whereClause .= ' AND k.posisiId >= 5 AND k.statusUtamaId != 4';
             } elseif ($statusFilter === 'menunggu') {
-                $whereClause .= " AND k.statusUtamaId = 1 AND k.posisiId < 5";
+                $whereClause .= ' AND k.statusUtamaId = 1 AND k.posisiId < 5';
             } elseif ($statusFilter === 'in process') {
-                $whereClause .= " AND k.statusUtamaId != 4 AND k.posisiId < 5 AND k.statusUtamaId != 1";
+                $whereClause .= ' AND k.statusUtamaId != 4 AND k.posisiId < 5 AND k.statusUtamaId != 1';
             } elseif ($statusFilter === 'lpj') {
                 // Filter untuk LPJ: posisi di 1 atau 6, status 5 atau 6, dan dana sudah cair
-                $whereClause .= " AND k.posisiId IN (1, 6) AND k.statusUtamaId IN (5, 6) AND k.jumlahDicairkan IS NOT NULL";
+                $whereClause .= ' AND k.posisiId IN (1, 6) AND k.statusUtamaId IN (5, 6) AND k.jumlahDicairkan IS NOT NULL';
             }
         }
 
         // Filter jurusan
         if ($jurusanFilter !== 'semua') {
-            $whereClause .= " AND k.jurusanPenyelenggara = ?";
-            $types .= "s";
+            $whereClause .= ' AND k.jurusanPenyelenggara = ?';
+            $types .= 's';
             $params[] = $jurusanFilter;
         }
 
         // 1. Execute Count Query
-        $countQuery = "SELECT COUNT(*) as total FROM tbl_kegiatan k" . $whereClause;
+        $countQuery = 'SELECT COUNT(*) as total FROM tbl_kegiatan k'.$whereClause;
         $stmtCount = mysqli_prepare($this->db, $countQuery);
 
-        if ($types !== "") {
+        if ($types !== '') {
             mysqli_stmt_bind_param($stmtCount, $types, ...$params);
         }
 
@@ -470,20 +470,20 @@ class DirekturModel
                         ELSE 'In Process'
                     END as status
                   FROM tbl_kegiatan k
-                  LEFT JOIN tbl_lpj l ON k.kegiatanId = l.kegiatanId" . $whereClause;
+                  LEFT JOIN tbl_lpj l ON k.kegiatanId = l.kegiatanId".$whereClause;
 
         // Add ORDER BY and LIMIT
-        $query .= " ORDER BY k.createdAt DESC LIMIT ? OFFSET ?";
-        
+        $query .= ' ORDER BY k.createdAt DESC LIMIT ? OFFSET ?';
+
         // Add limit/offset to params
-        $typesWithLimit = $types . "ii";
+        $typesWithLimit = $types.'ii';
         $paramsWithLimit = $params;
         $paramsWithLimit[] = $perPage;
         $paramsWithLimit[] = $offset;
 
         $stmt = mysqli_prepare($this->db, $query);
         mysqli_stmt_bind_param($stmt, $typesWithLimit, ...$paramsWithLimit);
-        
+
         mysqli_stmt_execute($stmt);
         $result = mysqli_stmt_get_result($stmt);
 
@@ -497,13 +497,13 @@ class DirekturModel
 
         return [
             'data' => $data,
-            'totalItems' => $totalItems
+            'totalItems' => $totalItems,
         ];
     }
 
     /**
      * Mengambil list jurusan yang distinct dari tabel kegiatan
-     * 
+     *
      * @return array List nama jurusan
      */
     public function getListJurusanDistinct()
@@ -519,6 +519,7 @@ class DirekturModel
                 $list[] = $row['jurusan'];
             }
         }
+
         return $list;
     }
 
@@ -531,7 +532,7 @@ class DirekturModel
         $search = $filters['search'] ?? '';
         $statusFilter = strtolower($filters['status'] ?? 'semua');
         $jurusanFilter = $filters['jurusan'] ?? 'semua';
-        
+
         return $this->getMonitoringData($page, $perPage, $search, $statusFilter, $jurusanFilter);
     }
 
@@ -542,15 +543,15 @@ class DirekturModel
     {
         switch ($periode) {
             case 'today':
-                return "WHERE DATE(k.createdAt) = CURDATE()";
+                return 'WHERE DATE(k.createdAt) = CURDATE()';
             case 'week':
-                return "WHERE k.createdAt >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)";
+                return 'WHERE k.createdAt >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)';
             case 'month':
-                return "WHERE k.createdAt >= DATE_SUB(CURDATE(), INTERVAL 1 MONTH)";
+                return 'WHERE k.createdAt >= DATE_SUB(CURDATE(), INTERVAL 1 MONTH)';
             case 'year':
-                return "WHERE k.createdAt >= DATE_SUB(CURDATE(), INTERVAL 1 YEAR)";
+                return 'WHERE k.createdAt >= DATE_SUB(CURDATE(), INTERVAL 1 YEAR)';
             default:
-                return "";
+                return '';
         }
     }
 }

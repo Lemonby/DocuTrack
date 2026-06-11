@@ -2,6 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Http\Middleware\CheckRole;
+use App\Models\Kegiatan;
+use App\Models\LogStatus;
 use App\Models\User;
 use Database\Seeders\MasterDataSeeder;
 use Database\Seeders\RolePermissionSeeder;
@@ -11,6 +14,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\TestDox;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Tests\TestCase;
 
 class AuthTest extends TestCase
@@ -52,7 +57,7 @@ class AuthTest extends TestCase
         $response->assertHeader('Content-Type', 'image/svg+xml');
         $response->assertSee('<svg', false);
         $response->assertSee('</svg>', false);
-        
+
         $this->assertTrue(session()->has('captcha_code'));
         $this->assertEquals(5, strlen(session('captcha_code')));
     }
@@ -65,9 +70,9 @@ class AuthTest extends TestCase
     public function test_login_validation_errors(): void
     {
         $response = $this->post('/login', [
-            'email'    => '',
+            'email' => '',
             'password' => '',
-            'captcha_code'   => '',
+            'captcha_code' => '',
         ]);
 
         $response->assertSessionHasErrors(['email', 'password', 'captcha_code']);
@@ -82,19 +87,19 @@ class AuthTest extends TestCase
     {
         // Buat user simulasi
         $user = User::create([
-            'nama'         => 'Test User',
-            'email'        => 'test@example.com',
-            'password'     => Hash::make('password123'),
+            'nama' => 'Test User',
+            'email' => 'test@example.com',
+            'password' => Hash::make('password123'),
             'nama_jurusan' => 'Teknik Informatika dan Komputer',
-            'status'       => 'Aktif',
+            'status' => 'Aktif',
         ]);
         $user->assignRole('Admin');
 
         // Mengirimkan request login dengan captcha yang salah (bukan master code '123456' dan bukan dari session)
         $response = $this->post('/login', [
-            'email'    => 'test@example.com',
+            'email' => 'test@example.com',
             'password' => 'password123',
-            'captcha_code'   => 'WRONG_CAPTncfsdfcsdj',
+            'captcha_code' => 'WRONG_CAPTncfsdfcsdj',
         ]);
 
         $response->assertRedirect();
@@ -111,19 +116,19 @@ class AuthTest extends TestCase
     {
         // Buat user simulasi
         $user = User::create([
-            'nama'         => 'Test User',
-            'email'        => 'test@example.com',
-            'password'     => Hash::make('password123'),
+            'nama' => 'Test User',
+            'email' => 'test@example.com',
+            'password' => Hash::make('password123'),
             'nama_jurusan' => 'Teknik Informatika dan Komputer',
-            'status'       => 'Aktif',
+            'status' => 'Aktif',
         ]);
         $user->assignRole('Admin');
 
         // Mengirimkan request dengan captcha master '123456' tapi password salah
         $response = $this->post('/login', [
-            'email'    => 'test@example.com',
+            'email' => 'test@example.com',
             'password' => 'wrong_password',
-            'captcha_code'   => '123456',
+            'captcha_code' => '123456',
         ]);
 
         $response->assertRedirect();
@@ -140,19 +145,19 @@ class AuthTest extends TestCase
     {
         // Buat user dengan role Admin
         $admin = User::create([
-            'nama'         => 'Admin TI',
-            'email'        => 'admin@example.com',
-            'password'     => Hash::make('password123'),
+            'nama' => 'Admin TI',
+            'email' => 'admin@example.com',
+            'password' => Hash::make('password123'),
             'nama_jurusan' => 'Teknik Informatika dan Komputer',
-            'status'       => 'Aktif',
+            'status' => 'Aktif',
         ]);
         $admin->assignRole('Admin');
 
         // Kirim request login
         $response = $this->post('/login', [
-            'email'    => 'admin@example.com',
+            'email' => 'admin@example.com',
             'password' => 'password123',
-            'captcha_code'   => '123456', // Menggunakan master captcha
+            'captcha_code' => '123456', // Menggunakan master captcha
         ]);
 
         // Cek redirect ke admin dashboard
@@ -175,19 +180,19 @@ class AuthTest extends TestCase
     {
         // Buat user dan simpan data ke session seolah-olah sudah login
         $user = User::create([
-            'nama'         => 'Test User',
-            'email'        => 'test@example.com',
-            'password'     => Hash::make('password123'),
+            'nama' => 'Test User',
+            'email' => 'test@example.com',
+            'password' => Hash::make('password123'),
             'nama_jurusan' => 'Teknik Informatika dan Komputer',
-            'status'       => 'Aktif',
+            'status' => 'Aktif',
         ]);
         $user->assignRole('Admin');
 
         // Login duluan agar session terisi
         $this->post('/login', [
-            'email'    => 'test@example.com',
+            'email' => 'test@example.com',
             'password' => 'password123',
-            'captcha_code'   => '123456',
+            'captcha_code' => '123456',
         ]);
 
         $this->assertTrue(Session::has('user_id'));
@@ -210,13 +215,13 @@ class AuthTest extends TestCase
     public function test_middleware_blocks_unauthenticated_user(): void
     {
         $request = Request::create('/dashboard', 'GET');
-        
-        $middleware = new \App\Http\Middleware\CheckRole();
-        
+
+        $middleware = new CheckRole;
+
         $response = $middleware->handle($request, function () {
             $this->fail('Middleware should not pass the request.');
         });
-        
+
         $this->assertEquals(302, $response->getStatusCode());
         $this->assertEquals(url('/'), $response->headers->get('Location'));
         $this->assertEquals('Silakan login terlebih dahulu.', session('login_error'));
@@ -233,13 +238,13 @@ class AuthTest extends TestCase
         Session::put('role', 'bendahara');
 
         $request = Request::create('/admin/dashboard', 'GET');
-        
-        $middleware = new \App\Http\Middleware\CheckRole();
-        
+
+        $middleware = new CheckRole;
+
         // Meminta agar hanya role 'admin' yang bisa lewat
-        $this->expectException(\Symfony\Component\HttpKernel\Exception\HttpException::class);
+        $this->expectException(HttpException::class);
         $this->expectExceptionMessage('Forbidden / Unauthorized Access');
-        
+
         $middleware->handle($request, function () {
             $this->fail('Middleware should not pass the request.');
         }, 'admin');
@@ -256,15 +261,16 @@ class AuthTest extends TestCase
         Session::put('role', 'admin');
 
         $request = Request::create('/admin/dashboard', 'GET');
-        
-        $middleware = new \App\Http\Middleware\CheckRole();
-        
+
+        $middleware = new CheckRole;
+
         $called = false;
         $response = $middleware->handle($request, function ($req) use (&$called) {
             $called = true;
-            return new \Symfony\Component\HttpFoundation\Response('Passed');
+
+            return new Response('Passed');
         }, 'admin');
-        
+
         $this->assertTrue($called);
         $this->assertEquals('Passed', $response->getContent());
     }
@@ -278,23 +284,23 @@ class AuthTest extends TestCase
     {
         // Buat user
         $user = User::create([
-            'nama'         => 'Log User',
-            'email'        => 'loguser@example.com',
-            'password'     => Hash::make('password123'),
+            'nama' => 'Log User',
+            'email' => 'loguser@example.com',
+            'password' => Hash::make('password123'),
             'nama_jurusan' => 'Teknik Informatika dan Komputer',
-            'status'       => 'Aktif',
+            'status' => 'Aktif',
         ]);
         $user->assignRole('Admin');
 
         // Kirim request login
         $response = $this->post('/login', [
-            'email'    => 'loguser@example.com',
+            'email' => 'loguser@example.com',
             'password' => 'password123',
-            'captcha_code'   => '123456',
+            'captcha_code' => '123456',
         ]);
 
         $response->assertRedirect(route('admin.dashboard'));
-        
+
         // Memastikan tabel log_statuses terisi
         $this->assertDatabaseHas('log_statuses', [
             'user_id' => $user->user_id,
@@ -312,30 +318,30 @@ class AuthTest extends TestCase
     {
         // Buat user
         $user = User::create([
-            'nama'         => 'Notif User',
-            'email'        => 'notifuser@example.com',
-            'password'     => Hash::make('password123'),
+            'nama' => 'Notif User',
+            'email' => 'notifuser@example.com',
+            'password' => Hash::make('password123'),
             'nama_jurusan' => 'Teknik Informatika dan Komputer',
-            'status'       => 'Aktif',
+            'status' => 'Aktif',
         ]);
         $user->assignRole('Admin');
 
         // Simpan notifikasi buatan ke database
-        \App\Models\LogStatus::create([
+        LogStatus::create([
             'user_id' => $user->user_id,
             'tipe_log' => 'NOTIFIKASI_APPROVAL',
             'status' => 'BELUM_DIBACA',
             'konten_json' => [
                 'judul' => 'Usulan Disetujui',
                 'pesan' => 'Usulan Anda disetujui.',
-                'link' => '#'
-            ]
+                'link' => '#',
+            ],
         ]);
 
         // Simulasikan session login
         $response = $this->withSession([
             'user_id' => $user->user_id,
-            'role' => 'admin'
+            'role' => 'admin',
         ])->get('/api/notifikasi');
 
         $response->assertStatus(200);
@@ -343,10 +349,10 @@ class AuthTest extends TestCase
             'success',
             'data' => [
                 'items',
-                'unread_count'
-            ]
+                'unread_count',
+            ],
         ]);
-        
+
         $response->assertJsonPath('data.unread_count', 1);
     }
 
@@ -358,17 +364,17 @@ class AuthTest extends TestCase
     public function test_admin_dashboard_renders_with_session_user(): void
     {
         $user = User::create([
-            'nama'         => 'Dashboard Admin',
-            'email'        => 'dashadmin@example.com',
-            'password'     => Hash::make('password123'),
+            'nama' => 'Dashboard Admin',
+            'email' => 'dashadmin@example.com',
+            'password' => Hash::make('password123'),
             'nama_jurusan' => 'Teknik Informatika dan Komputer',
-            'status'       => 'Aktif',
+            'status' => 'Aktif',
         ]);
         $user->assignRole('Admin');
 
         $response = $this->withSession([
             'user_id' => $user->user_id,
-            'role' => 'admin'
+            'role' => 'admin',
         ])->get('/admin/dashboard');
 
         $response->assertStatus(200);
@@ -383,17 +389,17 @@ class AuthTest extends TestCase
     public function test_admin_usulan_list_renders_with_session_user(): void
     {
         $user = User::create([
-            'nama'         => 'Usulan Admin',
-            'email'        => 'usuladmin@example.com',
-            'password'     => Hash::make('password123'),
+            'nama' => 'Usulan Admin',
+            'email' => 'usuladmin@example.com',
+            'password' => Hash::make('password123'),
             'nama_jurusan' => 'Teknik Informatika dan Komputer',
-            'status'       => 'Aktif',
+            'status' => 'Aktif',
         ]);
         $user->assignRole('Admin');
 
         $response = $this->withSession([
             'user_id' => $user->user_id,
-            'role' => 'admin'
+            'role' => 'admin',
         ])->get('/admin/pengajuan-usulan');
 
         $response->assertStatus(200);
@@ -408,17 +414,17 @@ class AuthTest extends TestCase
     public function test_admin_kegiatan_list_renders_with_session_user(): void
     {
         $user = User::create([
-            'nama'         => 'Kegiatan Admin',
-            'email'        => 'kegadmin@example.com',
-            'password'     => Hash::make('password123'),
+            'nama' => 'Kegiatan Admin',
+            'email' => 'kegadmin@example.com',
+            'password' => Hash::make('password123'),
             'nama_jurusan' => 'Teknik Informatika dan Komputer',
-            'status'       => 'Aktif',
+            'status' => 'Aktif',
         ]);
         $user->assignRole('Admin');
 
         $response = $this->withSession([
             'user_id' => $user->user_id,
-            'role' => 'admin'
+            'role' => 'admin',
         ])->get('/admin/pengajuan-kegiatan');
 
         $response->assertStatus(200);
@@ -433,17 +439,17 @@ class AuthTest extends TestCase
     public function test_admin_lpj_list_renders_with_session_user(): void
     {
         $user = User::create([
-            'nama'         => 'LPJ Admin',
-            'email'        => 'lpjadmin@example.com',
-            'password'     => Hash::make('password123'),
+            'nama' => 'LPJ Admin',
+            'email' => 'lpjadmin@example.com',
+            'password' => Hash::make('password123'),
             'nama_jurusan' => 'Teknik Informatika dan Komputer',
-            'status'       => 'Aktif',
+            'status' => 'Aktif',
         ]);
         $user->assignRole('Admin');
 
         $response = $this->withSession([
             'user_id' => $user->user_id,
-            'role' => 'admin'
+            'role' => 'admin',
         ])->get('/admin/pengajuan-lpj');
 
         $response->assertStatus(200);
@@ -459,16 +465,16 @@ class AuthTest extends TestCase
     {
         // 0. Create a TIK admin user
         $adminTIK = User::create([
-            'nama'         => 'Admin TIK',
-            'email'        => 'admintik_test@example.com',
-            'password'     => Hash::make('password123'),
+            'nama' => 'Admin TIK',
+            'email' => 'admintik_test@example.com',
+            'password' => Hash::make('password123'),
             'nama_jurusan' => 'Teknik Informatika dan Komputer',
-            'status'       => 'Aktif',
+            'status' => 'Aktif',
         ]);
         $adminTIK->assignRole('Admin');
 
         // 1. Create a Kegiatan belonging to TIK
-        $kegiatanTIK = \App\Models\Kegiatan::create([
+        $kegiatanTIK = Kegiatan::create([
             'nama_kegiatan' => 'Kegiatan TIK Test',
             'prodi_penyelenggara' => 'D4 Teknik Informatika',
             'pemilik_kegiatan' => 'Admin TI',
@@ -482,11 +488,11 @@ class AuthTest extends TestCase
 
         // 2. Create an admin user for Teknik Elektro
         $adminElektro = User::create([
-            'nama'         => 'Admin Elektro',
-            'email'        => 'adminelektro_test@example.com',
-            'password'     => Hash::make('password123'),
+            'nama' => 'Admin Elektro',
+            'email' => 'adminelektro_test@example.com',
+            'password' => Hash::make('password123'),
             'nama_jurusan' => 'Teknik Elektro',
-            'status'       => 'Aktif',
+            'status' => 'Aktif',
         ]);
         $adminElektro->assignRole('Admin');
 
@@ -494,11 +500,10 @@ class AuthTest extends TestCase
         $response = $this->withSession([
             'user_id' => $adminElektro->user_id,
             'role' => 'admin',
-            'jurusan' => 'Teknik Elektro'
+            'jurusan' => 'Teknik Elektro',
         ])->get("/admin/pengajuan-kegiatan/show/{$kegiatanTIK->kegiatan_id}");
 
         // 4. Assert 403 Forbidden access
         $response->assertStatus(403);
     }
 }
-

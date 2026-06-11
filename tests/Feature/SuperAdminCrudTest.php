@@ -2,9 +2,9 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
 use App\Models\Iku;
 use App\Models\Jurusan;
+use App\Models\User;
 use Database\Seeders\MasterDataSeeder;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -18,7 +18,9 @@ class SuperAdminCrudTest extends TestCase
     use RefreshDatabase;
 
     private User $superAdmin;
+
     private string $token;
+
     private Jurusan $jurusan;
 
     protected function setUp(): void
@@ -29,11 +31,11 @@ class SuperAdminCrudTest extends TestCase
         $this->seed(RolePermissionSeeder::class);
 
         $this->superAdmin = User::create([
-            'nama'         => 'Super Admin Test',
-            'email'        => 'superadmin@example.com',
-            'password'     => Hash::make('password123'),
+            'nama' => 'Super Admin Test',
+            'email' => 'superadmin@example.com',
+            'password' => Hash::make('password123'),
             'nama_jurusan' => 'Teknik Informatika dan Komputer',
-            'status'       => 'Aktif',
+            'status' => 'Aktif',
         ]);
         $this->superAdmin->assignRole('SuperAdmin');
         $this->token = $this->superAdmin->createToken('superadmin-token')->plainTextToken;
@@ -58,7 +60,7 @@ class SuperAdminCrudTest extends TestCase
             'nama_jurusan' => $this->jurusan->nama_jurusan,
         ];
 
-        $createResponse = $this->withHeaders(['Authorization' => 'Bearer ' . $this->token])
+        $createResponse = $this->withHeaders(['Authorization' => 'Bearer '.$this->token])
             ->postJson('/api/v1/superadmin/users', $createUserPayload);
 
         $createResponse->assertStatus(201)
@@ -72,7 +74,7 @@ class SuperAdminCrudTest extends TestCase
         ]);
 
         // 2. Read all users (GET /api/v1/superadmin/users)
-        $listResponse = $this->withHeaders(['Authorization' => 'Bearer ' . $this->token])
+        $listResponse = $this->withHeaders(['Authorization' => 'Bearer '.$this->token])
             ->getJson('/api/v1/superadmin/users');
 
         $listResponse->assertStatus(200)
@@ -80,7 +82,7 @@ class SuperAdminCrudTest extends TestCase
         $this->assertNotEmpty($listResponse->json('data'));
 
         // 3. Read single user (GET /api/v1/superadmin/users/{id})
-        $showResponse = $this->withHeaders(['Authorization' => 'Bearer ' . $this->token])
+        $showResponse = $this->withHeaders(['Authorization' => 'Bearer '.$this->token])
             ->getJson("/api/v1/superadmin/users/{$userId}");
 
         $showResponse->assertStatus(200)
@@ -93,7 +95,7 @@ class SuperAdminCrudTest extends TestCase
             'status' => 'Tidak Aktif',
         ];
 
-        $updateResponse = $this->withHeaders(['Authorization' => 'Bearer ' . $this->token])
+        $updateResponse = $this->withHeaders(['Authorization' => 'Bearer '.$this->token])
             ->putJson("/api/v1/superadmin/users/{$userId}", $updatePayload);
 
         $updateResponse->assertStatus(200)
@@ -106,7 +108,7 @@ class SuperAdminCrudTest extends TestCase
         ]);
 
         // 5. Delete user (DELETE /api/v1/superadmin/users/{id})
-        $deleteResponse = $this->withHeaders(['Authorization' => 'Bearer ' . $this->token])
+        $deleteResponse = $this->withHeaders(['Authorization' => 'Bearer '.$this->token])
             ->deleteJson("/api/v1/superadmin/users/{$userId}");
 
         $deleteResponse->assertStatus(200)
@@ -133,7 +135,7 @@ class SuperAdminCrudTest extends TestCase
             'tahun' => 2026,
         ];
 
-        $createResponse = $this->withHeaders(['Authorization' => 'Bearer ' . $this->token])
+        $createResponse = $this->withHeaders(['Authorization' => 'Bearer '.$this->token])
             ->postJson('/api/v1/superadmin/iku', $createIkuPayload);
 
         $createResponse->assertStatus(201)
@@ -147,14 +149,14 @@ class SuperAdminCrudTest extends TestCase
         ]);
 
         // 2. Read all IKUs (GET /api/v1/superadmin/iku)
-        $listResponse = $this->withHeaders(['Authorization' => 'Bearer ' . $this->token])
+        $listResponse = $this->withHeaders(['Authorization' => 'Bearer '.$this->token])
             ->getJson('/api/v1/superadmin/iku');
 
         $listResponse->assertStatus(200)
             ->assertJsonPath('success', true);
 
         // 3. Read single IKU (GET /api/v1/superadmin/iku/{id})
-        $showResponse = $this->withHeaders(['Authorization' => 'Bearer ' . $this->token])
+        $showResponse = $this->withHeaders(['Authorization' => 'Bearer '.$this->token])
             ->getJson("/api/v1/superadmin/iku/{$ikuId}");
 
         $showResponse->assertStatus(200)
@@ -166,7 +168,7 @@ class SuperAdminCrudTest extends TestCase
             'target' => '95%',
         ];
 
-        $updateResponse = $this->withHeaders(['Authorization' => 'Bearer ' . $this->token])
+        $updateResponse = $this->withHeaders(['Authorization' => 'Bearer '.$this->token])
             ->putJson("/api/v1/superadmin/iku/{$ikuId}", $updatePayload);
 
         $updateResponse->assertStatus(200)
@@ -178,7 +180,7 @@ class SuperAdminCrudTest extends TestCase
         ]);
 
         // 5. Delete IKU (DELETE /api/v1/superadmin/iku/{id})
-        $deleteResponse = $this->withHeaders(['Authorization' => 'Bearer ' . $this->token])
+        $deleteResponse = $this->withHeaders(['Authorization' => 'Bearer '.$this->token])
             ->deleteJson("/api/v1/superadmin/iku/{$ikuId}");
 
         $deleteResponse->assertStatus(200)

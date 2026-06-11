@@ -5,18 +5,19 @@ namespace App\Http\Controllers\Bendahara;
 use App\Http\Controllers\Controller;
 use App\Models\Kegiatan;
 use App\Models\Lpj;
+use App\Services\KegiatanService;
 use App\Services\WorkflowService;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        $stats = (new \App\Services\KegiatanService())->getBendaharaDashboardStats();
+        $stats = (new KegiatanService)->getBendaharaDashboardStats();
 
         $kegiatanList = Kegiatan::with(['statusUtama', 'user'])
             ->where(function ($query) {
                 $query->where('posisi_id', '>=', WorkflowService::POSITION_BENDAHARA)
-                      ->orWhere('status_utama_id', WorkflowService::STATUS_DANA_DIBERIKAN);
+                    ->orWhere('status_utama_id', WorkflowService::STATUS_DANA_DIBERIKAN);
             })
             ->latest()
             ->get();
@@ -44,9 +45,10 @@ class DashboardController extends Controller
 
         $list_lpj = $lpjList->map(function ($lpj) {
             $statusLabel = $this->mapLpjStatusLabel($lpj);
+
             return [
                 'id' => $lpj->kegiatan_id,
-                'nama' => 'LPJ - ' . ($lpj->kegiatan->nama_kegiatan ?? 'Kegiatan'),
+                'nama' => 'LPJ - '.($lpj->kegiatan->nama_kegiatan ?? 'Kegiatan'),
                 'pengusul' => $lpj->kegiatan->user->nama ?? $lpj->kegiatan->pemilik_kegiatan,
                 'nim' => $lpj->kegiatan->nim_pelaksana,
                 'prodi' => $lpj->kegiatan->prodi_penyelenggara,

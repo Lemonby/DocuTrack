@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
-use App\Models\LogStatus;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\LogStatus;
+use App\Models\User;
+use App\Services\ActivityLogService;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
-use Illuminate\Support\Facades\Cookie;
 
 class AuthController extends Controller
 {
@@ -23,7 +24,7 @@ class AuthController extends Controller
         // Find user by email
         $user = User::where('email', $request->email)->first();
 
-        if (!$user || !Hash::check($request->password, $user->password)) {
+        if (! $user || ! Hash::check($request->password, $user->password)) {
             return back()->with('login_error', 'Email atau password salah.')->withInput();
         }
 
@@ -36,24 +37,24 @@ class AuthController extends Controller
 
         // Map Spatie role name → session role key (lowercase)
         $roleMap = [
-            'Admin'      => 'admin',
-            'Bendahara'  => 'bendahara',
-            'Verifikator'=> 'verifikator',
-            'Wadir'      => 'wadir',
-            'PPK'        => 'ppk',
-            'Direktur'   => 'direktur',
+            'Admin' => 'admin',
+            'Bendahara' => 'bendahara',
+            'Verifikator' => 'verifikator',
+            'Wadir' => 'wadir',
+            'PPK' => 'ppk',
+            'Direktur' => 'direktur',
             'SuperAdmin' => 'superadmin',
         ];
 
         $sessionRole = $roleMap[$role] ?? 'admin';
 
         // Store session
-        Session::put('user_id',    $user->user_id);
-        Session::put('user_name',  $user->nama);
-        Session::put('email',      $user->email);
-        Session::put('role',       $sessionRole);
+        Session::put('user_id', $user->user_id);
+        Session::put('user_name', $user->nama);
+        Session::put('email', $user->email);
+        Session::put('role', $sessionRole);
         Session::put('spatie_role', $role);
-        Session::put('jurusan',    $user->nama_jurusan ?? '');
+        Session::put('jurusan', $user->nama_jurusan ?? '');
 
         // Set cookie indicating user has logged in (used for session expiration tracking)
         Cookie::queue('was_logged_in', '1', 525600); // 1 year expiry
@@ -66,12 +67,12 @@ class AuthController extends Controller
             'konten_json' => [
                 'judul' => 'Login Berhasil',
                 'pesan' => "User {$user->nama} ({$role}) berhasil masuk ke sistem.",
-                'link' => '#'
-            ]
+                'link' => '#',
+            ],
         ]);
 
         // Store activity log
-        app(\App\Services\ActivityLogService::class)->log(
+        app(ActivityLogService::class)->log(
             userId: $user->user_id,
             action: 'LOGIN',
             category: 'authentication',
@@ -82,14 +83,14 @@ class AuthController extends Controller
         );
 
         // Redirect based on role
-        return match($sessionRole) {
-            'bendahara'   => redirect()->route('bendahara.dashboard'),
+        return match ($sessionRole) {
+            'bendahara' => redirect()->route('bendahara.dashboard'),
             'verifikator' => redirect()->route('verifikator.dashboard'),
-            'ppk'         => redirect()->route('ppk.dashboard'),
-            'wadir'       => redirect()->route('wadir.dashboard'),
-            'direktur'    => redirect()->route('direktur.dashboard'),
-            'superadmin'  => redirect()->route('superadmin.dashboard'),
-            default       => redirect()->route('admin.dashboard'),
+            'ppk' => redirect()->route('ppk.dashboard'),
+            'wadir' => redirect()->route('wadir.dashboard'),
+            'direktur' => redirect()->route('direktur.dashboard'),
+            'superadmin' => redirect()->route('superadmin.dashboard'),
+            default => redirect()->route('admin.dashboard'),
         };
     }
 
@@ -100,7 +101,7 @@ class AuthController extends Controller
         $role = Session::get('spatie_role');
 
         if ($userId) {
-            app(\App\Services\ActivityLogService::class)->log(
+            app(ActivityLogService::class)->log(
                 userId: $userId,
                 action: 'LOGOUT',
                 category: 'authentication',
@@ -113,6 +114,7 @@ class AuthController extends Controller
 
         Session::flush();
         Cookie::queue(Cookie::forget('was_logged_in'));
+
         return redirect('/');
     }
 }

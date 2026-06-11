@@ -7,7 +7,9 @@ use App\Http\Requests\Admin\StoreUsulanRequest;
 use App\Http\Resources\KegiatanDetailResource;
 use App\Http\Resources\KegiatanResource;
 use App\Models\Kegiatan;
+use App\Models\ProgressHistory;
 use App\Services\KegiatanService;
+use App\Services\WorkflowService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -23,7 +25,7 @@ class PengajuanUsulanController extends Controller
 
         $kegiatans = Kegiatan::with(['statusUtama', 'user'])
             ->when($jurusan, fn ($q) => $q->byJurusan($jurusan))
-            ->atPosition(\App\Services\WorkflowService::POSITION_VERIFIKATOR)
+            ->atPosition(WorkflowService::POSITION_VERIFIKATOR)
             ->latest()
             ->paginate(15);
 
@@ -91,7 +93,7 @@ class PengajuanUsulanController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal memperbarui usulan: ' . $e->getMessage(),
+                'message' => 'Gagal memperbarui usulan: '.$e->getMessage(),
             ], 422);
         }
     }
@@ -104,7 +106,7 @@ class PengajuanUsulanController extends Controller
         ]);
 
         // Add progress history entry for status 8 (Selesai)
-        \App\Models\ProgressHistory::create([
+        ProgressHistory::create([
             'kegiatan_id' => $kegiatan->kegiatan_id,
             'status_id' => 8,
             'changed_by_user_id' => $request->user()->user_id,
