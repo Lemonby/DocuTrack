@@ -228,6 +228,17 @@ class LpjController extends Controller
                     ]);
                 }
 
+                // Create activity log
+                app(\App\Services\ActivityLogService::class)->log(
+                    userId: $actorUserId,
+                    action: 'APPROVE_LPJ',
+                    category: 'document',
+                    entityType: 'Kegiatan',
+                    entityId: $kegiatan->kegiatan_id,
+                    description: "Bendahara menyetujui LPJ untuk kegiatan: \"{$kegiatan->nama_kegiatan}\".",
+                    request: request()
+                );
+
             } elseif ($action === 'revise') {
                 $lpj->update([
                     'status_id' => 2, // Revisi
@@ -263,6 +274,17 @@ class LpjController extends Controller
                         ]
                     ]);
                 }
+
+                // Create activity log
+                app(\App\Services\ActivityLogService::class)->log(
+                    userId: $actorUserId,
+                    action: 'REVISE_LPJ',
+                    category: 'document',
+                    entityType: 'Kegiatan',
+                    entityId: $kegiatan->kegiatan_id,
+                    description: "Bendahara meminta revisi LPJ untuk kegiatan: \"{$kegiatan->nama_kegiatan}\". Catatan: {$notes}",
+                    request: request()
+                );
             }
         });
 

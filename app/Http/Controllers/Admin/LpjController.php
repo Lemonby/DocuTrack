@@ -263,6 +263,17 @@ class LpjController extends Controller
             ]
         ]);
 
+        // Create activity log
+        app(\App\Services\ActivityLogService::class)->log(
+            userId: $kegiatan->user_id,
+            action: 'SUBMIT_LPJ',
+            category: 'document',
+            entityType: 'Kegiatan',
+            entityId: $kegiatan->kegiatan_id,
+            description: "Pengusul mengajukan LPJ untuk kegiatan: \"{$kegiatan->nama_kegiatan}\".",
+            request: request()
+        );
+
         return redirect()->route('admin.lpj.index')->with('success', 'LPJ berhasil diajukan ke Bendahara.');
     }
 }

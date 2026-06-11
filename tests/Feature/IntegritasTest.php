@@ -40,6 +40,7 @@ class IntegritasTest extends TestCase
         // Jalankan seeder agar role, permission, dan status dasar terbuat di database pengujian
         $this->seed(MasterDataSeeder::class);
         $this->seed(RolePermissionSeeder::class);
+        $this->seed(\Database\Seeders\KriteriaSeeder::class);
 
         $this->spkService = new SpkMautService();
     }
@@ -234,5 +235,129 @@ class IntegritasTest extends TestCase
         $response->assertStatus(200);
         $response->assertViewIs('direktur.integritas.index');
         $response->assertViewHas('rankings');
+    }
+
+    /**
+     * Menguji pemeringkatan jurusan dihitung dengan formula MAUT yang benar dan menghasilkan skor yang sesuai dengan contoh riil.
+     */
+    #[Test]
+    #[TestDox('Memastikan pemeringkatan jurusan dihitung dengan formula MAUT yang benar dan menghasilkan skor yang sesuai dengan contoh riil')]
+    public function test_exact_maut_calculation_matches_user_example(): void
+    {
+        $mockService = new class extends SpkMautService {
+            public function calculateRawScores(Kegiatan $kegiatan): array
+            {
+                $name = $kegiatan->nama_kegiatan;
+                
+                if ($name === 'TIKGAMES2024_1') {
+                    return ['c1' => 1.00, 'c2' => 1.00, 'c3' => 1.00, 'c4' => 1.00];
+                }
+                if ($name === 'TIKGAMES2025') {
+                    return ['c1' => 1.00, 'c2' => 1.00, 'c3' => 1.00, 'c4' => 1.00];
+                }
+                if ($name === 'TIKGAMES2024_2') {
+                    return ['c1' => 1.00, 'c2' => 0.10, 'c3' => 1.00, 'c4' => 1.00];
+                }
+                if ($name === 'TIKGAMES2023') {
+                    return ['c1' => 0.40, 'c2' => 0.10, 'c3' => 1.00, 'c4' => 1.00];
+                }
+                
+                if ($name === 'ELEKTROGAMES2023') {
+                    return ['c1' => 0.80, 'c2' => 0.90, 'c3' => 1.00, 'c4' => 1.00];
+                }
+                if ($name === 'ELEKTROGAMES2022') {
+                    return ['c1' => 0.10, 'c2' => 1.00, 'c3' => 1.00, 'c4' => 1.00];
+                }
+                if ($name === 'ELEKTROGAMES2024') {
+                    return ['c1' => 0.60, 'c2' => 0.10, 'c3' => 1.00, 'c4' => 1.00];
+                }
+                if ($name === 'ELEKTROGAMES2021') {
+                    return ['c1' => 0.40, 'c2' => 1.00, 'c3' => 0.00, 'c4' => 1.00];
+                }
+                
+                if ($name === 'TGPGAMES2020') {
+                    return ['c1' => 1.00, 'c2' => 1.00, 'c3' => 1.00, 'c4' => 1.00];
+                }
+                if ($name === 'TGPGAMES2021') {
+                    return ['c1' => 0.80, 'c2' => 1.00, 'c3' => 1.00, 'c4' => 1.00];
+                }
+                if ($name === 'TGPGAMES2022') {
+                    return ['c1' => 1.00, 'c2' => 0.10, 'c3' => 0.00, 'c4' => 1.00];
+                }
+                
+                return parent::calculateRawScores($kegiatan);
+            }
+        };
+
+        $this->app->instance(SpkMautService::class, $mockService);
+
+        $user = User::create([
+            'nama' => 'Test User',
+            'email' => 'test@example.com',
+            'password' => bcrypt('password123'),
+            'nama_jurusan' => 'Teknik Informatika dan Komputer',
+            'status' => 'Aktif',
+        ]);
+
+        $activities = [
+            // JTIK
+            ['name' => 'TIKGAMES2024_1', 'jurusan' => 'Teknik Informatika dan Komputer'],
+            ['name' => 'TIKGAMES2025', 'jurusan' => 'Teknik Informatika dan Komputer'],
+            ['name' => 'TIKGAMES2024_2', 'jurusan' => 'Teknik Informatika dan Komputer'],
+            ['name' => 'TIKGAMES2023', 'jurusan' => 'Teknik Informatika dan Komputer'],
+
+            // JTE
+            ['name' => 'ELEKTROGAMES2023', 'jurusan' => 'Teknik Elektro'],
+            ['name' => 'ELEKTROGAMES2022', 'jurusan' => 'Teknik Elektro'],
+            ['name' => 'ELEKTROGAMES2024', 'jurusan' => 'Teknik Elektro'],
+            ['name' => 'ELEKTROGAMES2021', 'jurusan' => 'Teknik Elektro'],
+
+            // JTGP
+            ['name' => 'TGPGAMES2020', 'jurusan' => 'Teknik Grafika dan Penerbitan'],
+            ['name' => 'TGPGAMES2021', 'jurusan' => 'Teknik Grafika dan Penerbitan'],
+            ['name' => 'TGPGAMES2022', 'jurusan' => 'Teknik Grafika dan Penerbitan'],
+        ];
+
+        foreach ($activities as $act) {
+            $keg = Kegiatan::create([
+                'nama_kegiatan' => $act['name'],
+                'prodi_penyelenggara' => 'Prodi',
+                'pemilik_kegiatan' => 'PJ',
+                'user_id' => $user->user_id,
+                'jurusan_penyelenggara' => $act['jurusan'],
+                'tanggal_mulai' => '2026-06-01',
+                'tanggal_selesai' => '2026-06-05',
+                'jumlah_dicairkan' => 1000000.00,
+                'wadir_tujuan' => 1,
+                'status_utama_id' => 3,
+                'posisi_id' => 5,
+            ]);
+
+            Lpj::create([
+                'kegiatan_id' => $keg->kegiatan_id,
+                'grand_total_realisasi' => 1000000.00,
+                'submitted_at' => '2026-06-12',
+                'tenggat_lpj' => '2026-06-15',
+                'realisasi_tanggal_mulai' => '2026-06-01',
+                'realisasi_tanggal_selesai' => '2026-06-05',
+                'status_id' => 1,
+            ]);
+        }
+
+        $rankings = $mockService->getJurusanRankings();
+
+        $this->assertCount(3, $rankings);
+
+        $jtik = $rankings->firstWhere('jurusan', 'Teknik Informatika dan Komputer');
+        $jte = $rankings->firstWhere('jurusan', 'Teknik Elektro');
+        $jtgp = $rankings->firstWhere('jurusan', 'Teknik Grafika dan Penerbitan');
+
+        $this->assertNotNull($jtik);
+        $this->assertNotNull($jte);
+        $this->assertNotNull($jtgp);
+
+        $this->assertEquals(0.7046, $jtik['average_score']);
+        $this->assertEquals(0.5625, $jte['average_score']);
+        $this->assertEquals(0.6875, $jtgp['average_score']);
     }
 }

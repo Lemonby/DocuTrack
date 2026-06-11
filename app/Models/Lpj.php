@@ -42,6 +42,15 @@ class Lpj extends Model
         return $this->hasMany(LpjItem::class, 'lpj_id');
     }
 
+    protected static function booted()
+    {
+        static::saved(function ($lpj) {
+            if ($lpj->submitted_at && $lpj->kegiatan) {
+                resolve(\App\Services\SpkMautService::class)->syncKegiatanScores($lpj->kegiatan);
+            }
+        });
+    }
+
     public function getDeadlineStatusAttribute(): string
     {
         if ($this->status_id !== 1) {

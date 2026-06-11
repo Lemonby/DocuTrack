@@ -119,6 +119,17 @@ class PencairanService
                 ]);
             }
 
+            // Create activity log
+            app(\App\Services\ActivityLogService::class)->log(
+                userId: $userId,
+                action: 'DISBURSE_FUND',
+                category: 'financial',
+                entityType: 'Kegiatan',
+                entityId: $kegiatanId,
+                description: "Bendahara mencairkan dana kegiatan: \"{$kegiatan->nama_kegiatan}\" dengan metode {$metode}.",
+                request: request()
+            );
+
             return $kegiatan->fresh();
         });
     }

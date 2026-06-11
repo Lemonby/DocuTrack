@@ -70,6 +70,17 @@ class AuthController extends Controller
             ]
         ]);
 
+        // Store activity log
+        app(\App\Services\ActivityLogService::class)->log(
+            userId: $user->user_id,
+            action: 'LOGIN',
+            category: 'authentication',
+            entityType: 'User',
+            entityId: $user->user_id,
+            description: "User {$user->nama} ({$role}) berhasil masuk ke sistem via Web.",
+            request: request()
+        );
+
         // Redirect based on role
         return match($sessionRole) {
             'bendahara'   => redirect()->route('bendahara.dashboard'),
@@ -84,6 +95,22 @@ class AuthController extends Controller
 
     public function logout()
     {
+        $userId = Session::get('user_id');
+        $userName = Session::get('user_name');
+        $role = Session::get('spatie_role');
+
+        if ($userId) {
+            app(\App\Services\ActivityLogService::class)->log(
+                userId: $userId,
+                action: 'LOGOUT',
+                category: 'authentication',
+                entityType: 'User',
+                entityId: $userId,
+                description: "User {$userName} ({$role}) berhasil keluar dari sistem via Web.",
+                request: request()
+            );
+        }
+
         Session::flush();
         Cookie::queue(Cookie::forget('was_logged_in'));
         return redirect('/');

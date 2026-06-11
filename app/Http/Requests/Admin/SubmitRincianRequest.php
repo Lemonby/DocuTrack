@@ -41,4 +41,16 @@ class SubmitRincianRequest extends FormRequest
             'surat_pengantar.max' => 'Ukuran file surat pengantar maksimal 10MB.',
         ];
     }
+
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            // Tangani jika PHP gagal mengunggah file karena melebihi batas upload_max_filesize di php.ini
+            if (isset($_FILES['surat_pengantar']) && $_FILES['surat_pengantar']['error'] === UPLOAD_ERR_INI_SIZE) {
+                // Hapus pesan kesalahan default "surat pengantar harus berupa file" jika ada
+                $validator->errors()->forget('surat_pengantar');
+                $validator->errors()->add('surat_pengantar', 'Ukuran file surat pengantar maksimal 10MB.');
+            }
+        });
+    }
 }

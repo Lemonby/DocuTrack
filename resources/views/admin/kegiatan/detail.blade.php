@@ -28,9 +28,16 @@
     @endif
 
     @if($errors->any())
-        <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-r-xl shadow-sm flex items-center gap-3">
-            <i class="fas fa-exclamation-circle text-red-500"></i>
-            <p class="text-red-800 font-bold text-sm">Terdapat kesalahan pada form. Periksa field yang ditandai merah di bawah.</p>
+        <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-r-xl shadow-sm">
+            <div class="flex items-center gap-3 mb-2">
+                <i class="fas fa-exclamation-circle text-red-500"></i>
+                <p class="text-red-800 font-bold text-sm">Terdapat kesalahan pada form:</p>
+            </div>
+            <ul class="list-disc list-inside text-xs text-red-700 pl-7 font-medium space-y-1">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
         </div>
     @endif
 

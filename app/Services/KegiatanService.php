@@ -121,10 +121,26 @@ class KegiatanService
                 'status' => 'BELUM_DIBACA',
                 'konten_json' => [
                     'judul' => 'Usulan Baru Diajukan',
-                    'pesan' => "Usulan baru \"{$kegiatan->nama_kegiatan}\" berhasil diajukan dan sedang menunggu verifikasi.",
+                    'pesan' => "Usulan baru \"{$kegiatan->nama_kegiatan}\" berhasil diajukan and sedang menunggu verifikasi.",
                     'link' => "/admin/pengajuan-kegiatan"
                 ]
             ]);
+
+            // Create activity log
+            app(\App\Services\ActivityLogService::class)->log(
+                userId: $userId,
+                action: 'SUBMIT_PROPOSAL',
+                category: 'workflow',
+                entityType: 'Kegiatan',
+                entityId: $kegiatan->kegiatan_id,
+                description: "Pengusul mengajukan usulan baru: \"{$kegiatan->nama_kegiatan}\".",
+                newValue: [
+                    'nama_kegiatan' => $kegiatan->nama_kegiatan,
+                    'prodi' => $kegiatan->prodi_penyelenggara,
+                    'pemilik' => $kegiatan->pemilik_kegiatan,
+                ],
+                request: request()
+            );
 
             return $kegiatan->load(['kak.rabs', 'kak.indikators', 'kak.tahapans']);
         });
@@ -166,6 +182,18 @@ class KegiatanService
             }
 
             $kegiatan->update($updateData);
+
+            // Create activity log
+            $actorUserId = \Illuminate\Support\Facades\Session::get('user_id') ?? auth()->id() ?? $kegiatan->user_id;
+            app(\App\Services\ActivityLogService::class)->log(
+                userId: $actorUserId,
+                action: 'SUBMIT_RINCIAN',
+                category: 'workflow',
+                entityType: 'Kegiatan',
+                entityId: $kegiatan->kegiatan_id,
+                description: "Pengusul mengisi rincian pelaksanaan kegiatan: \"{$kegiatan->nama_kegiatan}\".",
+                request: request()
+            );
 
             return $kegiatan->fresh();
         });
@@ -297,6 +325,22 @@ class KegiatanService
                     'link' => "/admin/pengajuan-kegiatan"
                 ]
             ]);
+
+            // Create activity log
+            app(\App\Services\ActivityLogService::class)->log(
+                userId: $userId,
+                action: 'UPDATE_PROPOSAL',
+                category: 'workflow',
+                entityType: 'Kegiatan',
+                entityId: $kegiatan->kegiatan_id,
+                description: "Pengusul memperbarui usulan: \"{$kegiatan->nama_kegiatan}\".",
+                newValue: [
+                    'nama_kegiatan' => $kegiatan->nama_kegiatan,
+                    'prodi' => $kegiatan->prodi_penyelenggara,
+                    'pemilik' => $kegiatan->pemilik_kegiatan,
+                ],
+                request: request()
+            );
 
             // Add progress history entry for STATUS_MENUNGGU
             \App\Models\ProgressHistory::create([

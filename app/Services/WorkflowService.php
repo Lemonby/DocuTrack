@@ -72,7 +72,7 @@ class WorkflowService
         }
 
         return DB::transaction(function () use ($kegiatanId, $nextPosition, $newStatus, $currentPosition, $additionalData) {
-            $kegiatan = Kegiatan::lockForUpdate()->findOrFail($kegiatanId);
+            $kegiatan = Kegiatan::lockForUpdate()->findOrFail($kegiatanId); // ini adalah update data dari verifikator
 
             $updateData = [
                 'posisi_id' => $nextPosition,
@@ -131,6 +131,17 @@ class WorkflowService
                     ]
                 ]);
             }
+
+            // Create activity log
+            app(\App\Services\ActivityLogService::class)->log(
+                userId: $actorUserId ?? $kegiatan->user_id,
+                action: 'APPROVE_KEGIATAN',
+                category: 'workflow',
+                entityType: 'Kegiatan',
+                entityId: $kegiatanId,
+                description: "Menyetujui usulan kegiatan: \"{$kegiatan->nama_kegiatan}\" sebagai {$roleName}.",
+                request: request()
+            );
 
             return true;
         });
@@ -193,6 +204,17 @@ class WorkflowService
                     ]
                 ]);
             }
+
+            // Create activity log
+            app(\App\Services\ActivityLogService::class)->log(
+                userId: $actorUserId ?? $kegiatan->user_id,
+                action: 'REJECT_KEGIATAN',
+                category: 'workflow',
+                entityType: 'Kegiatan',
+                entityId: $kegiatanId,
+                description: "Menolak usulan kegiatan: \"{$kegiatan->nama_kegiatan}\" sebagai {$roleName}. Alasan: {$reason}",
+                request: request()
+            );
 
             return true;
         });
@@ -265,6 +287,17 @@ class WorkflowService
                     ]
                 ]);
             }
+
+            // Create activity log
+            app(\App\Services\ActivityLogService::class)->log(
+                userId: $actorUserId ?? $kegiatan->user_id,
+                action: 'REQUEST_REVISION',
+                category: 'workflow',
+                entityType: 'Kegiatan',
+                entityId: $kegiatanId,
+                description: "Meminta revisi usulan kegiatan: \"{$kegiatan->nama_kegiatan}\" sebagai {$roleName}. Catatan: {$comments}",
+                request: request()
+            );
 
             return true;
         });
