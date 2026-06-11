@@ -11,7 +11,7 @@ class ApiService {
   static String _baseUrl = kIsWeb
       ? 'http://127.0.0.1:8000/api'
       : (Platform.isAndroid
-          ? 'http://10.0.2.2:8000/api'
+          ? 'http://192.168.18.8:8000/api'
           : 'http://127.0.0.1:8000/api');
 
   static String get baseUrl => _baseUrl;
