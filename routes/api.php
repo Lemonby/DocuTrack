@@ -49,6 +49,7 @@ use App\Http\Controllers\API\SuperAdmin\KelolaAkunController;
 use App\Http\Controllers\API\SuperAdmin\BuatIkuController;
 use App\Http\Controllers\API\SuperAdmin\MonitoringController as SuperAdminMonitoring;
 use App\Http\Controllers\API\SuperAdmin\AiMonitoringController;
+use App\Http\Controllers\API\SuperAdmin\SendNotificationController;
 
 // Direktur
 use App\Http\Controllers\API\Direktur\DashboardController as DirekturDashboard;
@@ -243,12 +244,15 @@ Route::prefix('v1')->group(function () {
             Route::apiResource('iku', BuatIkuController::class);
 
             Route::get('/monitoring', [SuperAdminMonitoring::class, 'index']);
+            Route::post('/send-notification', [SendNotificationController::class, 'send']);
 
             // AI Monitoring
             Route::prefix('ai-monitoring')->group(function () {
                 Route::get('/stats', [AiMonitoringController::class, 'stats']);
                 Route::get('/log-summaries', [AiMonitoringController::class, 'logSummaries']);
                 Route::get('/security-alerts', [AiMonitoringController::class, 'securityAlerts']);
+                Route::get('/settings', [AiMonitoringController::class, 'getAiSettings']);
+                Route::put('/settings', [AiMonitoringController::class, 'updateAiSettings']);
             });
         });
 

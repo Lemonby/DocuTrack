@@ -124,8 +124,35 @@ class SuperAdminController extends Controller
     }
     public function monitoring()
     {
+        $ai_agents_active = \App\Models\AppSetting::getValue('ai_agents_active', false);
         return view('superadmin.monitoring', [
-            'title' => 'Monitoring Sistem - Super Admin'
+            'title' => 'Monitoring Sistem - Super Admin',
+            'ai_agents_active' => $ai_agents_active
         ]);
+    }
+
+    public function updateAiSetting(Request $request)
+    {
+        $request->validate([
+            'ai_agents_active' => 'required|boolean',
+        ]);
+
+        $oldValue = \App\Models\AppSetting::getValue('ai_agents_active', false);
+        $newValue = $request->input('ai_agents_active');
+
+        \App\Models\AppSetting::setValue('ai_agents_active', $newValue, 'boolean');
+
+        (new \App\Services\ActivityLogService())->log(
+            $request->user()->user_id,
+            $newValue ? 'activate_ai_agents' : 'deactivate_ai_agents',
+            'security',
+            'app_setting',
+            null,
+            'Superadmin changed AI agents activation status (Web)',
+            ['ai_agents_active' => $oldValue],
+            ['ai_agents_active' => $newValue]
+        );
+
+        return back()->with('success', 'Status AI Agents berhasil diperbarui.');
     }
 }

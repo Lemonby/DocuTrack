@@ -192,6 +192,7 @@ Route::middleware([CheckRole::class])->group(function () {
         Route::patch('/kelola-akun/toggle-status/{id}', [SuperAdminUserController::class, 'toggleStatus'])->name('superadmin.users.toggle-status');
         Route::get('/buat-iku', [SuperAdminIkuController::class, 'index'])->name('superadmin.iku.index');
         Route::get('/monitoring', [SuperAdminController::class, 'monitoring'])->name('superadmin.monitoring');
+        Route::post('/monitoring/ai-setting', [SuperAdminController::class, 'updateAiSetting'])->name('superadmin.ai.setting.update');
         Route::get('/akun', [SuperAdminAkunController::class, 'index'])->name('superadmin.akun.index');
         Route::patch('/akun/update', [SuperAdminAkunController::class, 'update'])->name('superadmin.akun.update');
         Route::patch('/akun/password', [SuperAdminAkunController::class, 'changePassword'])->name('superadmin.akun.password');
