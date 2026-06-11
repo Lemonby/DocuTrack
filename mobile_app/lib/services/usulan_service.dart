@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'api_service.dart';
 import '../models/kegiatan.dart';
+import '../models/lpj.dart';
 
 class UsulanService {
   final ApiService _apiService;
@@ -153,6 +154,132 @@ class UsulanService {
     } on DioException catch (e) {
       final errorMsg = e.response?.data['message'] ?? 'Terjadi kesalahan jaringan.';
       return {'success': false, 'message': errorMsg};
+    }
+  }
+
+  // Submit Rincian (Add PJ, dates, and letter)
+  Future<Map<String, dynamic>> submitRincian(int id, Map<String, dynamic> data, String? filePath) async {
+    try {
+      final formDataMap = {
+        'kegiatan_id': id,
+        ...data,
+      };
+
+      if (filePath != null) {
+        formDataMap['surat_pengantar'] = await MultipartFile.fromFile(
+          filePath,
+          filename: filePath.split('/').last,
+        );
+      }
+
+      final formData = FormData.fromMap(formDataMap);
+      final response = await _apiService.client.post(
+        '/v1/admin/kegiatan/submit-rincian',
+        data: formData,
+      );
+
+      if (response.data['success'] == true) {
+        return {
+          'success': true,
+          'message': response.data['message'] ?? 'Rincian berhasil disubmit.',
+        };
+      }
+      return {'success': false, 'message': 'Gagal mensubmit rincian.'};
+    } on DioException catch (e) {
+      String errorMsg = 'Terjadi kesalahan jaringan.';
+      if (e.response?.statusCode == 422) {
+        final errors = e.response?.data['errors'] as Map<String, dynamic>?;
+        if (errors != null && errors.isNotEmpty) {
+          errorMsg = errors.values.first[0];
+        } else {
+          errorMsg = e.response?.data['message'] ?? errorMsg;
+        }
+      } else {
+        errorMsg = e.response?.data['message'] ?? errorMsg;
+      }
+      return {'success': false, 'message': errorMsg};
+    }
+  }
+
+  // Get paginated list of LPJ
+  Future<Map<String, dynamic>> getLpjs({int page = 1}) async {
+    try {
+      final response = await _apiService.client.get('/v1/admin/lpj', queryParameters: {'page': page});
+      if (response.data['success'] == true) {
+        final List<dynamic> listData = response.data['data'] ?? [];
+        return {
+          'success': true,
+          'data': listData.map((e) => Lpj.fromJson(e)).toList(),
+          'last_page': response.data['meta']?['last_page'] ?? 1,
+        };
+      }
+      return {'success': false, 'message': 'Gagal memuat data LPJ.'};
+    } on DioException catch (e) {
+      return {'success': false, 'message': e.response?.data['message'] ?? 'Terjadi kesalahan jaringan.'};
+    }
+  }
+
+  // Get LPJ Detail
+  Future<Map<String, dynamic>> getLpjDetail(int id) async {
+    try {
+      final response = await _apiService.client.get('/v1/admin/lpj/$id');
+      if (response.data['success'] == true) {
+        return {
+          'success': true,
+          'data': Lpj.fromJson(response.data['data']),
+        };
+      }
+      return {'success': false, 'message': 'Gagal memuat detail LPJ.'};
+    } on DioException catch (e) {
+      return {'success': false, 'message': e.response?.data['message'] ?? 'Terjadi kesalahan jaringan.'};
+    }
+  }
+
+  // Submit LPJ Bukti
+  Future<Map<String, dynamic>> uploadLpjBukti(int lpjId, int rabItemId, String filePath) async {
+    try {
+      final formData = FormData.fromMap({
+        'lpj_id': lpjId,
+        'rab_item_id': rabItemId,
+        'file': await MultipartFile.fromFile(filePath, filename: filePath.split('/').last),
+      });
+
+      final response = await _apiService.client.post('/v1/admin/lpj/upload-bukti', data: formData);
+      if (response.data['success'] == true) {
+        return {'success': true, 'message': 'Bukti berhasil diunggah.'};
+      }
+      return {'success': false, 'message': 'Gagal mengunggah bukti.'};
+    } on DioException catch (e) {
+      return {'success': false, 'message': e.response?.data['message'] ?? 'Gagal mengunggah bukti.'};
+    }
+  }
+
+  // Final LPJ Submit
+  Future<Map<String, dynamic>> submitLpj(int kegiatanId, List<Map<String, dynamic>> items) async {
+    try {
+      final response = await _apiService.client.post('/v1/admin/lpj/submit', data: {
+        'kegiatan_id': kegiatanId,
+        'items': items,
+      });
+      if (response.data['success'] == true) {
+        return {'success': true, 'message': 'LPJ berhasil disubmit.'};
+      }
+      return {'success': false, 'message': 'Gagal mensubmit LPJ.'};
+    } on DioException catch (e) {
+      return {'success': false, 'message': e.response?.data['message'] ?? 'Gagal mensubmit LPJ.'};
+    }
+  }
+
+  // Resubmit KAK (after revision)
+  Future<Map<String, dynamic>> resubmitUsulan(int id) async {
+    try {
+      final response = await _apiService.client.post('/v1/admin/kak/$id/resubmit');
+      if (response.data['success'] == true) {
+        return {'success': true, 'message': 'KAK berhasil diajukan kembali.'};
+      }
+      return {'success': false, 'message': 'Gagal mengajukan kembali KAK.'};
+    } on DioException catch (e) {
+      return {'success': false, 'message': e.response?.data['message'] ?? 'Gagal mengajukan kembali KAK.'};
     }
   }
 }

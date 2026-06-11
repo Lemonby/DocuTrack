@@ -25,7 +25,8 @@ class AuthProvider extends ChangeNotifier {
   
   // CAPTCHA details
   String _captchaKey = '';
-  String _captchaCodeText = ''; // fallback code
+  String _captchaCodeText = ''; 
+  bool _isCaptchaLoading = false;
   
   // 2FA TOTP configuration state
   bool _isTotpEnabled = false;
@@ -43,6 +44,7 @@ class AuthProvider extends ChangeNotifier {
   String get errorMessage => _errorMessage;
   String get captchaKey => _captchaKey;
   String get captchaCodeText => _captchaCodeText;
+  bool get isCaptchaLoading => _isCaptchaLoading;
   bool get isTotpEnabled => _isTotpEnabled;
   String get totpSecret => _totpSecret;
   String get totpQrUrl => _totpQrUrl;
@@ -87,15 +89,28 @@ class AuthProvider extends ChangeNotifier {
 
   // Load/Refresh CAPTCHA
   Future<void> refreshCaptcha() async {
+    _isCaptchaLoading = true;
     _errorMessage = '';
-    final result = await _authService.fetchCaptcha();
-    if (result['success']) {
-      _captchaKey = result['key'];
-      _captchaCodeText = result['code'];
-    } else {
-      _errorMessage = result['message'];
-    }
     notifyListeners();
+
+    try {
+      final result = await _authService.fetchCaptcha();
+      if (result['success']) {
+        _captchaKey = result['key'];
+        _captchaCodeText = result['code'];
+      } else {
+        _errorMessage = result['message'];
+        _captchaKey = 'error'; 
+        _captchaCodeText = 'REF!';
+      }
+    } catch (e) {
+      _errorMessage = 'Gagal memuat Captcha.';
+      _captchaKey = 'error';
+      _captchaCodeText = 'OFF';
+    } finally {
+      _isCaptchaLoading = false;
+      notifyListeners();
+    }
   }
 
   // Login via standard credentials + CAPTCHA

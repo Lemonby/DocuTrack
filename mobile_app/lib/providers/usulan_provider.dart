@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/kegiatan.dart';
 import '../models/master_models.dart';
 import '../models/iku.dart';
+import '../models/lpj.dart';
 import '../services/usulan_service.dart';
 import '../services/master_service.dart';
 
@@ -14,6 +15,7 @@ class UsulanProvider with ChangeNotifier {
   // Pagination & List State
   List<Kegiatan> _usulans = [];
   List<Kegiatan> _kegiatans = [];
+  List<Lpj> _lpjs = [];
   bool _isLoading = false;
   String _errorMessage = '';
   int _currentPage = 1;
@@ -28,6 +30,7 @@ class UsulanProvider with ChangeNotifier {
 
   List<Kegiatan> get usulans => _usulans;
   List<Kegiatan> get kegiatans => _kegiatans;
+  List<Lpj> get lpjs => _lpjs;
   bool get isLoading => _isLoading;
   String get errorMessage => _errorMessage;
   int get currentPage => _currentPage;
@@ -38,6 +41,50 @@ class UsulanProvider with ChangeNotifier {
   List<Wadir> get wadirs => _wadirs;
   List<Iku> get ikus => _ikus;
   bool get isLoadingMaster => _isLoadingMaster;
+
+  Future<void> fetchLpjs({int page = 1, bool isRefresh = false}) async {
+    if (isRefresh) {
+      _currentPage = 1;
+      _lpjs.clear();
+      _errorMessage = '';
+    }
+
+    _isLoading = true;
+    notifyListeners();
+
+    final result = await _usulanService.getLpjs(page: page);
+
+    if (result['success']) {
+      if (isRefresh) {
+        _lpjs = result['data'];
+      } else {
+        _lpjs.addAll(result['data'] as List<Lpj>);
+      }
+      _currentPage = page;
+      _lastPage = result['last_page'];
+    } else {
+      _errorMessage = result['message'];
+    }
+
+    _isLoading = false;
+    notifyListeners();
+  }
+
+  Future<Lpj?> getLpjDetail(int id) async {
+    _isLoading = true;
+    notifyListeners();
+
+    final result = await _usulanService.getLpjDetail(id);
+    _isLoading = false;
+    notifyListeners();
+
+    if (result['success']) {
+      return result['data'];
+    } else {
+      _errorMessage = result['message'];
+      return null;
+    }
+  }
 
   Future<void> fetchUsulans({int page = 1, bool isRefresh = false}) async {
     if (isRefresh) {
@@ -176,5 +223,65 @@ class UsulanProvider with ChangeNotifier {
       notifyListeners();
       return false;
     }
+  }
+
+  Future<bool> submitRincian(int id, Map<String, dynamic> data, String? filePath) async {
+    _isLoading = true;
+    notifyListeners();
+
+    final result = await _usulanService.submitRincian(id, data, filePath);
+
+    if (result['success']) {
+      await fetchKegiatans(page: 1, isRefresh: true);
+      return true;
+    } else {
+      _errorMessage = result['message'];
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> uploadLpjBukti(int lpjId, int rabItemId, String filePath) async {
+    _isLoading = true;
+    notifyListeners();
+
+    final result = await _usulanService.uploadLpjBukti(lpjId, rabItemId, filePath);
+    _isLoading = false;
+    if (!result['success']) {
+      _errorMessage = result['message'];
+    }
+    notifyListeners();
+    return result['success'];
+  }
+
+  Future<bool> submitLpj(int kegiatanId, List<Map<String, dynamic>> items) async {
+    _isLoading = true;
+    notifyListeners();
+
+    final result = await _usulanService.submitLpj(kegiatanId, items);
+    if (result['success']) {
+      await fetchLpjs(page: 1, isRefresh: true); // reload list
+    } else {
+      _errorMessage = result['message'];
+    }
+    _isLoading = false;
+    notifyListeners();
+    return result['success'];
+  }
+
+  Future<bool> resubmitUsulan(int id) async {
+    _isLoading = true;
+    notifyListeners();
+
+    final result = await _usulanService.resubmitUsulan(id);
+    if (result['success']) {
+      await fetchUsulans(page: 1, isRefresh: true);
+    } else {
+      _errorMessage = result['message'];
+    }
+    _isLoading = false;
+    notifyListeners();
+    return result['success'];
   }
 }
