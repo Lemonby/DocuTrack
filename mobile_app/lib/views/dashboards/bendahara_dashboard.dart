@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../theme/app_theme.dart';
 import '../../models/user.dart';
 import '../../models/dashboard_data.dart';
+import '../../models/kegiatan.dart';
+import '../../providers/dashboard_provider.dart';
 import '../bendahara/bendahara_pencairan_detail_view.dart';
 import '../bendahara/bendahara_lpj_detail_view.dart';
 
@@ -13,6 +16,8 @@ class BendaharaDashboard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final recentItems = data?.recentItems ?? [];
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20.0),
       child: Column(
@@ -26,83 +31,60 @@ class BendaharaDashboard extends StatelessWidget {
           _buildStatisticsGrid(context),
           const SizedBox(height: 24),
 
-          // Antrian Pencairan
+          // Activity Queue
           const Row(
             children: [
-              Icon(Icons.request_quote_rounded, color: AppTheme.primaryBlue, size: 20),
+              Icon(Icons.history_toggle_off_rounded, color: AppTheme.primaryBlue, size: 20),
               SizedBox(width: 8),
               Text(
-                'Antrian Pencairan Dana',
+                'Antrian Terakhir',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textDark),
               ),
             ],
           ),
           const SizedBox(height: 4),
           const Text(
-            'Kegiatan yang menunggu pencairan dana',
+            'Kegiatan yang membutuhkan perhatian keuangan',
             style: TextStyle(fontSize: 11, color: AppTheme.textMuted, fontStyle: FontStyle.italic),
           ),
           const SizedBox(height: 16),
-          _buildApprovalCard(
-            context: context,
-            title: 'Pelatihan Digitalisasi Desa',
-            prodi: 'Teknik Informatika',
-            pengusul: 'Budi Santoso',
-            date: '02 Jun 2026',
-            status: 'Belum Dicairkan',
-            statusColor: Colors.blue,
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BendaharaPencairanDetailView(id: 101, status: 'Belum Dicairkan')))
-          ),
-          _buildApprovalCard(
-            context: context,
-            title: 'Workshop AI for Students',
-            prodi: 'Sistem Informasi',
-            pengusul: 'Andi Rahman',
-            date: '15 Jun 2026',
-            status: 'Sudah Dicairkan',
-            statusColor: Colors.teal,
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BendaharaPencairanDetailView(id: 102, status: 'Sudah Dicairkan')))
-          ),
-          
-          const SizedBox(height: 24),
 
-          // Antrian LPJ
-          const Row(
-            children: [
-              Icon(Icons.receipt_long_rounded, color: AppTheme.primaryBlue, size: 20),
-              SizedBox(width: 8),
-              Text(
-                'Antrian Verifikasi LPJ',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textDark),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          const Text(
-            'Laporan Pertanggungjawaban yang menunggu verifikasi',
-            style: TextStyle(fontSize: 11, color: AppTheme.textMuted, fontStyle: FontStyle.italic),
-          ),
-          const SizedBox(height: 16),
-          _buildApprovalCard(
-            context: context,
-            title: 'Pengabdian Masyarakat Terpadu',
-            prodi: 'Teknik Sipil',
-            pengusul: 'Siti Aminah',
-            date: '20 Jun 2026',
-            status: 'Menunggu Verifikasi',
-            statusColor: Colors.orange,
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BendaharaLpjDetailView(id: 201, status: 'Menunggu Verifikasi')))
-          ),
-          _buildApprovalCard(
-            context: context,
-            title: 'Lomba Inovasi Mahasiswa',
-            prodi: 'Akuntansi',
-            pengusul: 'Dedi Kurniawan',
-            date: '25 Jun 2026',
-            status: 'Revisi',
-            statusColor: Colors.red,
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BendaharaLpjDetailView(id: 202, status: 'Revisi')))
-          ),
+          if (recentItems.isEmpty)
+             const Padding(
+               padding: EdgeInsets.symmetric(vertical: 40),
+               child: Center(
+                 child: Column(
+                   children: [
+                     Icon(Icons.done_all_rounded, size: 48, color: Colors.green),
+                     SizedBox(height: 12),
+                     Text('Semua urusan keuangan selesai.', style: TextStyle(color: AppTheme.textMuted)),
+                   ],
+                 ),
+               ),
+             )
+          else
+            ...recentItems.map((item) {
+              bool isLpj = item.statusNama?.contains('LPJ') ?? false;
+              String status = item.statusNama ?? 'Proses';
+              Color statusColor = isLpj ? Colors.orange : Colors.teal;
+              
+              return _buildApprovalCard(
+                context: context,
+                title: item.namaKegiatan,
+                prodi: item.jurusanPenyelenggara ?? '-',
+                pengusul: item.pemilikKegiatan ?? '-',
+                date: item.tanggalMulai ?? item.createdAt ?? '-',
+                status: status,
+                statusColor: statusColor,
+                onTap: () {
+                  if (isLpj) {
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => BendaharaLpjDetailView(id: item.id, status: status)));
+                  } else {
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => BendaharaPencairanDetailView(id: item.id, status: status)));
+                  }
+                }
+              );
+            }),
         ],
       ),
     );
@@ -154,10 +136,10 @@ class BendaharaDashboard extends StatelessWidget {
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.check_circle_outline, color: AppTheme.brightAqua, size: 16),
+                      Icon(Icons.account_balance_wallet, color: AppTheme.brightAqua, size: 16),
                       SizedBox(width: 4),
-                      Text(
-                        'Koneksi API Aktif',
+                      const Text(
+                        'Pusat Keuangan Aktif',
                         style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
                       ),
                     ],
@@ -180,6 +162,7 @@ class BendaharaDashboard extends StatelessWidget {
   }
 
   Widget _buildStatisticsGrid(BuildContext context) {
+    final stats = data?.stats;
     return LayoutBuilder(
       builder: (context, constraints) {
         final bool isMobile = constraints.maxWidth < 600;
@@ -191,10 +174,10 @@ class BendaharaDashboard extends StatelessWidget {
           physics: const NeverScrollableScrollPhysics(),
           childAspectRatio: isMobile ? 1.3 : 1.1,
           children: [
-            _buildStatCard(Icons.layers_outlined, '42', 'TOTAL\nKAK', AppTheme.totalUsulanGradient),
-            _buildStatCard(Icons.check_circle_outline, '18', 'DICAIRKAN', AppTheme.disetujuiGradient),
-            _buildStatCard(Icons.hourglass_bottom_outlined, '15', 'MENUNGGU', AppTheme.menungguGradient),
-            _buildStatCard(Icons.cancel_outlined, '9', 'DITOLAK', AppTheme.ditolakGradient),
+            _buildStatCard(Icons.layers_outlined, '${stats?.totalUsulan ?? 0}', 'TOTAL\nKAK', AppTheme.totalUsulanGradient),
+            _buildStatCard(Icons.check_circle_outline, '${stats?.disetujui ?? 0}', 'DICAIRKAN', AppTheme.disetujuiGradient),
+            _buildStatCard(Icons.hourglass_bottom_outlined, '${stats?.menunggu ?? 0}', 'MENUNGGU', AppTheme.menungguGradient),
+            _buildStatCard(Icons.cancel_outlined, '${stats?.ditolak ?? 0}', 'DITOLAK', AppTheme.ditolakGradient),
           ],
         );
       },
@@ -343,17 +326,17 @@ class BendaharaDashboard extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
+                    const Row(
                       children: [
-                        const Icon(Icons.account_balance_wallet_rounded, size: 16, color: Colors.blueGrey),
-                        const SizedBox(width: 6),
-                        const Text('Rp 15.000.000', style: TextStyle(fontWeight: FontWeight.w900, color: Colors.blueGrey, fontSize: 13)),
+                        Icon(Icons.account_balance_wallet_rounded, size: 16, color: Colors.blueGrey),
+                        SizedBox(width: 6),
+                        Text('Cek Detail Anggaran', style: TextStyle(fontWeight: FontWeight.w900, color: Colors.blueGrey, fontSize: 13)),
                       ],
                     ),
                     Row(
                       children: [
                         Text(
-                          'DETAIL',
+                          'PROSES',
                           style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: AppTheme.primaryBlue),
                         ),
                         const SizedBox(width: 4),

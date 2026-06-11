@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 import '../../models/user.dart';
 import '../../models/dashboard_data.dart';
-import '../admin/admin_lpj_detail_view.dart';
+import '../../models/kegiatan.dart';
+import '../admin/admin_lpj_list_view.dart';
 import '../usulan/usulan_detail_view.dart';
+import '../admin/admin_kegiatan_detail_view.dart';
 
 class AdminDashboard extends StatelessWidget {
   final User user;
@@ -13,6 +15,8 @@ class AdminDashboard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final recentItems = data?.recentItems ?? [];
+    
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20.0),
       child: Column(
@@ -46,45 +50,39 @@ class AdminDashboard extends StatelessWidget {
           ),
           const SizedBox(height: 32),
           
-          // List Pengajuan KAK
+          // List Pengajuan KAK Terbaru (Dinamis)
           Row(
             children: [
               Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(8)), child: Icon(Icons.file_copy_rounded, color: Colors.blue.shade600, size: 20)),
               const SizedBox(width: 12),
-              const Text('Antrian KAK Terbaru', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: AppTheme.textDark)),
+              const Text('Aktivitas Terakhir', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: AppTheme.textDark)),
             ],
           ),
           const SizedBox(height: 16),
-          _buildListCard(
-            context,
-            'Pembuatan Sistem Informasi Kepegawaian', 'Budi Santoso • Teknik Informatika', '01 Nov 2026', null, 'Proses', Colors.blueGrey,
-            () => Navigator.push(context, MaterialPageRoute(builder: (_) => const UsulanDetailView(kegiatanId: 9001)))
-          ),
-          _buildListCard(
-            context,
-            'Studi Banding Universitas', 'Dewi Lestari • Teknik Informatika', '12 Nov 2026', null, 'Revisi', Colors.orange,
-            () => Navigator.push(context, MaterialPageRoute(builder: (_) => const UsulanDetailView(kegiatanId: 9002)))
-          ),
+          
+          if (recentItems.isEmpty)
+             const Padding(
+               padding: EdgeInsets.symmetric(vertical: 20),
+               child: Center(child: Text('Belum ada aktivitas terbaru', style: TextStyle(color: Colors.grey))),
+             )
+          else
+            ...recentItems.map((kegiatan) => _buildRecentItemCard(context, kegiatan)),
+            
           const SizedBox(height: 32),
 
-          // List Pengajuan LPJ
+          // LPJ Shortcuts
           Row(
             children: [
               Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: Colors.green.shade50, borderRadius: BorderRadius.circular(8)), child: Icon(Icons.receipt_long_rounded, color: Colors.green.shade600, size: 20)),
               const SizedBox(width: 12),
-              const Text('Antrian LPJ Terbaru', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: AppTheme.textDark)),
+              const Text('Menu LPJ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: AppTheme.textDark)),
             ],
           ),
           const SizedBox(height: 16),
           _buildListCard(
             context,
-            'Pengadaan Komputer Lab A', 'Siti Aminah • Teknik Informatika', '05 Nov 2026', '2026-11-04', 'Perlu Upload', Colors.orange,
-            () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminLpjDetailView(status: 'Perlu Upload')))
-          ),
-          _buildListCard(
-            context,
-            'Pelatihan UI/UX Dasar', 'Agus Pratama • Teknik Informatika', '10 Nov 2026', null, 'Siap Submit', Colors.blue,
-            () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminLpjDetailView(status: 'Siap Submit')))
+            'Pantau Semua LPJ', 'Lihat status realisasi anggaran kegiatan.', 'Daftar Realisasi', null, 'LPJ', Colors.indigo,
+            () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminLpjListView()))
           ),
           const SizedBox(height: 12),
         ],
@@ -133,7 +131,7 @@ class AdminDashboard extends StatelessWidget {
               children: [
                 Container(width: 8, height: 8, decoration: const BoxDecoration(color: Colors.greenAccent, shape: BoxShape.circle)),
                 const SizedBox(width: 8),
-                Text('Role: Admin TI • ${user.departmentName ?? ''}', style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                Text('Role: Admin • ${user.departmentName ?? ''}', style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
               ],
             ),
           ),
@@ -193,6 +191,31 @@ class AdminDashboard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildRecentItemCard(BuildContext context, Kegiatan kegiatan) {
+    String status = kegiatan.statusNama ?? 'Proses';
+    Color statusColor = Colors.blueGrey;
+    if (status == 'Revisi') statusColor = Colors.orange;
+    if (status == 'Disetujui') statusColor = Colors.green;
+    if (status == 'Ditolak') statusColor = Colors.red;
+
+    return _buildListCard(
+      context,
+      kegiatan.namaKegiatan,
+      '${kegiatan.pemilikKegiatan ?? "-"} • ${kegiatan.prodiPenyelenggara ?? "-"}',
+      kegiatan.createdAt?.split('T').first ?? '-',
+      null,
+      status,
+      statusColor,
+      () {
+        if (status == 'Proses' || status == 'Revisi') {
+           Navigator.push(context, MaterialPageRoute(builder: (_) => AdminKegiatanDetailView(kegiatan: kegiatan)));
+        } else {
+           Navigator.push(context, MaterialPageRoute(builder: (_) => UsulanDetailView(kegiatanId: kegiatan.id)));
+        }
+      }
     );
   }
 

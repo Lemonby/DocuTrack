@@ -13,6 +13,8 @@ class VerifikatorDashboard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final recentItems = data?.recentItems ?? [];
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20.0),
       child: Column(
@@ -44,11 +46,22 @@ class VerifikatorDashboard extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
-          // List Items
-          if ((data?.recentItems.isEmpty ?? true) && _getDummyRecentItems().isEmpty)
-            const Center(child: Text('Tidak ada antrian verifikasi.', style: TextStyle(color: AppTheme.textMuted)))
+          // List Items (Dinamis)
+          if (recentItems.isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 40),
+              child: Center(
+                child: Column(
+                  children: [
+                    Icon(Icons.inbox_outlined, size: 48, color: Colors.grey),
+                    SizedBox(height: 12),
+                    Text('Tidak ada antrian verifikasi.', style: TextStyle(color: AppTheme.textMuted)),
+                  ],
+                ),
+              ),
+            )
           else
-            ...(data?.recentItems.isNotEmpty == true ? data!.recentItems : _getDummyRecentItems()).map((item) {
+            ...recentItems.map((item) {
               return _buildApprovalCard(
                 context: context,
                 item: item,
@@ -63,27 +76,6 @@ class VerifikatorDashboard extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  List<Kegiatan> _getDummyRecentItems() {
-    return [
-      Kegiatan(
-        id: 9001,
-        namaKegiatan: 'Pembuatan Sistem Informasi Kepegawaian Berbasis AI',
-        pemilikKegiatan: 'Budi Santoso',
-        tanggalMulai: '01 Nov 2026',
-        jurusanPenyelenggara: 'Teknik Informatika dan Komputer',
-        statusNama: 'Menunggu',
-      ),
-      Kegiatan(
-        id: 9002,
-        namaKegiatan: 'Pelatihan Sertifikasi Cyber Security Dasar untuk Dosen',
-        pemilikKegiatan: 'Siti Aminah',
-        tanggalMulai: '03 Nov 2026',
-        jurusanPenyelenggara: 'Teknik Elektro',
-        statusNama: 'Menunggu',
-      ),
-    ];
   }
 
   Widget _buildWelcomeBanner() {

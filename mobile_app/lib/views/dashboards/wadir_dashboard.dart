@@ -13,6 +13,8 @@ class WadirDashboard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final recentItems = data?.recentItems ?? [];
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20.0),
       child: Column(
@@ -22,7 +24,7 @@ class WadirDashboard extends StatelessWidget {
           _buildWelcomeBanner(),
           const SizedBox(height: 24),
 
-          // Statistics Grid (Wadir has 3 cards: Total Usulan, Disetujui, Menunggu Persetujuan)
+          // Statistics Grid
           _buildStatisticsGrid(context),
           const SizedBox(height: 24),
 
@@ -39,79 +41,55 @@ class WadirDashboard extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
-          // Filter Controls
+          // Filter Controls (UI Only)
           _buildFilterControls(),
           const SizedBox(height: 16),
 
-          // List Items
-          Builder(
-            builder: (context) {
-              final List<Kegiatan> dummyData = [
-                Kegiatan(
-                  id: 9301,
-                  namaKegiatan: 'Pembelian Buku Perpustakaan Pusat',
-                  jurusanPenyelenggara: 'Perpustakaan',
-                  pemilikKegiatan: 'Dr. Hendra',
-                  nimPelaksana: 'NIP. 19780101',
-                  tanggalMulai: '10 Des 2026',
-                  statusNama: 'Menunggu',
-                ),
-                Kegiatan(
-                  id: 9302,
-                  namaKegiatan: 'Seminar Nasional Teknologi Ramah Lingkungan',
-                  jurusanPenyelenggara: 'Teknik Sipil',
-                  pemilikKegiatan: 'Budi Santoso',
-                  nimPelaksana: '190304001',
-                  tanggalMulai: '12 Des 2026',
-                  statusNama: 'Disetujui',
-                ),
-                Kegiatan(
-                  id: 9303,
-                  namaKegiatan: 'Pelatihan Soft Skill Mahasiswa Baru',
-                  jurusanPenyelenggara: 'Semua Jurusan',
-                  pemilikKegiatan: 'Kemahasiswaan',
-                  nimPelaksana: 'NIP. 19800202',
-                  tanggalMulai: '15 Des 2026',
-                  statusNama: 'Ditolak',
-                ),
-              ];
+          // List Items (Dinamis)
+          if (recentItems.isEmpty)
+             const Padding(
+               padding: EdgeInsets.symmetric(vertical: 40),
+               child: Center(
+                 child: Column(
+                   children: [
+                     Icon(Icons.folder_open_outlined, size: 48, color: Colors.grey),
+                     SizedBox(height: 12),
+                     Text('Belum ada data usulan.', style: TextStyle(color: AppTheme.textMuted)),
+                   ],
+                 ),
+               ),
+             )
+          else
+            ...recentItems.asMap().entries.map((entry) {
+              int index = entry.key;
+              Kegiatan item = entry.value;
+              String status = item.statusNama ?? 'Menunggu';
+              Color statusColor = status.toLowerCase() == 'disetujui' ? Colors.green : (status.toLowerCase() == 'ditolak' ? Colors.red : Colors.orange);
+              IconData statusIcon = status.toLowerCase() == 'disetujui' ? Icons.check_circle : (status.toLowerCase() == 'ditolak' ? Icons.cancel : Icons.access_time);
               
-              final List<Kegiatan> items = [...(data?.recentItems ?? []), ...dummyData];
-
-              return Column(
-                children: items.asMap().entries.map((entry) {
-                  int index = entry.key;
-                  Kegiatan item = entry.value;
-                  String status = item.statusNama ?? 'Menunggu';
-                  Color statusColor = status.toLowerCase() == 'disetujui' ? Colors.green : (status.toLowerCase() == 'ditolak' ? Colors.red : Colors.orange);
-                  IconData statusIcon = status.toLowerCase() == 'disetujui' ? Icons.check_circle : (status.toLowerCase() == 'ditolak' ? Icons.cancel : Icons.access_time);
-                  
-                  return _buildWadirListCard(
-                    no: '${index + 1}',
-                    title: item.namaKegiatan,
-                    prodi: item.jurusanPenyelenggara ?? '-',
-                    pengusul: item.pemilikKegiatan ?? '-',
-                    nim: item.nimPelaksana ?? '-',
-                    date: item.tanggalMulai ?? item.createdAt ?? '-',
-                    status: status,
-                    statusIcon: statusIcon,
-                    statusColor: statusColor,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => TelaahDetailView(
-                            kegiatanId: item.id,
-                            rolePrefix: 'wadir',
-                          ),
-                        ),
-                      );
-                    },
+              return _buildWadirListCard(
+                no: '${index + 1}',
+                title: item.namaKegiatan,
+                prodi: item.jurusanPenyelenggara ?? '-',
+                pengusul: item.pemilikKegiatan ?? '-',
+                nim: item.nimPelaksana ?? '-',
+                date: item.tanggalMulai ?? item.createdAt ?? '-',
+                status: status,
+                statusIcon: statusIcon,
+                statusColor: statusColor,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => TelaahDetailView(
+                        kegiatanId: item.id,
+                        rolePrefix: 'wadir',
+                      ),
+                    ),
                   );
-                }).toList(),
+                },
               );
-            }
-          ),
+            }),
         ],
       ),
     );
@@ -192,7 +170,6 @@ class WadirDashboard extends StatelessWidget {
     final stats = data?.stats;
     return LayoutBuilder(
       builder: (context, constraints) {
-        
         return Wrap(
           spacing: 12,
           runSpacing: 12,
@@ -216,14 +193,13 @@ class WadirDashboard extends StatelessWidget {
               ),
             ),
             SizedBox(
-              // Make the third item take full width on mobile or 1/3rd on large
               width: constraints.maxWidth > 600 ? (constraints.maxWidth - 64) / 3 : constraints.maxWidth - 40,
               child: _buildStatCard(
                 Icons.hourglass_bottom_outlined, 
                 '${stats?.menunggu ?? 0}', 
                 'Menunggu Persetujuan', 
                 const LinearGradient(colors: [Color(0xFFFDE047), Color(0xFFFACC15)], begin: Alignment.topLeft, end: Alignment.bottomRight),
-                textColor: const Color(0xFF713F12), // Yellow-900 text for yellow background
+                textColor: const Color(0xFF713F12),
               ),
             ),
           ],
@@ -291,22 +267,7 @@ class WadirDashboard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: AppTheme.borderLight),
                 ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value: 'Semua Status',
-                    isExpanded: true,
-                    icon: const Icon(Icons.keyboard_arrow_down, size: 18),
-                    style: const TextStyle(fontSize: 13, color: AppTheme.textDark),
-                    items: <String>['Semua Status', 'Menunggu', 'Disetujui', 'Ditolak']
-                        .map<DropdownMenuItem<String>>((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(value),
-                      );
-                    }).toList(),
-                    onChanged: (String? newValue) {},
-                  ),
-                ),
+                child: const Center(child: Text('Filter Status', style: TextStyle(fontSize: 13, color: AppTheme.textMuted))),
               ),
             ),
             const SizedBox(width: 8),
@@ -319,59 +280,7 @@ class WadirDashboard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: AppTheme.borderLight),
                 ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value: 'Semua Jurusan',
-                    isExpanded: true,
-                    icon: const Icon(Icons.keyboard_arrow_down, size: 18),
-                    style: const TextStyle(fontSize: 13, color: AppTheme.textDark),
-                    items: <String>['Semua Jurusan', 'Teknik Informatika', 'Teknik Elektro']
-                        .map<DropdownMenuItem<String>>((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(value, overflow: TextOverflow.ellipsis),
-                      );
-                    }).toList(),
-                    onChanged: (String? newValue) {},
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            Expanded(
-              child: Container(
-                height: 44,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppTheme.borderLight),
-                ),
-                child: const TextField(
-                  decoration: InputDecoration(
-                    hintText: 'Cari nama kegiatan, pengusul...',
-                    hintStyle: TextStyle(fontSize: 13),
-                    prefixIcon: Icon(Icons.search, size: 18),
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(vertical: 12),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Container(
-              height: 44,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: IconButton(
-                onPressed: () {},
-                icon: const Icon(Icons.refresh, size: 20, color: AppTheme.textDark),
-                tooltip: 'Reset Filter',
+                child: const Center(child: Text('Filter Jurusan', style: TextStyle(fontSize: 13, color: AppTheme.textMuted))),
               ),
             ),
           ],
@@ -404,7 +313,6 @@ class WadirDashboard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // Header Row
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
@@ -420,8 +328,8 @@ class WadirDashboard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    '#$no',
-                    style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                    'ID: $no',
+                    style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
                   ),
                 ),
                 Container(
@@ -446,75 +354,42 @@ class WadirDashboard extends StatelessWidget {
               ],
             ),
           ),
-          
-          // Body Content
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Activity Name
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Icon(Icons.assignment, size: 14, color: AppTheme.textMuted),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        title,
-                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.textDark),
-                      ),
-                    ),
-                  ],
+                Text(
+                  title,
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.textDark),
                 ),
                 const SizedBox(height: 12),
-                
-                // Proposer info
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Icon(Icons.person, size: 14, color: AppTheme.textMuted),
                     const SizedBox(width: 6),
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '$pengusul ($nim)',
-                            style: const TextStyle(fontSize: 12, color: AppTheme.textDark),
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              const Icon(Icons.school, size: 12, color: AppTheme.textMuted),
-                              const SizedBox(width: 4),
-                              Text(prodi, style: const TextStyle(fontSize: 11, color: AppTheme.textMuted)),
-                            ],
-                          ),
-                        ],
+                      child: Text(
+                        '$pengusul ($nim)',
+                        style: const TextStyle(fontSize: 12, color: AppTheme.textDark),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
-                
-                // Date
+                const SizedBox(height: 8),
                 Row(
                   children: [
-                    const Icon(Icons.calendar_today, size: 14, color: AppTheme.textMuted),
+                    const Icon(Icons.school, size: 14, color: AppTheme.textMuted),
                     const SizedBox(width: 6),
-                    Text(date, style: const TextStyle(fontSize: 12, color: AppTheme.textDark)),
+                    Text(prodi, style: const TextStyle(fontSize: 11, color: AppTheme.textMuted)),
                   ],
                 ),
                 const SizedBox(height: 16),
-                
-                // Action Button
                 SizedBox(
                   width: double.infinity,
-                  child: ElevatedButton.icon(
+                  child: ElevatedButton(
                     onPressed: onTap,
-                    icon: const Icon(Icons.visibility, size: 14),
-                    label: const Text('LIHAT DETAIL', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.primaryBlue,
                       foregroundColor: Colors.white,
@@ -522,6 +397,7 @@ class WadirDashboard extends StatelessWidget {
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                       elevation: 0,
                     ),
+                    child: const Text('LIHAT DETAIL', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1)),
                   ),
                 ),
               ],

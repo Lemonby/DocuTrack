@@ -13,6 +13,8 @@ class PpkDashboard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final recentItems = data?.recentItems ?? [];
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20.0),
       child: Column(
@@ -22,7 +24,7 @@ class PpkDashboard extends StatelessWidget {
           _buildWelcomeBanner(),
           const SizedBox(height: 24),
 
-          // Statistics Grid (PPK only has 3 cards: Total Usulan, Disetujui, Menunggu)
+          // Statistics Grid
           _buildStatisticsGrid(context),
           const SizedBox(height: 24),
 
@@ -44,103 +46,78 @@ class PpkDashboard extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
-          // Search and Filter Bar
-          Row(
-            children: [
-              Expanded(
-                child: Container(
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppTheme.borderLight),
-                  ),
-                  child: const TextField(
-                    decoration: InputDecoration(
-                      hintText: 'Cari kegiatan...',
-                      hintStyle: TextStyle(fontSize: 12),
-                      prefixIcon: Icon(Icons.search, size: 18),
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(vertical: 12),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Container(
-                height: 40,
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppTheme.borderLight),
-                ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value: 'Status',
-                    icon: const Icon(Icons.keyboard_arrow_down, size: 18),
-                    style: const TextStyle(fontSize: 12, color: AppTheme.textDark),
-                    items: <String>['Status', 'Menunggu', 'Disetujui']
-                        .map<DropdownMenuItem<String>>((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(value),
-                      );
-                    }).toList(),
-                    onChanged: (String? newValue) {},
-                  ),
-                ),
-              ),
-            ],
-          ),
+          // Search and Filter Bar (UI Only for now)
+          _buildSearchBar(),
           const SizedBox(height: 16),
 
-          // List Items
-          Builder(
-            builder: (context) {
-              final List<Kegiatan> dummyData = [
-                Kegiatan(
-                  id: 9401,
-                  namaKegiatan: 'Pengadaan Meja Kursi Ruang Rapat',
-                  jurusanPenyelenggara: 'Administrasi Umum',
-                  pemilikKegiatan: 'Siti Sarah',
-                  nimPelaksana: 'NIP. 19800201',
-                  tanggalMulai: '15 Jan 2027',
-                  statusNama: 'Menunggu',
+          // List Items (Dinamis)
+          if (recentItems.isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 40),
+              child: Center(
+                child: Column(
+                  children: [
+                    Icon(Icons.check_circle_outline, size: 48, color: Colors.green),
+                    SizedBox(height: 12),
+                    Text('Antrian persetujuan bersih.', style: TextStyle(color: AppTheme.textMuted)),
+                  ],
                 ),
-                Kegiatan(
-                  id: 9402,
-                  namaKegiatan: 'Pembuatan Sistem E-Learning Terpadu',
-                  jurusanPenyelenggara: 'Pusat Komputer',
-                  pemilikKegiatan: 'Andi Wijaya',
-                  nimPelaksana: 'NIP. 19850403',
-                  tanggalMulai: '01 Feb 2027',
-                  statusNama: 'Disetujui',
-                ),
-              ];
-              
-              final List<Kegiatan> items = [...(data?.recentItems ?? []), ...dummyData];
-
-              return Column(
-                children: items.map((item) {
-                  String status = item.statusNama ?? 'Menunggu';
-                  Color statusColor = status.toLowerCase() == 'disetujui' ? Colors.green : (status.toLowerCase() == 'ditolak' ? Colors.red : Colors.orange);
-                  return _buildApprovalCard(
-                    context: context,
-                    item: item,
-                    title: item.namaKegiatan,
-                    prodi: item.jurusanPenyelenggara ?? '-',
-                    pengusul: item.pemilikKegiatan ?? '-',
-                    date: item.tanggalMulai ?? item.createdAt ?? '-',
-                    status: status,
-                    statusColor: statusColor,
-                  );
-                }).toList(),
+              ),
+            )
+          else
+            ...recentItems.map((item) {
+              String status = item.statusNama ?? 'Menunggu';
+              Color statusColor = status.toLowerCase() == 'disetujui' ? Colors.green : (status.toLowerCase() == 'ditolak' ? Colors.red : Colors.orange);
+              return _buildApprovalCard(
+                context: context,
+                item: item,
+                title: item.namaKegiatan,
+                prodi: item.jurusanPenyelenggara ?? '-',
+                pengusul: item.pemilikKegiatan ?? '-',
+                date: item.tanggalMulai ?? item.createdAt ?? '-',
+                status: status,
+                statusColor: statusColor,
               );
-            }
-          ),
+            }),
         ],
       ),
+    );
+  }
+
+  Widget _buildSearchBar() {
+    return Row(
+      children: [
+        Expanded(
+          child: Container(
+            height: 40,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppTheme.borderLight),
+            ),
+            child: const TextField(
+              decoration: InputDecoration(
+                hintText: 'Cari kegiatan...',
+                hintStyle: TextStyle(fontSize: 12),
+                prefixIcon: Icon(Icons.search, size: 18),
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.symmetric(vertical: 12),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Container(
+          height: 40,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppTheme.borderLight),
+          ),
+          child: const Center(child: Icon(Icons.filter_list, size: 18, color: AppTheme.primaryBlue)),
+        ),
+      ],
     );
   }
 
@@ -164,9 +141,9 @@ class PpkDashboard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'Dashboard PPK',
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: Colors.white,
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
@@ -219,7 +196,6 @@ class PpkDashboard extends StatelessWidget {
     final stats = data?.stats;
     return LayoutBuilder(
       builder: (context, constraints) {
-        
         return GridView.count(
           crossAxisCount: 3,
           crossAxisSpacing: 10,
