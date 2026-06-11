@@ -110,9 +110,11 @@ class _LandingViewState extends State<LandingView> with TickerProviderStateMixin
   Widget _buildHeroSection(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final isSmallScreen = size.width < 600;
+    final heroHeight = isSmallScreen ? 650.0 : 800.0;
 
     return Container(
       width: double.infinity,
+      height: heroHeight,
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topRight,

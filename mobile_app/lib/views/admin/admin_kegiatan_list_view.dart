@@ -210,7 +210,7 @@ class _AdminKegiatanListViewState extends State<AdminKegiatanListView> {
                   width: double.infinity,
                   child: ElevatedButton.icon(
                     onPressed: () async {
-                      await Navigator.push(context, MaterialPageRoute(builder: (_) => AdminKegiatanDetailView(status: status)));
+                      await Navigator.push(context, MaterialPageRoute(builder: (_) => AdminKegiatanDetailView(kegiatan: kegiatan)));
                       if (!mounted) return;
                       context.read<UsulanProvider>().fetchKegiatans(isRefresh: true);
                     },

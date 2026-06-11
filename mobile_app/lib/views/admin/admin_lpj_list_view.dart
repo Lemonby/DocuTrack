@@ -1,9 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import '../../theme/app_theme.dart';
+import '../../models/lpj.dart';
+import '../../providers/usulan_provider.dart';
 import 'admin_lpj_detail_view.dart';
 
-class AdminLpjListView extends StatelessWidget {
+class AdminLpjListView extends StatefulWidget {
   const AdminLpjListView({super.key});
+
+  @override
+  State<AdminLpjListView> createState() => _AdminLpjListViewState();
+}
+
+class _AdminLpjListViewState extends State<AdminLpjListView> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<UsulanProvider>().fetchLpjs(isRefresh: true);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,175 +37,89 @@ class AdminLpjListView extends StatelessWidget {
           ],
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              margin: const EdgeInsets.only(bottom: 20),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(colors: [Colors.indigo.shade800, Colors.indigo.shade500], begin: Alignment.topLeft, end: Alignment.bottomRight),
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [BoxShadow(color: Colors.indigo.shade200, blurRadius: 15, offset: const Offset(0, 8))]
-              ),
-              child: const Row(
+      body: Consumer<UsulanProvider>(
+        builder: (context, provider, child) {
+          if (provider.isLoading && provider.lpjs.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          return RefreshIndicator(
+            onRefresh: () => provider.fetchLpjs(isRefresh: true),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.receipt_long_rounded, color: Colors.white, size: 48),
-                  SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    margin: const EdgeInsets.only(bottom: 20),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(colors: [Colors.indigo.shade800, Colors.indigo.shade500], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [BoxShadow(color: Colors.indigo.shade200, blurRadius: 15, offset: const Offset(0, 8))]
+                    ),
+                    child: const Row(
                       children: [
-                        Text('Laporan Pertanggungjawaban', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 16, letterSpacing: 0.5)),
-                        SizedBox(height: 4),
-                        Text('Unggah bukti realisasi dan kelola pengajuan LPJ.', style: TextStyle(color: Colors.white70, fontSize: 12, height: 1.3)),
+                        Icon(Icons.receipt_long_rounded, color: Colors.white, size: 48),
+                        SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Laporan Pertanggungjawaban', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 16, letterSpacing: 0.5)),
+                              SizedBox(height: 4),
+                              Text('Unggah bukti realisasi dan kelola pengajuan LPJ.', style: TextStyle(color: Colors.white70, fontSize: 12, height: 1.3)),
+                            ],
+                          ),
+                        )
                       ],
                     ),
-                  )
+                  ),
+                  
+                  if (provider.lpjs.isEmpty && !provider.isLoading)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 40),
+                      child: Center(child: Text('Belum ada data LPJ', style: TextStyle(color: AppTheme.textMuted))),
+                    )
+                  else
+                    ...provider.lpjs.map((lpj) => _buildLpjCard(context, lpj)),
+
+                  if (provider.isLoading && provider.lpjs.isNotEmpty)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 20),
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
                 ],
               ),
             ),
-            
-            _buildLpjCard(
-              context,
-              no: '1',
-              title: 'Pembuatan Sistem Informasi Kepegawaian',
-              subtitle: 'Budi Santoso (192001) • Teknik Informatika',
-              date: '01 Nov 2026',
-              deadline: '2026-11-03',
-              status: 'Perlu Upload',
-              statusColor: Colors.orange,
-              btnText: 'Upload Bukti',
-              btnIcon: Icons.upload_file,
-            ),
-            _buildLpjCard(
-              context,
-              no: '2',
-              title: 'Pengadaan Komputer Lab A',
-              subtitle: 'Siti Aminah (192002) • Teknik Informatika',
-              date: '05 Nov 2026',
-              deadline: '2026-11-04',
-              status: 'Perlu Upload',
-              statusColor: Colors.orange,
-              btnText: 'Upload Bukti',
-              btnIcon: Icons.upload_file,
-            ),
-            _buildLpjCard(
-              context,
-              no: '3',
-              title: 'Pelatihan UI/UX Dasar',
-              subtitle: 'Agus Pratama (192003) • Teknik Informatika',
-              date: '10 Nov 2026',
-              deadline: null,
-              status: 'Siap Submit',
-              statusColor: Colors.blue,
-              btnText: 'Submit LPJ',
-              btnIcon: Icons.send_rounded,
-            ),
-            _buildLpjCard(
-              context,
-              no: '4',
-              title: 'Studi Banding Universitas',
-              subtitle: 'Dewi Lestari (192004) • Teknik Informatika',
-              date: '12 Nov 2026',
-              deadline: null,
-              status: 'Revisi',
-              statusColor: Colors.amber.shade700,
-              btnText: 'Lihat Revisi',
-              btnIcon: Icons.warning_rounded,
-            ),
-            _buildLpjCard(
-              context,
-              no: '5',
-              title: 'Lomba Pemrograman Nasional',
-              subtitle: 'Reza Rahadian (192005) • Teknik Informatika',
-              date: '15 Nov 2026',
-              deadline: null,
-              status: 'Telah Direvisi',
-              statusColor: Colors.cyan,
-              btnText: 'Cek Revisi',
-              btnIcon: Icons.history_rounded,
-            ),
-            _buildLpjCard(
-              context,
-              no: '6',
-              title: 'Seminar Nasional AI',
-              subtitle: 'Rina Nose (192006) • Teknik Informatika',
-              date: '20 Nov 2026',
-              deadline: null,
-              status: 'Disetujui',
-              statusColor: Colors.green,
-              btnText: 'Lihat Detail',
-              btnIcon: Icons.check_circle_rounded,
-            ),
-          ],
-        ),
+          );
+        }
       ),
     );
   }
 
-  Widget _buildLpjCard(
-    BuildContext context, {
-    required String no,
-    required String title,
-    required String subtitle,
-    required String date,
-    required String? deadline,
-    required String status,
-    required Color statusColor,
-    required String btnText,
-    required IconData btnIcon,
-  }) {
-    final isActionable = (status == 'Perlu Upload' || status == 'Siap Submit' || status == 'Revisi');
-    
-    Widget deadlineWidget = const SizedBox();
-    if (status == 'Perlu Upload' && deadline != null) {
-      // Dummy logic for deadline
-      final diff = DateTime.parse(deadline).difference(DateTime.now()).inDays;
-      Color dColor;
-      String dText;
-      IconData dIcon;
-      if (diff < 0) {
-        dColor = Colors.red;
-        dText = 'Terlewat ${diff.abs()} hari';
-        dIcon = Icons.warning_amber_rounded;
-      } else if (diff == 0) {
-        dColor = Colors.red;
-        dText = 'Hari Ini!';
-        dIcon = Icons.error_outline;
-      } else if (diff <= 3) {
-        dColor = Colors.orange;
-        dText = 'Sisa $diff hari';
-        dIcon = Icons.hourglass_bottom_rounded;
-      } else {
-        dColor = Colors.blue;
-        dText = 'Sisa $diff hari';
-        dIcon = Icons.calendar_today_rounded;
-      }
-      
-      deadlineWidget = Container(
-        margin: const EdgeInsets.only(top: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(color: dColor.withOpacity(0.1), borderRadius: BorderRadius.circular(20), border: Border.all(color: dColor.withOpacity(0.3))),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(dIcon, size: 10, color: dColor),
-            const SizedBox(width: 4),
-            Text(dText, style: TextStyle(color: dColor, fontSize: 10, fontWeight: FontWeight.bold)),
-          ],
-        ),
-      );
-    } else if (status == 'Perlu Upload' && deadline == null) {
-      deadlineWidget = Container(
-        margin: const EdgeInsets.only(top: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(color: Colors.orange.withOpacity(0.1), borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.orange.withOpacity(0.3))),
-        child: const Text('Belum Ditetapkan', style: TextStyle(color: Colors.orange, fontSize: 10, fontWeight: FontWeight.bold)),
-      );
+  Widget _buildLpjCard(BuildContext context, Lpj lpj) {
+    final status = lpj.statusNama ?? 'Menunggu';
+    Color statusColor = Colors.blue;
+    IconData btnIcon = Icons.visibility;
+    String btnText = 'Lihat Detail';
+
+    if (status.toLowerCase().contains('upload') || status.toLowerCase().contains('proses')) {
+      statusColor = Colors.orange;
+      btnIcon = Icons.upload_file;
+      btnText = 'Upload Bukti';
+    } else if (status.toLowerCase().contains('revisi')) {
+      statusColor = Colors.amber.shade700;
+      btnIcon = Icons.warning_rounded;
+      btnText = 'Revisi LPJ';
+    } else if (status.toLowerCase().contains('disetujui') || status.toLowerCase().contains('selesai')) {
+      statusColor = Colors.green;
+      btnIcon = Icons.check_circle_rounded;
+      btnText = 'Lihat Laporan';
     }
+
+    final isActionable = (status.toLowerCase().contains('upload') || status.toLowerCase().contains('revisi') || status.toLowerCase().contains('draft'));
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -212,7 +143,7 @@ class AdminLpjListView extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(8)),
-                      child: Text('#$no', style: const TextStyle(color: Colors.black87, fontSize: 11, fontWeight: FontWeight.w900)),
+                      child: Text('#${lpj.id}', style: const TextStyle(color: Colors.black87, fontSize: 11, fontWeight: FontWeight.w900)),
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -221,40 +152,14 @@ class AdminLpjListView extends StatelessWidget {
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(color: statusColor.withOpacity(0.2)),
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(btnIcon, size: 12, color: statusColor),
-                          const SizedBox(width: 6),
-                          Text(status.toUpperCase(), style: TextStyle(color: statusColor, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
-                        ],
-                      ),
+                      child: Text(status.toUpperCase(), style: TextStyle(color: statusColor, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
                     ),
                   ],
                 ),
                 const SizedBox(height: 16),
-                Text(title, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: AppTheme.textDark, height: 1.2)),
+                Text(lpj.kegiatan?.namaKegiatan ?? 'Tanpa Nama', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: AppTheme.textDark, height: 1.2)),
                 const SizedBox(height: 8),
-                Text(subtitle, style: const TextStyle(color: AppTheme.textMuted, fontSize: 12, fontWeight: FontWeight.w500)),
-                const SizedBox(height: 12),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(Icons.calendar_month_rounded, size: 14, color: Colors.grey.shade400),
-                            const SizedBox(width: 6),
-                            Text(date, style: const TextStyle(fontSize: 12, color: AppTheme.textMuted, fontWeight: FontWeight.bold)),
-                          ],
-                        ),
-                        deadlineWidget
-                      ],
-                    ),
-                  ],
-                ),
+                Text('${lpj.kegiatan?.pemilikKegiatan ?? '-'} • ${lpj.kegiatan?.prodiPenyelenggara ?? '-'}', style: const TextStyle(color: AppTheme.textMuted, fontSize: 12, fontWeight: FontWeight.w500)),
               ],
             ),
           ),
@@ -267,8 +172,10 @@ class AdminLpjListView extends StatelessWidget {
               border: Border(top: BorderSide(color: Colors.grey.shade100)),
             ),
             child: ElevatedButton.icon(
-              onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (_) => AdminLpjDetailView(status: status)));
+              onPressed: () async {
+                await Navigator.push(context, MaterialPageRoute(builder: (_) => AdminLpjDetailView(lpjId: lpj.id)));
+                if (!mounted) return;
+                context.read<UsulanProvider>().fetchLpjs(isRefresh: true);
               },
               icon: Icon(btnIcon, size: 16),
               label: Text(btnText, style: const TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1)),

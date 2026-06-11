@@ -199,7 +199,7 @@ class _LoginViewState extends State<LoginView> {
                           Expanded(
                             child: Consumer<AuthProvider>(
                               builder: (context, auth, _) {
-                                if (auth.captchaKey.isEmpty) {
+                                if (auth.isCaptchaLoading) {
                                   return Container(
                                     height: 60,
                                     decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(8), border: Border.all(color: const Color(0xFFE2E8F0))),
