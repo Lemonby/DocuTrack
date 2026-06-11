@@ -5,6 +5,7 @@ class User {
   final String? departmentName; // nama_jurusan
   final String status;
   final String role; // primary role name e.g. 'Admin', 'SuperAdmin', 'PPK'
+  final Map<String, dynamic>? rawData;
 
   User({
     required this.userId,
@@ -13,6 +14,7 @@ class User {
     this.departmentName,
     required this.status,
     required this.role,
+    this.rawData,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -31,6 +33,7 @@ class User {
       departmentName: json['nama_jurusan'],
       status: json['status'] ?? 'Aktif',
       role: extractedRole,
+      rawData: json,
     );
   }
 

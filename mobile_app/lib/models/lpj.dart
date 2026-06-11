@@ -49,6 +49,7 @@ class LpjItem {
   final double? nominal;
   final String? lampiranPath;
   final String? kategoriNama;
+  final Map<String, dynamic>? rawData;
 
   LpjItem({
     required this.id,
@@ -56,6 +57,7 @@ class LpjItem {
     this.nominal,
     this.lampiranPath,
     this.kategoriNama,
+    this.rawData,
   });
 
   factory LpjItem.fromJson(Map<String, dynamic> json) {
@@ -65,6 +67,7 @@ class LpjItem {
       nominal: json['nominal'] != null ? double.tryParse(json['nominal'].toString()) : 0.0,
       lampiranPath: json['lampiran'],
       kategoriNama: json['kategori']?['nama_kategori'],
+      rawData: json,
     );
   }
 }
