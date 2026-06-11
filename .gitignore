@@ -26,6 +26,12 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 
+# AI Agent & Tools
+.gemini/
+.geminiignore
+code-reviewer.skill
+code-reviewer/
+
 # --- Flutter Mobile App (mobile_app/) ---
 mobile_app/.dart_tool/
 mobile_app/.flutter-plugins

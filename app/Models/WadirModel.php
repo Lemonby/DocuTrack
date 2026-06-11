@@ -144,7 +144,7 @@ class WadirModel
             $d[] = $r;
         }
 
-return $d;
+        return $d;
     }
 
     public function getTahapanByKAK($kakId)
@@ -159,7 +159,7 @@ return $d;
             $d[] = $r['namaTahapan'];
         }
 
-return $d;
+        return $d;
     }
 
     public function getRABByKAK($kakId)
@@ -174,7 +174,7 @@ return $d;
             $d[$r['namaKategori']][] = $r;
         }
 
-return $d;
+        return $d;
     }
 
     /**
