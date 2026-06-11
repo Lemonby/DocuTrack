@@ -47,13 +47,18 @@ class _TelaahDetailViewState extends State<TelaahDetailView> {
     final iconData = isApprove ? Icons.check_circle_outline_rounded : (action == 'reject' ? Icons.cancel_outlined : Icons.edit_note_rounded);
     
     final _catatanCtrl = TextEditingController();
-    final _kodeMakCtrl = TextEditingController();
-    final _danaCtrl = TextEditingController(text: _kegiatan?.rawData?['rab'] != null 
-        ? _calculateTotalRab(_kegiatan!.rawData!['rab']).toStringAsFixed(0) 
-        : '0');
+    final _kodeMakCtrl = TextEditingController(text: _kegiatan?.rawData?['kode_mak'] ?? '');
+    
+    double totalAwal = 0;
+    if (_kegiatan?.rawData?['rab'] != null) {
+      totalAwal = _calculateTotalRab(_kegiatan!.rawData!['rab']);
+    }
+    
+    final _danaCtrl = TextEditingController(text: totalAwal.toStringAsFixed(0));
 
-    final needsMak = isApprove && widget.rolePrefix == 'verifikator';
-    final needsDana = isApprove && widget.rolePrefix == 'ppk'; // Usually PPK or Wadir sets Dana, for Verifikator only MAK is needed as requested.
+    final isVerifikator = widget.rolePrefix == 'verifikator';
+    final needsMak = isApprove && isVerifikator;
+    final needsDana = isApprove && isVerifikator;
 
     showModalBottomSheet(
       context: context,

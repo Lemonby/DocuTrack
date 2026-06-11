@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../theme/app_theme.dart';
+import '../../providers/usulan_provider.dart';
+import '../../providers/auth_provider.dart';
+import '../../models/master_models.dart';
+import '../../models/iku.dart';
 
 // --- MODELS ---
 class IndikatorItem {
-  String? bulan;
+  int? bulanIndex;
   TextEditingController indikatorCtrl = TextEditingController();
   TextEditingController targetCtrl = TextEditingController();
 
@@ -26,7 +31,7 @@ class RabItem {
   int get v2 {
     final val = int.tryParse(vol2Ctrl.text);
     if (val != null) return val;
-    if (vol2Ctrl.text.isEmpty) return 1; // If empty, assume 1 so it doesn't zero out V1
+    if (vol2Ctrl.text.isEmpty) return 1;
     return 0;
   }
   int get harga => int.tryParse(hargaCtrl.text.replaceAll('.', '')) ?? 0;
@@ -66,15 +71,15 @@ class UsulanFormView extends StatefulWidget {
 
 class _UsulanFormViewState extends State<UsulanFormView> {
   int _currentStep = 0;
-  bool _isLoading = false;
+  bool _isLoadingSubmission = false;
 
   // Controllers - Tahap 1
   final _namaPengusulController = TextEditingController();
   final _nimController = TextEditingController();
-  String? _jurusan;
-  String? _prodi;
+  Jurusan? _selectedJurusan;
+  Prodi? _selectedProdi;
   final _namaKegiatanController = TextEditingController();
-  String? _wadirTujuan;
+  Wadir? _selectedWadir;
 
   // Controllers - Tahap 2
   final _gambaranUmumController = TextEditingController();
@@ -84,7 +89,7 @@ class _UsulanFormViewState extends State<UsulanFormView> {
   final _metodePelaksanaanController = TextEditingController();
   final List<TextEditingController> _tahapanList = [];
   final List<IndikatorItem> _indikatorList = [];
-  final List<String> _selectedIkus = [];
+  final List<Iku> _selectedIkus = [];
 
   // Controllers - Tahap 4 (RAB)
   final List<RabCategory> _rabCategories = [
@@ -94,57 +99,58 @@ class _UsulanFormViewState extends State<UsulanFormView> {
   ];
   final _newCategoryCtrl = TextEditingController();
 
-  // Data Masters
-  final List<String> _jurusanList = [
-    'Teknik Sipil', 'Teknik Mesin', 'Teknik Elektro', 
-    'Teknik Informatika dan Komputer', 'Teknik Grafika dan Penerbitan',
-    'Akuntansi', 'Administrasi Niaga', 'Pascasarjana'
-  ];
-
-  final Map<String, List<String>> _prodiMap = {
-    'Teknik Sipil': ['D3 Konstruksi Sipil', 'D4 Teknik Perancangan Jalan dan Jembatan'],
-    'Teknik Mesin': ['D3 Teknik Mesin', 'D4 Teknik Mesin Produksi dan Perawatan', 'D4 Teknologi Rekayasa Pembangkit Energi'],
-    'Teknik Elektro': ['D3 Teknik Listrik', 'D3 Teknik Telekomunikasi', 'D4 Teknik Otomasi Listrik Industri'],
-    'Teknik Informatika dan Komputer': ['D3 Teknik Informatika', 'D4 Teknik Informatika', 'D4 Teknik Multimedia Digital', 'D4 Keamanan Sistem Informasi'],
-    'Teknik Grafika dan Penerbitan': ['D3 Desain Grafis', 'D3 Penerbitan'],
-    'Akuntansi': ['D3 Akuntansi', 'D4 Akuntansi Keuangan', 'D4 Keuangan Perbankan'],
-    'Administrasi Niaga': ['D3 Administrasi Bisnis', 'D4 MICE', 'D4 Administrasi Bisnis Terapan'],
-    'Pascasarjana': ['S2 Rekayasa Teknologi', 'S2 Terapan Keuangan dan Perbankan'],
-  };
-
-  final List<String> _wadirList = [
-    'Wadir 1 - Akademik', 'Wadir 2 - Umum & Keuangan',
-    'Wadir 3 - Kemahasiswaan', 'Wadir 4 - Kerjasama & Hubungan Luar'
-  ];
-
   final List<String> _bulanList = [
     'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
     'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
   ];
 
-  final List<String> _ikuOptions = [
-    'IKU 1 - Lulusan Mendapat Pekerjaan yang Layak',
-    'IKU 2 - Mahasiswa Mendapat Pengalaman di Luar Kampus',
-    'IKU 3 - Dosen Berkegiatan di Luar Kampus',
-    'IKU 4 - Praktisi Mengajar di Dalam Kampus',
-    'IKU 5 - Hasil Kerja Dosen Digunakan oleh Masyarakat',
-    'IKU 6 - Program Studi Bekerjasama dengan Mitra Kelas Dunia',
-    'IKU 7 - Kelas yang Kolaboratif dan Partisipatif',
-    'IKU 8 - Program Studi Berstandar Internasional',
-  ];
-
   @override
   void initState() {
     super.initState();
-    if (widget.usulan != null) {
-      _namaPengusulController.text = widget.usulan!['nama_mahasiswa'] ?? '';
-      _namaKegiatanController.text = widget.usulan!['nama'] ?? '';
-      _jurusan = 'Teknik Informatika dan Komputer';
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initData();
+    });
+  }
+
+  Future<void> _initData() async {
+    final usulanProvider = context.read<UsulanProvider>();
+    final authProvider = context.read<AuthProvider>();
+    
+    await usulanProvider.fetchMasterData();
+    
+    if (mounted) {
+      setState(() {
+        // Auto-fill from Auth if available
+        if (authProvider.currentUser != null) {
+          _namaPengusulController.text = authProvider.currentUser!.name;
+          // Note: nim might be in rawData if not in model
+          _nimController.text = (authProvider.currentUser!.rawData?['nim_nip'] ?? '').toString();
+          
+          final deptName = authProvider.currentUser!.departmentName;
+          if (deptName != null) {
+             try {
+                _selectedJurusan = usulanProvider.jurusans.firstWhere((j) => j.namaJurusan == deptName);
+             } catch (_) {}
+          }
+        }
+
+        if (widget.usulan != null) {
+          _namaPengusulController.text = widget.usulan!['nama_pengusul'] ?? _namaPengusulController.text;
+          _namaKegiatanController.text = widget.usulan!['nama_kegiatan'] ?? '';
+          _nimController.text = (widget.usulan!['nim_nip'] ?? '').toString();
+        }
+      });
     }
   }
 
   @override
   void dispose() {
+    _namaPengusulController.dispose();
+    _nimController.dispose();
+    _namaKegiatanController.dispose();
+    _gambaranUmumController.dispose();
+    _penerimaManfaatController.dispose();
+    _metodePelaksanaanController.dispose();
     for (var ctrl in _tahapanList) { ctrl.dispose(); }
     for (var ind in _indikatorList) { ind.dispose(); }
     for (var cat in _rabCategories) {
@@ -164,12 +170,68 @@ class _UsulanFormViewState extends State<UsulanFormView> {
   }
 
   Future<void> _submitForm() async {
-    setState(() => _isLoading = true);
-    await Future.delayed(const Duration(seconds: 2));
-    setState(() => _isLoading = false);
+    if (_selectedWadir == null || _selectedJurusan == null || _selectedProdi == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Harap lengkapi data pengusul, jurusan, dan wadir tujuan.')));
+      setState(() => _currentStep = 0);
+      return;
+    }
+
+    if (_rabCategories.every((cat) => cat.items.isEmpty)) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('RAB minimal harus memiliki 1 item.')));
+      return;
+    }
+
+    setState(() => _isLoadingSubmission = true);
+    
+    // Prepare RAB Data
+    Map<String, List<Map<String, dynamic>>> rabData = {};
+    for (var cat in _rabCategories) {
+      if (cat.items.isNotEmpty) {
+        rabData[cat.name] = cat.items.map((item) => {
+          'uraian': item.uraianCtrl.text,
+          'rincian': item.rincianCtrl.text,
+          'vol1': item.v1,
+          'sat1': item.sat1Ctrl.text,
+          'vol2': item.v2,
+          'sat2': item.sat2Ctrl.text,
+          'harga': item.harga,
+        }).toList();
+      }
+    }
+
+    // Prepare Payload
+    final data = {
+      'nama_kegiatan': _namaKegiatanController.text,
+      'nama_pengusul': _namaPengusulController.text,
+      'nim_nip': _nimController.text,
+      'jurusan': _selectedJurusan!.namaJurusan,
+      'prodi': _selectedProdi!.namaProdi,
+      'wadir_tujuan': _selectedWadir!.id,
+      'indikator_kinerja': _selectedIkus.map((e) => e.code).join(', '),
+      'gambaran_umum': _gambaranUmumController.text,
+      'penerima_manfaat': _penerimaManfaatController.text,
+      'metode_pelaksanaan': _metodePelaksanaanController.text,
+      'tahapan': _tahapanList.map((e) => e.text).toList(),
+      'indikator': _indikatorList.map((e) => {
+        'nama': e.indikatorCtrl.text,
+        'bulan': (e.bulanIndex ?? 0) + 1,
+        'target': int.tryParse(e.targetCtrl.text) ?? 0,
+      }).toList(),
+      'rab_data': rabData,
+    };
+
+    final provider = context.read<UsulanProvider>();
+    final success = await provider.createUsulan(data);
+
+    setState(() => _isLoadingSubmission = false);
+    
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Berhasil menyimpan usulan!')));
-      Navigator.pop(context, true);
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Berhasil mengajukan usulan!'), backgroundColor: Colors.green));
+        Navigator.pop(context, true);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(provider.errorMessage), backgroundColor: Colors.red));
+      }
     }
   }
 
@@ -182,6 +244,7 @@ class _UsulanFormViewState extends State<UsulanFormView> {
   void _removeIndikator(int index) => setState(() { _indikatorList[index].dispose(); _indikatorList.removeAt(index); });
 
   void _showIkuDialog() {
+    final allIkus = context.read<UsulanProvider>().ikus;
     showDialog(
       context: context,
       builder: (context) {
@@ -191,26 +254,28 @@ class _UsulanFormViewState extends State<UsulanFormView> {
               title: const Text('Pilih IKU', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
               content: SizedBox(
                 width: double.maxFinite,
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: _ikuOptions.length,
-                  itemBuilder: (context, index) {
-                    final iku = _ikuOptions[index];
-                    final isSelected = _selectedIkus.contains(iku);
-                    return CheckboxListTile(
-                      title: Text(iku, style: const TextStyle(fontSize: 13)),
-                      value: isSelected,
-                      activeColor: Colors.blue.shade600,
-                      onChanged: (val) {
-                        setDialogState(() {
-                          if (val == true) _selectedIkus.add(iku);
-                          else _selectedIkus.remove(iku);
-                        });
-                        setState(() {});
+                child: allIkus.isEmpty 
+                  ? const Center(child: Text('Data IKU tidak ditemukan'))
+                  : ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: allIkus.length,
+                      itemBuilder: (context, index) {
+                        final iku = allIkus[index];
+                        final isSelected = _selectedIkus.any((e) => e.id == iku.id);
+                        return CheckboxListTile(
+                          title: Text('${iku.code} - ${iku.performanceIndicator}', style: const TextStyle(fontSize: 13)),
+                          value: isSelected,
+                          activeColor: Colors.blue.shade600,
+                          onChanged: (val) {
+                            setDialogState(() {
+                              if (val == true) _selectedIkus.add(iku);
+                              else _selectedIkus.removeWhere((e) => e.id == iku.id);
+                            });
+                            setState(() {});
+                          },
+                        );
                       },
-                    );
-                  },
-                ),
+                    ),
               ),
               actions: [
                 TextButton(onPressed: () => Navigator.pop(context), child: const Text('Tutup', style: TextStyle(fontWeight: FontWeight.bold))),
@@ -254,6 +319,8 @@ class _UsulanFormViewState extends State<UsulanFormView> {
 
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<UsulanProvider>();
+
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
@@ -262,42 +329,22 @@ class _UsulanFormViewState extends State<UsulanFormView> {
         foregroundColor: AppTheme.textDark,
         elevation: 1,
       ),
-      body: _isLoading 
-          ? const Center(child: CircularProgressIndicator())
+      body: provider.isLoadingMaster || _isLoadingSubmission
+          ? Center(child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const CircularProgressIndicator(),
+                const SizedBox(height: 16),
+                Text(_isLoadingSubmission ? 'Mengirim Usulan...' : 'Memuat Data Master...', style: const TextStyle(color: Colors.blueGrey)),
+              ],
+            ))
           : Column(
               children: [
-                if (widget.usulan != null)
-                  Container(
-                    margin: const EdgeInsets.all(16).copyWith(bottom: 0),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.orange.withOpacity(0.1),
-                      border: Border(left: const BorderSide(color: Colors.orange, width: 4)),
-                      borderRadius: const BorderRadius.horizontal(right: Radius.circular(16)),
-                    ),
-                    child: const Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 24),
-                        SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Catatan Revisi', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange, fontSize: 14)),
-                              SizedBox(height: 4),
-                              Text('Terdapat beberapa bagian yang perlu diperbaiki sebelum pengajuan dapat dilanjutkan.', style: TextStyle(fontSize: 12, color: Colors.black87, height: 1.4)),
-                            ],
-                          ),
-                        )
-                      ],
-                    ),
-                  ),
                 _buildStepperHeader(),
                 Expanded(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.all(20),
-                    child: _buildCurrentStepContent(),
+                    child: _buildCurrentStepContent(provider),
                   ),
                 ),
                 _buildBottomNav(),
@@ -338,9 +385,9 @@ class _UsulanFormViewState extends State<UsulanFormView> {
     );
   }
 
-  Widget _buildCurrentStepContent() {
+  Widget _buildCurrentStepContent(UsulanProvider provider) {
     switch (_currentStep) {
-      case 0: return _buildStep1();
+      case 0: return _buildStep1(provider);
       case 1: return _buildStep2();
       case 2: return _buildStep3();
       case 3: return _buildStep4();
@@ -348,7 +395,7 @@ class _UsulanFormViewState extends State<UsulanFormView> {
     }
   }
 
-  Widget _buildStep1() {
+  Widget _buildStep1(UsulanProvider provider) {
     return _buildCardWrapper(
       title: 'Input Data Pengusul / Pelaksana',
       child: Column(
@@ -357,26 +404,39 @@ class _UsulanFormViewState extends State<UsulanFormView> {
           const SizedBox(height: 16),
           _buildTextField('NIM/NIP', 'Masukkan NIM atau NIP', _nimController, Icons.badge_rounded),
           const SizedBox(height: 16),
-          _buildDropdown(
-            'Jurusan', 'Pilih Jurusan', _jurusanList, _jurusan, 
+          
+          // Dynamic Jurusan
+          _buildGenericDropdown<Jurusan>(
+            'Jurusan', 'Pilih Jurusan', provider.jurusans, _selectedJurusan, 
             (val) => setState(() {
-              _jurusan = val;
-              _prodi = null; // Reset prodi
-            })
+              _selectedJurusan = val;
+              _selectedProdi = null;
+            }),
+            (j) => j.namaJurusan,
           ),
           const SizedBox(height: 16),
-          _buildDropdown(
+          
+          // Dynamic Prodi
+          _buildGenericDropdown<Prodi>(
             'Prodi', 
-            _jurusan == null ? 'Pilih Jurusan Terlebih Dahulu' : 'Pilih Program Studi', 
-            _jurusan == null ? [] : _prodiMap[_jurusan!] ?? [], 
-            _prodi, 
-            (val) => setState(() => _prodi = val), 
-            disabled: _jurusan == null
+            _selectedJurusan == null ? 'Pilih Jurusan Terlebih Dahulu' : 'Pilih Program Studi', 
+            _selectedJurusan?.prodis ?? [], 
+            _selectedProdi, 
+            (val) => setState(() => _selectedProdi = val), 
+            (p) => p.namaProdi,
+            disabled: _selectedJurusan == null
           ),
           const SizedBox(height: 16),
+          
           _buildTextField('Nama Kegiatan', 'Masukkan nama kegiatan', _namaKegiatanController, Icons.event_rounded),
           const SizedBox(height: 16),
-          _buildDropdown('Wadir Tujuan', 'Pilih Wadir Tujuan', _wadirList, _wadirTujuan, (val) => setState(() => _wadirTujuan = val)),
+          
+          // Dynamic Wadir
+          _buildGenericDropdown<Wadir>(
+            'Wadir Tujuan', 'Pilih Wadir Tujuan', provider.wadirs, _selectedWadir, 
+            (val) => setState(() => _selectedWadir = val),
+            (w) => w.namaWadir,
+          ),
         ],
       ),
     );
@@ -449,16 +509,16 @@ class _UsulanFormViewState extends State<UsulanFormView> {
                     children: [
                       Expanded(
                         flex: 2,
-                        child: DropdownButtonFormField<String>(
-                          value: item.bulan,
+                        child: DropdownButtonFormField<int>(
+                          value: item.bulanIndex,
                           decoration: InputDecoration(
                             hintText: 'Bulan',
                             isDense: true, contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                           ),
                           style: const TextStyle(fontSize: 12, color: Colors.black),
-                          items: _bulanList.map((String val) => DropdownMenuItem(value: val, child: Text(val))).toList(),
-                          onChanged: (val) => setState(() => item.bulan = val),
+                          items: List.generate(_bulanList.length, (i) => DropdownMenuItem(value: i, child: Text(_bulanList[i]))),
+                          onChanged: (val) => setState(() => item.bulanIndex = val),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -502,9 +562,9 @@ class _UsulanFormViewState extends State<UsulanFormView> {
                 else Wrap(
                   spacing: 8, runSpacing: 8,
                   children: _selectedIkus.map((iku) => Chip(
-                    label: Text(iku, style: const TextStyle(fontSize: 11, color: Colors.blue)),
+                    label: Text(iku.code ?? '', style: const TextStyle(fontSize: 11, color: Colors.blue)),
                     backgroundColor: Colors.white, deleteIconColor: Colors.red.shade300,
-                    onDeleted: () => setState(() => _selectedIkus.remove(iku)),
+                    onDeleted: () => setState(() => _selectedIkus.removeWhere((e) => e.id == iku.id)),
                     side: BorderSide(color: Colors.blue.shade200),
                   )).toList()
                 ),
@@ -556,7 +616,6 @@ class _UsulanFormViewState extends State<UsulanFormView> {
                 decoration: BoxDecoration(border: Border.all(color: Colors.grey.shade300), borderRadius: BorderRadius.circular(12)),
                 child: Column(
                   children: [
-                    // Category Header
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       decoration: BoxDecoration(color: Colors.blue.shade50.withOpacity(0.5), borderRadius: const BorderRadius.vertical(top: Radius.circular(12))),
@@ -574,8 +633,6 @@ class _UsulanFormViewState extends State<UsulanFormView> {
                         ],
                       ),
                     ),
-                    
-                    // Items List
                     Padding(
                       padding: const EdgeInsets.all(12),
                       child: Column(
@@ -644,10 +701,7 @@ class _UsulanFormViewState extends State<UsulanFormView> {
                 ),
               );
             }),
-
           const SizedBox(height: 24),
-          
-          // Grand Total
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(color: Colors.blue.shade50, border: Border.all(color: Colors.blue.shade200), borderRadius: BorderRadius.circular(16)),
@@ -724,13 +778,13 @@ class _UsulanFormViewState extends State<UsulanFormView> {
     );
   }
 
-  Widget _buildDropdown(String label, String hint, List<String> items, String? value, Function(String?) onChanged, {bool disabled = false}) {
+  Widget _buildGenericDropdown<T>(String label, String hint, List<T> items, T? value, Function(T?) onChanged, String Function(T) labelMapper, {bool disabled = false}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blueGrey, letterSpacing: 0.5)),
         const SizedBox(height: 8),
-        DropdownButtonFormField<String>(
+        DropdownButtonFormField<T>(
           value: value,
           icon: Icon(Icons.expand_more_rounded, color: disabled ? Colors.grey.shade400 : Colors.grey.shade600),
           decoration: InputDecoration(
@@ -741,7 +795,7 @@ class _UsulanFormViewState extends State<UsulanFormView> {
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           ),
           style: TextStyle(fontSize: 13, color: disabled ? Colors.grey.shade600 : AppTheme.textDark, fontWeight: FontWeight.w600),
-          items: items.map((String val) => DropdownMenuItem(value: val, child: Text(val))).toList(),
+          items: items.map((T val) => DropdownMenuItem(value: val, child: Text(labelMapper(val), overflow: TextOverflow.ellipsis))).toList(),
           onChanged: disabled ? null : onChanged,
         ),
       ],

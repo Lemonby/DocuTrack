@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import '../../theme/app_theme.dart';
+import '../../providers/usulan_provider.dart';
+import '../../models/kegiatan.dart';
 import 'usulan_form_view.dart';
 
 class UsulanDetailView extends StatefulWidget {
@@ -12,33 +16,61 @@ class UsulanDetailView extends StatefulWidget {
 }
 
 class _UsulanDetailViewState extends State<UsulanDetailView> {
-  String status = 'Proses';
-  Color statusColor = Colors.blueGrey;
+  Kegiatan? _kegiatan;
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _setupMockData();
+    _loadData();
   }
 
-  void _setupMockData() {
-    if (widget.kegiatanId == 9002 || widget.kegiatanId == 2) {
-      status = 'Revisi';
-      statusColor = Colors.orange;
-    } else if (widget.kegiatanId == 9003 || widget.kegiatanId == 3) {
-      status = 'Disetujui';
-      statusColor = Colors.green;
-    } else if (widget.kegiatanId == 9004 || widget.kegiatanId == 4) {
-      status = 'Ditolak';
-      statusColor = Colors.red;
-    } else {
-      status = 'Proses';
-      statusColor = Colors.blueGrey;
+  Future<void> _loadData() async {
+    final provider = context.read<UsulanProvider>();
+    // Since we already have the list, we could find it there, 
+    // but better to fetch fresh detail from API.
+    // However, UsulanProvider only has getKegiatans (for rincian) and getUsulans (for list).
+    // I'll check if I need a getUsulanDetail.
+    
+    // Attempt to get from list first as a fallback
+    final existing = provider.usulans.cast<Kegiatan?>().firstWhere((e) => e?.id == widget.kegiatanId, orElse: () => null);
+    
+    if (mounted) {
+      setState(() {
+        _kegiatan = existing;
+        _isLoading = false;
+      });
     }
+  }
+
+  String _formatRupiah(num value) {
+    return NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0).format(value);
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    if (_kegiatan == null) return Scaffold(appBar: AppBar(), body: const Center(child: Text('Data tidak ditemukan')));
+
+    final status = _kegiatan!.statusNama ?? 'Proses';
+    Color statusColor = Colors.blueGrey;
+    if (status.contains('Revisi')) statusColor = Colors.orange;
+    else if (status.contains('Setuju') || status.contains('Selesai')) statusColor = Colors.green;
+    else if (status.contains('Tolak')) statusColor = Colors.red;
+    else if (status.contains('Menunggu')) statusColor = Colors.blue;
+
+    final rab = _kegiatan!.rawData?['rab'] as List? ?? [];
+    final kak = _kegiatan!.rawData?['kak'] ?? {};
+    final jadwal = _kegiatan!.rawData?['jadwal'] as List? ?? [];
+    
+    double totalAnggaran = 0;
+    for (var r in rab) {
+      double hrg = double.tryParse(r['harga_satuan']?.toString() ?? '0') ?? 0;
+      double v1 = double.tryParse(r['volume_1']?.toString() ?? '1') ?? 1;
+      double v2 = double.tryParse(r['volume_2']?.toString() ?? '1') ?? 1;
+      totalAnggaran += (hrg * v1 * v2);
+    }
+
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
@@ -52,14 +84,14 @@ class _UsulanDetailViewState extends State<UsulanDetailView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (status == 'Revisi')
+            if (status.contains('Revisi'))
               _buildAlertBanner(
                 'Perlu Revisi',
-                'Terdapat beberapa bagian yang perlu diperbaiki sebelum pengajuan dapat dilanjutkan.',
+                _kegiatan!.rawData?['revisi_comment'] ?? 'Terdapat beberapa bagian yang perlu diperbaiki.',
                 Colors.orange,
                 Icons.warning_amber_rounded,
               )
-            else if (status == 'Disetujui')
+            else if (status.contains('Setuju'))
               _buildAlertBanner(
                 'Usulan Disetujui',
                 'Kegiatan ini telah melewati tahap verifikasi dan siap untuk dilaksanakan.',
@@ -84,15 +116,15 @@ class _UsulanDetailViewState extends State<UsulanDetailView> {
                       const SizedBox(width: 8),
                       const Text('|', style: TextStyle(color: Colors.black26)),
                       const SizedBox(width: 8),
-                      Text('ID USULAN: #USL-${widget.kegiatanId.toString().padLeft(5, '0')}', style: const TextStyle(color: AppTheme.textMuted, fontSize: 10, fontWeight: FontWeight.bold)),
+                      Text('ID USULAN: #USL-${_kegiatan!.id.toString().padLeft(5, '0')}', style: const TextStyle(color: AppTheme.textMuted, fontSize: 10, fontWeight: FontWeight.bold)),
                     ],
                   ),
                   const SizedBox(height: 16),
-                  const Text('Detail Usulan Kegiatan', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: AppTheme.textDark, height: 1.2)),
+                  Text(_kegiatan!.namaKegiatan, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: AppTheme.textDark, height: 1.2)),
                   const SizedBox(height: 24),
                   
                   // Progress Stepper
-                  _buildProgressStepper(),
+                  _buildProgressStepper(status, statusColor),
                 ],
               ),
             ),
@@ -105,51 +137,54 @@ class _UsulanDetailViewState extends State<UsulanDetailView> {
               color: statusColor,
               child: Column(
                 children: [
-                  _buildDataRow('Nama Pengusul', 'Budi Santoso', 'NIM / NIP', '192001'),
+                  _buildDataRow('Nama Pengusul', _kegiatan!.pemilikKegiatan ?? '-', 'NIM / NIP', _kegiatan!.nimPelaksana ?? '-'),
                   const SizedBox(height: 16),
-                  _buildDataRow('Jurusan & Prodi', 'Teknik Informatika\nD4 Teknik Informatika', 'Nama Kegiatan', 'Pembuatan Sistem Informasi Kepegawaian'),
+                  _buildDataRow('Jurusan', _kegiatan!.jurusanPenyelenggara ?? '-', 'Prodi', _kegiatan!.prodiPenyelenggara ?? '-'),
                   const SizedBox(height: 16),
-                  _buildDataRow('Wadir Tujuan', 'Wadir 1 - Akademik', 'Penerima Manfaat', 'Seluruh Mahasiswa TI'),
-                  const SizedBox(height: 16),
-                  _buildDataRow('Penanggung Jawab', 'Budi Santoso\nNIP: 192001', '', ''),
+                  _buildDataRow('Wadir Tujuan', 'Wadir ${_kegiatan!.rawData?['wadir_tujuan'] ?? "-"}', 'Penerima Manfaat', kak['penerima_manfaat'] ?? '-'),
                   
                   const Padding(padding: EdgeInsets.symmetric(vertical: 20), child: Divider(height: 1)),
                   
-                  _buildLongTextData('Gambaran Umum', 'Pembuatan sistem informasi untuk manajemen data pegawai yang lebih terintegrasi dan efisien.'),
+                  _buildLongTextData('Gambaran Umum', kak['gambaran_umum'] ?? '-'),
                   const SizedBox(height: 16),
-                  _buildLongTextData('Metode Pelaksanaan', 'Menggunakan metode Agile Scrum dengan sprint selama 2 minggu, mencakup perancangan, pengembangan, dan pengujian.'),
+                  _buildLongTextData('Metode Pelaksanaan', kak['metode_pelaksanaan'] ?? '-'),
                 ],
               ),
             ),
             const SizedBox(height: 24),
 
             // IKU Section
-            _buildCardWrapper(
-              title: 'Indikator Kinerja Utama (IKU)',
-              icon: Icons.track_changes_rounded,
-              color: statusColor,
-              child: Column(
-                children: [
-                  _buildIkuItem('IKU 1 - Lulusan Mendapat Pekerjaan yang Layak'),
-                  _buildIkuItem('IKU 2 - Mahasiswa Mendapat Pengalaman di Luar Kampus'),
-                ],
+            if (kak['iku'] != null) ...[
+              _buildCardWrapper(
+                title: 'Indikator Kinerja Utama (IKU)',
+                icon: Icons.track_changes_rounded,
+                color: statusColor,
+                child: Column(
+                  children: [
+                    _buildIkuItem(kak['iku'].toString()),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 24),
+              const SizedBox(height: 24),
+            ],
 
             // Tahapan Pelaksanaan
-            _buildCardWrapper(
-              title: 'Pelaksanaan & Keberhasilan',
-              icon: Icons.checklist_rounded,
-              color: statusColor,
-              child: Column(
-                children: [
-                  _buildTahapanBulan('Januari', 'Pengumpulan kebutuhan sistem dan penyusunan desain UI/UX.', 'Desain disetujui oleh stakeholder', '100'),
-                  _buildTahapanBulan('Februari', 'Pengembangan sistem backend dan frontend.', 'Fitur utama berjalan tanpa bug', '80'),
-                ],
+            if (jadwal.isNotEmpty) ...[
+              _buildCardWrapper(
+                title: 'Pelaksanaan & Keberhasilan',
+                icon: Icons.checklist_rounded,
+                color: statusColor,
+                child: Column(
+                  children: jadwal.map((j) => _buildTahapanBulan(
+                    j['bulan'] ?? '-', 
+                    j['tahapan_pelaksanaan'] ?? '-', 
+                    j['indikator_keberhasilan'] ?? '-', 
+                    j['target']?.toString() ?? '0'
+                  )).toList(),
+                ),
               ),
-            ),
-            const SizedBox(height: 24),
+              const SizedBox(height: 24),
+            ],
 
             // RAB Total
             Container(
@@ -170,9 +205,7 @@ class _UsulanDetailViewState extends State<UsulanDetailView> {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  const Text('Rp 15.000.000', style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: Colors.white)),
-                  const SizedBox(height: 4),
-                  Text('Sudah termasuk pajak & biaya operasional', style: TextStyle(fontSize: 10, color: Colors.white.withOpacity(0.7))),
+                  Text(_formatRupiah(totalAnggaran), style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: Colors.white)),
                 ],
               ),
             ),
@@ -187,23 +220,16 @@ class _UsulanDetailViewState extends State<UsulanDetailView> {
                 children: [
                   const Text('AKSI TERSEDIA', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: Colors.blueGrey, letterSpacing: 1)),
                   const SizedBox(height: 16),
-                  if (status == 'Revisi')
+                  if (status.contains('Revisi'))
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(
                         onPressed: () {
-                          // Navigate to UsulanFormView with mock data
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => const UsulanFormView(
-                                usulan: {
-                                  'nama_mahasiswa': 'Budi Santoso',
-                                  'nama': 'Pembuatan Sistem Informasi Kepegawaian',
-                                  'jurusan': 'Teknik Informatika dan Komputer',
-                                  'prodi': 'D4 Teknik Informatika',
-                                  'id': 9002
-                                }
+                              builder: (_) => UsulanFormView(
+                                usulan: _kegiatan!.rawData
                               )
                             )
                           );
@@ -220,29 +246,12 @@ class _UsulanDetailViewState extends State<UsulanDetailView> {
                         ),
                       ),
                     )
-                  else if (status == 'Proses')
+                  else
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(color: Colors.blueGrey.withOpacity(0.05), borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.blueGrey.withOpacity(0.1))),
-                      child: const Text('"Status saat ini: Menunggu Verifikasi. Tidak ada aksi yang dapat dilakukan."', textAlign: TextAlign.center, style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic, color: Colors.blueGrey, fontWeight: FontWeight.bold)),
-                    )
-                  else if (status == 'Disetujui')
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: () {},
-                        icon: const Icon(Icons.download_rounded),
-                        label: const Text('UNDUH BERKAS KAK', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1)),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          elevation: 4,
-                          shadowColor: Colors.green.withOpacity(0.4),
-                        ),
-                      ),
+                      child: Text('"Status saat ini: $status. Pantau perkembangan secara berkala."', textAlign: TextAlign.center, style: const TextStyle(fontSize: 11, fontStyle: FontStyle.italic, color: Colors.blueGrey, fontWeight: FontWeight.bold)),
                     ),
                 ],
               ),
@@ -282,16 +291,16 @@ class _UsulanDetailViewState extends State<UsulanDetailView> {
     );
   }
 
-  Widget _buildProgressStepper() {
-    int currentStep = status == 'Disetujui' ? 2 : (status == 'Revisi' || status == 'Proses' ? 0 : 1);
+  Widget _buildProgressStepper(String status, Color statusColor) {
+    int currentStep = status.contains('Setuju') ? 2 : (status.contains('Revisi') || status.contains('Proses') ? 0 : 1);
     final steps = ['Pengajuan', 'Verifikasi', 'Selesai'];
 
     return Row(
       children: List.generate(steps.length * 2 - 1, (index) {
         if (index % 2 == 0) {
           int stepIdx = index ~/ 2;
-          bool isCompleted = status == 'Disetujui' || stepIdx < currentStep || (stepIdx == 1 && status != 'Revisi' && status != 'Proses');
-          bool isActive = (stepIdx == 1 && status == 'Proses') || (stepIdx == 0 && status == 'Revisi');
+          bool isCompleted = status.contains('Setuju') || stepIdx < currentStep || (stepIdx == 1 && !status.contains('Revisi') && !status.contains('Proses'));
+          bool isActive = (stepIdx == 1 && status.contains('Proses')) || (stepIdx == 0 && status.contains('Revisi'));
           
           Color bgColor = isCompleted ? statusColor : Colors.white;
           Color borderColor = isCompleted || isActive ? statusColor : Colors.grey.shade300;
@@ -314,7 +323,7 @@ class _UsulanDetailViewState extends State<UsulanDetailView> {
           );
         } else {
           int stepIdx = (index - 1) ~/ 2;
-          bool isLineActive = status == 'Disetujui' || stepIdx < currentStep;
+          bool isLineActive = status.contains('Setuju') || stepIdx < currentStep;
           return Expanded(
             child: Container(
               height: 3,
@@ -395,8 +404,8 @@ class _UsulanDetailViewState extends State<UsulanDetailView> {
         children: [
           Container(
             padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(color: statusColor.withOpacity(0.1), shape: BoxShape.circle),
-            child: Icon(Icons.check_rounded, size: 12, color: statusColor),
+            decoration: BoxDecoration(color: Colors.blue.withOpacity(0.1), shape: BoxShape.circle),
+            child: const Icon(Icons.check_rounded, size: 12, color: Colors.blue),
           ),
           const SizedBox(width: 12),
           Expanded(child: Text(text, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppTheme.textDark))),
@@ -415,8 +424,8 @@ class _UsulanDetailViewState extends State<UsulanDetailView> {
         children: [
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(color: statusColor.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
-            child: Text(bulan.toUpperCase(), style: TextStyle(color: statusColor, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1)),
+            decoration: BoxDecoration(color: Colors.blue.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
+            child: Text(bulan.toUpperCase(), style: const TextStyle(color: Colors.blue, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1)),
           ),
           const SizedBox(height: 16),
           Row(
