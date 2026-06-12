@@ -34,12 +34,19 @@ class TahapanPencairan {
     this.fileBukti,
   });
 
+  static double? _parseNum(dynamic value) {
+    if (value == null) return null;
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value);
+    return null;
+  }
+
   factory TahapanPencairan.fromJson(Map<String, dynamic> json) {
     return TahapanPencairan(
       id: json['id'] ?? 0,
       kegiatanId: json['kegiatan_id'] ?? 0,
       namaTahapan: json['nama_tahapan'] ?? '',
-      jumlahCair: (json['jumlah_cair'] as num?)?.toDouble() ?? 0.0,
+      jumlahCair: _parseNum(json['jumlah_cair']) ?? 0.0,
       tanggalCair: json['tanggal_cair'],
       fileBukti: json['file_bukti'],
     );
@@ -124,8 +131,8 @@ class Kegiatan {
       buktiMak: json['bukti_mak'],
       jurusanPenyelenggara: json['jurusan_penyelenggara'],
       suratPengantar: json['surat_pengantar'],
-      danaDiSetujui: (json['dana_di_setujui'] as num?)?.toDouble(),
-      jumlahDicairkan: (json['jumlah_dicairkan'] as num?)?.toDouble(),
+      danaDiSetujui: TahapanPencairan._parseNum(json['dana_di_setujui']),
+      jumlahDicairkan: TahapanPencairan._parseNum(json['jumlah_dicairkan']),
       metodePencairan: json['metode_pencairan'],
       tanggalPencairan: json['tanggal_pencairan'],
       catatanBendahara: json['catatan_bendahara'],

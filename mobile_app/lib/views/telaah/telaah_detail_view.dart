@@ -112,7 +112,16 @@ class _TelaahDetailViewState extends State<TelaahDetailView> {
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                         contentPadding: const EdgeInsets.all(16)
                       ),
-                      validator: (v) => !isApprove && (v == null || v.trim().isEmpty) ? 'Catatan wajib diisi' : null,
+                      validator: (v) {
+                        if (isApprove) return null;
+                        if (v == null || v.trim().isEmpty) return 'Catatan wajib diisi';
+                        
+                        final minLen = action == 'reject' ? 10 : 5;
+                        if (v.trim().length < minLen) {
+                          return 'Minimal $minLen karakter';
+                        }
+                        return null;
+                      },
                     )
                   ],
                   if (needsMak) ...[
@@ -171,7 +180,10 @@ class _TelaahDetailViewState extends State<TelaahDetailView> {
                           onPressed: provider.isLoading ? null : () async {
                             if (!_formKey.currentState!.validate()) return;
 
-                            Navigator.pop(context);
+                            // Capture view context before popping
+                            final viewContext = this.context;
+                            Navigator.pop(context); // Close bottom sheet
+                            
                             final success = await provider.processAction(
                               widget.rolePrefix, 
                               widget.kegiatanId, 
@@ -182,14 +194,14 @@ class _TelaahDetailViewState extends State<TelaahDetailView> {
                             );
 
                             if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
+                              ScaffoldMessenger.of(viewContext).showSnackBar(
                                 SnackBar(
                                   content: Text(success ? 'Tindakan berhasil diproses.' : provider.errorMessage),
                                   backgroundColor: success ? Colors.green.shade600 : Colors.redAccent,
                                 ),
                               );
                               if (success) {
-                                Navigator.pop(context); // Go back to list
+                                Navigator.pop(viewContext); // Go back to list using view context
                               }
                             }
                           },

@@ -146,91 +146,86 @@ class _LandingViewState extends State<LandingView> with TickerProviderStateMixin
             ),
           ),
           
-          // Content
           SafeArea(
             bottom: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 90, 24, 40),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const SizedBox(height: 20),
-                  Text(
-                    'Sistem\nPengajuan TOR\n& Kegiatan PNJ',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: isSmallScreen ? 28 : 42, 
-                      fontWeight: FontWeight.w900, 
-                      color: Colors.white, 
-                      height: 1.2
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Ajukan, Pantau dan kelola dokumen TOR Anda secara online, cepat, transparant, dan efisien.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: isSmallScreen ? 14 : 16, 
-                      color: Colors.white.withOpacity(0.9)
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => const LoginView()));
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(colors: [Color(0xFF3B82F6), Color(0xFF22D3EE)]),
-                        borderRadius: BorderRadius.circular(30),
-                        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 10, offset: const Offset(0, 5))],
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text('Log In', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-                          SizedBox(width: 8),
-                          Icon(Icons.arrow_forward, color: Colors.white, size: 20),
-                        ],
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(24, 90, 24, 40),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const SizedBox(height: 20),
+                    Text(
+                      'Sistem\nPengajuan TOR\n& Kegiatan PNJ',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: isSmallScreen ? 28 : 42, 
+                        fontWeight: FontWeight.w900, 
+                        color: Colors.white, 
+                        height: 1.2
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 48),
-                  
-                  // Responsive Hero Image with Floating Icons
-                  LayoutBuilder(
-                    builder: (context, constraints) {
-                      final imageWidth = constraints.maxWidth * 0.8;
-                      final iconSize = isSmallScreen ? 40.0 : 60.0;
-                      
-                      return Center(
-                        child: SizedBox(
-                          width: constraints.maxWidth,
-                          height: imageWidth * 0.8 + (isSmallScreen ? 40 : 80),
-                          child: Stack(
-                            alignment: Alignment.center,
-                            clipBehavior: Clip.none,
-                            children: [
-                              // Main Image
-                              Image.asset(
-                                'assets/images/icon/orang-main-laptop.png', 
-                                width: imageWidth,
-                                fit: BoxFit.contain,
-                              ),
-                              
-                              // Floating elements (positioned relative to container)
-                              // Removed floating animated icons per user request
-                              
-                              // Status card removed per user request
-                            ],
-                          ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Ajukan, Pantau dan kelola dokumen TOR Anda secara online, cepat, transparant, dan efisien.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: isSmallScreen ? 14 : 16, 
+                        color: Colors.white.withOpacity(0.9)
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(context, MaterialPageRoute(builder: (context) => const LoginView()));
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(colors: [Color(0xFF3B82F6), Color(0xFF22D3EE)]),
+                          borderRadius: BorderRadius.circular(30),
+                          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 10, offset: const Offset(0, 5))],
                         ),
-                      );
-                    }
-                  ),
-                  const SizedBox(height: 60), // Space for wave
-                ],
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text('Log In', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                            SizedBox(width: 8),
+                            Icon(Icons.arrow_forward, color: Colors.white, size: 20),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 48),
+                    
+                    // Responsive Hero Image with Floating Icons
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final imageWidth = constraints.maxWidth * 0.8;
+                        
+                        return Center(
+                          child: SizedBox(
+                            width: constraints.maxWidth,
+                            height: imageWidth * 0.8 + (isSmallScreen ? 40 : 80),
+                            child: Stack(
+                              alignment: Alignment.center,
+                              clipBehavior: Clip.none,
+                              children: [
+                                // Main Image
+                                Image.asset(
+                                  'assets/images/icon/orang-main-laptop.png', 
+                                  width: imageWidth,
+                                  fit: BoxFit.contain,
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }
+                    ),
+                    const SizedBox(height: 60), // Space for wave
+                  ],
+                ),
               ),
             ),
           ),

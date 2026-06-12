@@ -14,7 +14,7 @@ class ApiService {
       ? 'http://127.0.0.1:8000/api'
       : 'http://10.0.2.2:8000/api'; // Standard Android Emulator loopback
 
-  static String _baseUrl = String.fromEnvironment(
+  static String _baseUrl = const String.fromEnvironment(
     'API_BASE_URL',
     defaultValue: _defaultUrl,
   );
