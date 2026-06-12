@@ -156,7 +156,7 @@ class _UsulanDetailViewState extends State<UsulanDetailView> {
             const SizedBox(height: 24),
 
             _buildFinancialSection(),
-            if (_kegiatan!.danaDisetujui != null || _kegiatan!.buktiMak != null)
+            if (_kegiatan!.danaDiSetujui != null || _kegiatan!.buktiMak != null)
               const SizedBox(height: 24),
 
             // IKU Section
@@ -257,7 +257,7 @@ class _UsulanDetailViewState extends State<UsulanDetailView> {
   }
 
   Widget _buildFinancialSection() {
-    if (_kegiatan!.danaDisetujui == null && _kegiatan!.buktiMak == null) return const SizedBox();
+    if (_kegiatan!.danaDiSetujui == null && _kegiatan!.buktiMak == null) return const SizedBox();
 
     return _buildCardWrapper(
       title: 'Verifikasi Anggaran',
@@ -266,7 +266,7 @@ class _UsulanDetailViewState extends State<UsulanDetailView> {
       child: Column(
         children: [
           if (_kegiatan!.buktiMak != null)
-            _buildDataRow('Kode MAK', _kegiatan!.buktiMak!, 'Dana Disetujui', _formatRupiah(_kegiatan!.danaDisetujui ?? 0)),
+            _buildDataRow('Kode MAK', _kegiatan!.buktiMak!, 'Dana Disetujui', _formatRupiah(_kegiatan!.danaDiSetujui ?? 0)),
           if (_kegiatan!.umpanBaikVerifikator != null) ...[
             const SizedBox(height: 16),
             _buildLongTextData('Catatan Verifikator', _kegiatan!.umpanBaikVerifikator!),

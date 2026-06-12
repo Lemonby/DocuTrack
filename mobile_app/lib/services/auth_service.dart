@@ -1,5 +1,4 @@
 import 'package:dio/dio.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'api_service.dart';
 import 'biometric_service.dart';
 import '../models/user.dart';
@@ -7,10 +6,6 @@ import '../models/user.dart';
 class AuthService {
   final ApiService _apiService;
   final BiometricService _biometricService = BiometricService();
-  final GoogleSignIn _googleSignIn = GoogleSignIn(
-    scopes: ['email', 'profile'],
-    clientId: 'demo-client-id.apps.googleusercontent.com', // Required for Flutter Web
-  );
 
   AuthService(this._apiService);
 

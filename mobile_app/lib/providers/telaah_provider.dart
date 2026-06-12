@@ -70,24 +70,37 @@ class TelaahProvider with ChangeNotifier {
     notifyListeners();
 
     Map<String, dynamic> result;
-    if (action == 'approve') {
-      result = await _telaahService.approve(rolePrefix, id, kodeMak: kodeMak, danaDisetujui: danaDisetujui);
-    } else if (action == 'reject') {
-      result = await _telaahService.reject(rolePrefix, id, catatan);
-    } else if (action == 'revise') {
-      result = await _telaahService.revise(rolePrefix, id, catatan);
-    } else {
-      result = {'success': false, 'message': 'Unknown action'};
-    }
+    try {
+      if (action == 'approve') {
+        if (kodeMak == null || danaDisetujui == null) {
+          _errorMessage = 'Kode MAK dan Dana Disetujui wajib diisi.';
+          _isLoading = false;
+          notifyListeners();
+          return false;
+        }
+        result = await _telaahService.approve(rolePrefix, id, kodeMak: kodeMak, danaDisetujui: danaDisetujui, catatan: catatan);
+      } else if (action == 'reject') {
+        result = await _telaahService.reject(rolePrefix, id, catatan);
+      } else if (action == 'revise') {
+        result = await _telaahService.revise(rolePrefix, id, catatan);
+      } else {
+        result = {'success': false, 'message': 'Unknown action'};
+      }
 
-    if (result['success']) {
-      // Remove the item from list locally
-      _items.removeWhere((item) => item.id == id);
-      _isLoading = false;
-      notifyListeners();
-      return true;
-    } else {
-      _errorMessage = result['message'];
+      if (result['success'] == true) {
+        // Remove the item from list locally
+        _items.removeWhere((item) => item.id == id);
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      } else {
+        _errorMessage = result['message'] ?? 'Tindakan gagal diproses.';
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
+    } catch (e) {
+      _errorMessage = 'Terjadi kesalahan sistem.';
       _isLoading = false;
       notifyListeners();
       return false;

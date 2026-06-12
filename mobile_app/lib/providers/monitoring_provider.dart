@@ -48,4 +48,16 @@ class MonitoringProvider with ChangeNotifier {
     _isLoading = false;
     notifyListeners();
   }
+
+  Future<Map<String, dynamic>> fetchIntegritasRanking() async {
+    _isLoading = true;
+    _errorMessage = '';
+    notifyListeners();
+
+    final result = await _service.getIntegritasRanking();
+
+    _isLoading = false;
+    notifyListeners();
+    return result;
+  }
 }

@@ -180,24 +180,26 @@ class _TelaahDetailViewState extends State<TelaahDetailView> {
                               kodeMak: needsMak ? _kodeMakCtrl.text : null,
                               danaDisetujui: needsDana ? double.tryParse(_danaCtrl.text) ?? 0 : null,
                             );
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(success ? 'Tindakan berhasil diproses.' : provider.errorMessage),
-                                backgroundColor: success ? Colors.green.shade600 : Colors.redAccent,
-                              ),
-                            );
-                            if (success) {
-                              Navigator.pop(context); // Go back to list
+
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(success ? 'Tindakan berhasil diproses.' : provider.errorMessage),
+                                  backgroundColor: success ? Colors.green.shade600 : Colors.redAccent,
+                                ),
+                              );
+                              if (success) {
+                                Navigator.pop(context); // Go back to list
+                              }
                             }
-                          }
-                        },
-                        child: const Text('Konfirmasi', style: TextStyle(fontWeight: FontWeight.bold)),
+                          },
+                          child: const Text('Konfirmasi', style: TextStyle(fontWeight: FontWeight.bold)),
+                        ),
                       ),
-                    ),
-                  ],
-                )
-              ],
+                    ],
+                  )
+                ],
+              ),
             ),
           ),
         );
