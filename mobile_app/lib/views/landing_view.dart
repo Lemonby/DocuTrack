@@ -275,6 +275,7 @@ class _LandingViewState extends State<LandingView> with TickerProviderStateMixin
           SvgPicture.asset(
             'assets/images/icon/laptop-about.svg', 
             width: double.infinity,
+            height: 250,
             fit: BoxFit.contain,
           ),
           const SizedBox(height: 60),

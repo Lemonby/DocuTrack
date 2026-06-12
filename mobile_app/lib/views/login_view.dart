@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
@@ -81,13 +82,21 @@ class _LoginViewState extends State<LoginView> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black87, // Dimmed background like web popup
-      body: Center(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: _buildLoginCard(context),
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) {
+        if (didPop) return;
+        // Import flutter/services.dart at the top to use SystemNavigator if not there, but let's just use SystemNavigator
+        SystemNavigator.pop();
+      },
+      child: Scaffold(
+        backgroundColor: Colors.black87, // Dimmed background like web popup
+        body: Center(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: _buildLoginCard(context),
+            ),
           ),
         ),
       ),

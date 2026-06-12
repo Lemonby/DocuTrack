@@ -55,7 +55,6 @@ class _BendaharaPencairanDetailViewState extends State<BendaharaPencairanDetailV
   @override
   void initState() {
     super.initState();
-    _terminForms.add(TerminForm(terminKe: _tahapanCounter));
     _localStatus = widget.status;
     _animController = AnimationController(vsync: this, duration: const Duration(milliseconds: 600));
     _fadeAnim = Tween<double>(begin: 0, end: 1).animate(CurvedAnimation(parent: _animController, curve: Curves.easeOut));
@@ -87,7 +86,7 @@ class _BendaharaPencairanDetailViewState extends State<BendaharaPencairanDetailV
                       _jumlahDicairkan = _anggaranDisetujui;
                       _sisaDana = 0;
                   } else {
-                      _jumlahDicairkan = 0; 
+                      _jumlahDicairkan = double.tryParse((_kegiatan!.rawData?['jumlah_dicairkan'] ?? 0).toString()) ?? 0;
                       _sisaDana = _anggaranDisetujui - _jumlahDicairkan;
                   }
                   
@@ -96,6 +95,12 @@ class _BendaharaPencairanDetailViewState extends State<BendaharaPencairanDetailV
                   final lpjList = _kegiatan!.rawData?['lpj'] as List? ?? [];
                   if (lpjList.isNotEmpty) {
                       _lpjStatus = lpjList.last['status'] ?? 'Diajukan';
+                  }
+
+                  final List<dynamic> existTahapan = _kegiatan!.rawData?['tahapan_pencairan'] ?? [];
+                  _tahapanCounter = existTahapan.length + 1;
+                  if (_terminForms.isEmpty) {
+                      _terminForms.add(TerminForm(terminKe: _tahapanCounter));
                   }
               }
           });
@@ -401,6 +406,16 @@ class _BendaharaPencairanDetailViewState extends State<BendaharaPencairanDetailV
   }
 
   Widget _buildIkuBlock() {
+    final kak = _kegiatan!.rawData?['kak'] ?? {};
+    
+    String ikuText = '-';
+    if (kak['ikus'] != null && (kak['ikus'] as List).isNotEmpty) {
+      final ikus = kak['ikus'] as List;
+      ikuText = ikus.map((i) => i['indikator_kinerja']?.toString() ?? '').where((s) => s.isNotEmpty).join('\n');
+    } else {
+      ikuText = kak['iku'] ?? _kegiatan!.rawData?['indikator_kinerja'] ?? '-';
+    }
+
     return _buildCardBase(
       title: 'Indikator Kinerja Utama',
       icon: Icons.api_rounded,
@@ -415,7 +430,7 @@ class _BendaharaPencairanDetailViewState extends State<BendaharaPencairanDetailV
                 children: [
                   Icon(Icons.check_circle_rounded, color: Colors.blue.shade600, size: 20),
                   const SizedBox(width: 12),
-                  Expanded(child: Text(_kegiatan!.rawData?['indikator_kinerja'] ?? '-', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.black87))),
+                  Expanded(child: Text(ikuText, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.black87))),
                 ],
               ),
             )
@@ -661,17 +676,28 @@ class _BendaharaPencairanDetailViewState extends State<BendaharaPencairanDetailV
             } else {
               List<Map<String, dynamic>> tahapan = [];
               for (var form in _terminForms) {
-                final nom = double.tryParse(form.nominalController.text) ?? 0;
-                if (nom <= 0) return;
+                final cleanNominal = form.nominalController.text.replaceAll('.', '').replaceAll(',', '');
+                final nom = double.tryParse(cleanNominal) ?? 0;
+                if (nom <= 0) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Nominal termin tidak valid.'), backgroundColor: Colors.red));
+                  return;
+                }
                 tahapan.add({'tanggal': DateFormat('yyyy-MM-dd').format(form.tglEstimasi ?? DateTime.now()), 'termin': 'Termin ${form.terminKe}', 'nominal': nom});
               }
               payload['tahapan'] = tahapan;
             }
-            final success = await provider.submitPencairan(payload);
-            if (mounted && success['success']) { Navigator.pop(context); }
+            final result = await provider.submitPencairan(payload);
+            if (mounted) {
+              if (result['success'] == true) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Berhasil mencairkan dana'), backgroundColor: Colors.green));
+                Navigator.pop(context);
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result['message'] ?? 'Gagal memproses pencairan.'), backgroundColor: Colors.red));
+              }
+            }
           },
           style: ElevatedButton.styleFrom(backgroundColor: Colors.blue.shade600, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 20), minimumSize: const Size(double.infinity, 50), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20))),
-          child: const Text('KONFIRMASI PENCAIRAN'),
+          child: provider.isSubmitting ? const CircularProgressIndicator(color: Colors.white) : const Text('KONFIRMASI PENCAIRAN'),
         );
       }
     );

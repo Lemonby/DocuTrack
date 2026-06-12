@@ -32,16 +32,14 @@ class Lpj {
   });
 
   factory Lpj.fromJson(Map<String, dynamic> json) {
+    double calculatedTotal = 0.0;
     List<LpjItem> parsedItems = [];
     if (json['items'] != null) {
       final itemList = json['items'] as List<dynamic>;
       parsedItems = itemList.map((e) => LpjItem.fromJson(e)).toList();
-<<<<<<< HEAD
       for (var item in parsedItems) {
         calculatedTotal += item.realisasi ?? 0.0;
       }
-=======
->>>>>>> c0d5a63 (fix masalah field semua yang ga ke show di halaman utama)
     }
 
     String extractedStatus = 'Menunggu';
@@ -55,22 +53,16 @@ class Lpj {
       id: json['lpj_id'] ?? json['id'] ?? 0,
       kegiatanId: json['kegiatan_id'],
       kegiatan: json['kegiatan'] != null ? Kegiatan.fromJson(json['kegiatan']) : null,
-<<<<<<< HEAD
       statusNama: extractedStatus,
-      submittedAt: json['submitted_at'],
-      totalPengeluaran: json['grand_total_realisasi'] != null 
-          ? (json['grand_total_realisasi'] as num).toDouble()
-          : calculatedTotal,
-=======
-      statusNama: json['status'] is Map ? json['status']['nama'] : (json['status']?.toString() ?? 'Menunggu'),
       statusId: json['status'] is Map ? json['status']['id'] : null,
       submittedAt: json['submitted_at'],
       approvedAt: json['approved_at'],
       tenggatLpj: json['tenggat_lpj'],
-      grandTotalRealisasi: json['grand_total_realisasi'] != null ? double.tryParse(json['grand_total_realisasi'].toString()) : 0.0,
+      grandTotalRealisasi: json['grand_total_realisasi'] != null 
+          ? double.tryParse(json['grand_total_realisasi'].toString()) 
+          : calculatedTotal,
       komentarRevisi: json['komentar_revisi'],
       komentarPenolakan: json['komentar_penolakan'],
->>>>>>> c0d5a63 (fix masalah field semua yang ga ke show di halaman utama)
       items: parsedItems,
       rawData: json,
     );
@@ -79,14 +71,6 @@ class Lpj {
 
 class LpjItem {
   final int id;
-<<<<<<< HEAD
-  final String? uraian;
-  final String? rincian;
-  final double? realisasi;
-  final String? lampiranPath;
-  final String? kategoriNama;
-  final String? komentar;
-=======
   final String? kategoriNama;
   final String? uraian;
   final String? rincian;
@@ -100,19 +84,10 @@ class LpjItem {
   final double? vol1;
   final double? vol2;
   final double? harga;
->>>>>>> c0d5a63 (fix masalah field semua yang ga ke show di halaman utama)
   final Map<String, dynamic>? rawData;
 
   LpjItem({
     required this.id,
-<<<<<<< HEAD
-    this.uraian,
-    this.rincian,
-    this.realisasi,
-    this.lampiranPath,
-    this.kategoriNama,
-    this.komentar,
-=======
     this.kategoriNama,
     this.uraian,
     this.rincian,
@@ -126,7 +101,6 @@ class LpjItem {
     this.vol1,
     this.vol2,
     this.harga,
->>>>>>> c0d5a63 (fix masalah field semua yang ga ke show di halaman utama)
     this.rawData,
   });
 
@@ -139,17 +113,8 @@ class LpjItem {
     }
 
     return LpjItem(
-<<<<<<< HEAD
       id: json['lpj_item_id'] ?? json['id'] ?? 0,
-      uraian: json['uraian'],
-      rincian: json['rincian'],
-      realisasi: (json['realisasi'] as num?)?.toDouble() ?? 0.0,
-      lampiranPath: json['file_bukti'],
-      kategoriNama: catName,
-      komentar: json['komentar'],
-=======
-      id: json['id'] ?? 0,
-      kategoriNama: json['kategori'] is Map ? json['kategori']['nama_kategori'] : (json['jenis_belanja'] ?? 'Lainnya'),
+      kategoriNama: catName ?? (json['kategori'] is Map ? json['kategori']['nama_kategori'] : (json['jenis_belanja'] ?? 'Lainnya')),
       uraian: json['uraian'],
       rincian: json['rincian'],
       totalHarga: json['total_harga'] != null ? double.tryParse(json['total_harga'].toString()) : 0.0,
@@ -162,7 +127,6 @@ class LpjItem {
       vol1: json['vol1'] != null ? double.tryParse(json['vol1'].toString()) : 0.0,
       vol2: json['vol2'] != null ? double.tryParse(json['vol2'].toString()) : 0.0,
       harga: json['harga'] != null ? double.tryParse(json['harga'].toString()) : 0.0,
->>>>>>> c0d5a63 (fix masalah field semua yang ga ke show di halaman utama)
       rawData: json,
     );
   }

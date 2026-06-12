@@ -6,8 +6,8 @@ class KegiatanStatus {
 
   factory KegiatanStatus.fromJson(Map<String, dynamic> json) {
     return KegiatanStatus(
-      id: json['id'] as int,
-      nama: json['nama'] as String,
+      id: json['id'] != null ? int.tryParse(json['id'].toString()) ?? 0 : 0,
+      nama: json['nama']?.toString() ?? 'Unknown',
     );
   }
 
@@ -122,15 +122,14 @@ class Kegiatan {
   factory Kegiatan.fromJson(Map<String, dynamic> json) {
     return Kegiatan(
       id: json['id'] ?? 0,
-<<<<<<< HEAD
-      namaKegiatan: json['nama_kegiatan'] ?? 'Tanpa Judul',
-      prodiPenyelenggara: json['prodi_penyelenggara'],
-      pemilikKegiatan: json['pemilik_kegiatan'],
-      nimPelaksana: json['nim_pelaksana'],
+      namaKegiatan: json['nama_kegiatan'] ?? json['nama'] ?? 'Tanpa Judul',
+      prodiPenyelenggara: json['prodi_penyelenggara'] ?? json['prodi'],
+      pemilikKegiatan: json['pemilik_kegiatan'] ?? json['pengusul'],
+      nimPelaksana: json['nim_pelaksana'] ?? json['nim'],
       nip: json['nip'],
       namaPj: json['nama_pj'],
       buktiMak: json['bukti_mak'],
-      jurusanPenyelenggara: json['jurusan_penyelenggara'],
+      jurusanPenyelenggara: json['jurusan_penyelenggara'] ?? json['jurusan'],
       suratPengantar: json['surat_pengantar'],
       danaDiSetujui: TahapanPencairan._parseNum(json['dana_di_setujui']),
       jumlahDicairkan: TahapanPencairan._parseNum(json['jumlah_dicairkan']),
@@ -138,23 +137,14 @@ class Kegiatan {
       tanggalPencairan: json['tanggal_pencairan'],
       catatanBendahara: json['catatan_bendahara'],
       umpanBaikVerifikator: json['umpan_balik_verifikator'],
-      status: json['status'] != null ? KegiatanStatus.fromJson(json['status']) : null,
+      status: json['status'] is Map 
+          ? KegiatanStatus.fromJson(json['status']) 
+          : (json['status'] != null ? KegiatanStatus(id: 0, nama: json['status'].toString()) : null),
       tahapanPencairan: json['tahapan_pencairan'] != null
           ? (json['tahapan_pencairan'] as List)
               .map((e) => TahapanPencairan.fromJson(e))
               .toList()
           : null,
-=======
-      namaKegiatan: json['nama_kegiatan'] ?? json['nama'] ?? 'Tanpa Judul',
-      prodiPenyelenggara: json['prodi_penyelenggara'] ?? json['prodi'],
-      pemilikKegiatan: json['pemilik_kegiatan'] ?? json['pengusul'],
-      nimPelaksana: json['nim_pelaksana'] ?? json['nim'],
-      jurusanPenyelenggara: json['jurusan_penyelenggara'] ?? json['jurusan'],
-      statusId: json['status'] is Map ? json['status']['id'] : null,
-      statusNama: json['status'] is Map
-          ? (json['status']['nama'] ?? 'Menunggu')
-          : (json['status']?.toString() ?? 'Menunggu'),
->>>>>>> c0d5a63 (fix masalah field semua yang ga ke show di halaman utama)
       posisiId: json['posisi_id'],
       workflowProgress: json['workflow_progress'] as int?,
       tanggalMulai: json['tanggal_mulai'],

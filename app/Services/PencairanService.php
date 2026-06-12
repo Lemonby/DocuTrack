@@ -18,92 +18,81 @@ class PencairanService
     {
         return DB::transaction(function () use ($kegiatanId, $data, $userId) {
             $kegiatan = Kegiatan::lockForUpdate()->findOrFail($kegiatanId);
-            $metode = $data['metode'] ?? 'penuh';
-            $catatan = $data['catatan'] ?? '';
+            
+            $metode = $data['metode_pencairan'] ?? 'penuh';
+            $catatan = $data['catatan_bendahara'] ?? '';
+            $jumlahCair = (float) ($data['jumlah_cair'] ?? 0);
+            $isFinal = filter_var($data['is_final'] ?? true, FILTER_VALIDATE_BOOLEAN);
 
-            if ($metode === 'bertahap') {
-                $totalDicairkan = 0;
+            $tahapKe = $kegiatan->tahapanPencairans()->count() + 1;
+            
+            TahapanPencairan::create([
+                'kegiatan_id' => $kegiatanId,
+                'tgl_pencairan' => now()->toDateString(),
+                'termin' => $metode === 'bertahap' ? "Termin $tahapKe" : 'Pencairan Penuh',
+                'nominal' => $jumlahCair,
+                'catatan' => $catatan,
+                'created_by' => $userId,
+            ]);
 
-                foreach ($data['tahapan'] as $index => $tahap) {
-                    $nominal = (float) $tahap['nominal'];
-                    if ($nominal <= 0 || empty($tahap['tanggal'])) {
-                        throw new \InvalidArgumentException('Data tahap '.($index + 1).' tidak valid');
-                    }
+            $totalDicairkan = (float) ($kegiatan->jumlah_dicairkan ?? 0) + $jumlahCair;
 
-                    TahapanPencairan::create([
-                        'kegiatan_id' => $kegiatanId,
-                        'tgl_pencairan' => $tahap['tanggal'],
-                        'termin' => $tahap['termin'] ?? 'Termin '.($index + 1),
-                        'nominal' => $nominal,
-                        'catatan' => $catatan,
-                        'created_by' => $userId,
-                    ]);
+            $updateData = [
+                'tanggal_pencairan' => now()->toDateString(),
+                'jumlah_dicairkan' => $totalDicairkan,
+                'metode_pencairan' => $metode,
+                'catatan_bendahara' => $catatan,
+            ];
 
-                    $totalDicairkan += $nominal;
-                }
-
-                $kegiatan->update([
-                    'tanggal_pencairan' => now()->toDateString(),
-                    'jumlah_dicairkan' => $totalDicairkan,
-                    'metode_pencairan' => 'bertahap',
-                    'catatan_bendahara' => $catatan,
-                    'status_utama_id' => WorkflowService::STATUS_DANA_DIBERIKAN,
-                    'posisi_id' => WorkflowService::POSITION_ADMIN,
-                ]);
-
-                $tanggalTerakhir = now()->toDateString();
-            } else {
-                $jumlah = (float) ($data['jumlah'] ?? 0);
-                $tanggalCair = $data['tanggal'] ?? now()->toDateString();
-
-                $kegiatan->update([
-                    'tanggal_pencairan' => now()->toDateString(),
-                    'jumlah_dicairkan' => $jumlah,
-                    'metode_pencairan' => 'penuh',
-                    'catatan_bendahara' => $catatan,
-                    'status_utama_id' => WorkflowService::STATUS_DANA_DIBERIKAN,
-                    'posisi_id' => WorkflowService::POSITION_ADMIN,
-                ]);
-
-                TahapanPencairan::create([
-                    'kegiatan_id' => $kegiatanId,
-                    'tgl_pencairan' => $tanggalCair,
-                    'termin' => 'Pencairan Penuh',
-                    'nominal' => $jumlah,
-                    'catatan' => $catatan,
-                    'created_by' => $userId,
-                ]);
-
-                $tanggalTerakhir = now()->toDateString();
+            if ($isFinal || $metode === 'penuh') {
+                $updateData['status_utama_id'] = WorkflowService::STATUS_DANA_DIBERIKAN;
+                $updateData['posisi_id'] = WorkflowService::POSITION_ADMIN; // Lanjut ke Admin/Pengusul
             }
 
-            // Record history
-            ProgressHistory::create([
-                'kegiatan_id' => $kegiatanId,
-                'status_id' => WorkflowService::STATUS_DANA_DIBERIKAN,
-                'changed_by_user_id' => $userId,
-                'created_at' => now(),
-            ]);
+            $kegiatan->update($updateData);
 
-            // Create/update LPJ placeholder with deadline
-            $tenggatLpj = $this->calculateLpjDeadline($tanggalTerakhir);
-            Lpj::updateOrCreate(
-                ['kegiatan_id' => $kegiatanId],
-                ['tenggat_lpj' => $tenggatLpj, 'status_id' => 1]
-            );
+            if ($isFinal || $metode === 'penuh') {
+                // Record history
+                ProgressHistory::create([
+                    'kegiatan_id' => $kegiatanId,
+                    'status_id' => WorkflowService::STATUS_DANA_DIBERIKAN,
+                    'changed_by_user_id' => $userId,
+                    'created_at' => now(),
+                ]);
 
-            // Create notification log in log_statuses for the owner
-            LogStatus::create([
-                'user_id' => $kegiatan->user_id,
-                'tipe_log' => 'APPROVAL',
-                'id_referensi' => $kegiatanId,
-                'status' => 'BELUM_DIBACA',
-                'konten_json' => [
-                    'judul' => 'Dana Kegiatan Cair',
-                    'pesan' => "Dana untuk kegiatan \"{$kegiatan->nama_kegiatan}\" telah dicairkan oleh Bendahara. Silakan upload LPJ sebelum tenggat waktu.",
-                    'link' => '/admin/pengajuan-lpj',
-                ],
-            ]);
+                // Create/update LPJ placeholder with deadline
+                $tenggatLpj = $this->calculateLpjDeadline(now()->toDateString());
+                Lpj::updateOrCreate(
+                    ['kegiatan_id' => $kegiatanId],
+                    ['tenggat_lpj' => $tenggatLpj, 'status_id' => 1]
+                );
+
+                // Create notification log in log_statuses for the owner
+                LogStatus::create([
+                    'user_id' => $kegiatan->user_id,
+                    'tipe_log' => 'APPROVAL',
+                    'id_referensi' => $kegiatanId,
+                    'status' => 'BELUM_DIBACA',
+                    'konten_json' => [
+                        'judul' => 'Dana Kegiatan Cair',
+                        'pesan' => "Dana untuk kegiatan \"{$kegiatan->nama_kegiatan}\" telah dicairkan oleh Bendahara. Silakan upload LPJ sebelum tenggat waktu.",
+                        'link' => '/admin/pengajuan-lpj',
+                    ],
+                ]);
+            } else {
+                // Not final, just log partial
+                LogStatus::create([
+                    'user_id' => $kegiatan->user_id,
+                    'tipe_log' => 'APPROVAL',
+                    'id_referensi' => $kegiatanId,
+                    'status' => 'BELUM_DIBACA',
+                    'konten_json' => [
+                        'judul' => 'Pencairan Dana Tahap',
+                        'pesan' => "Dana untuk kegiatan \"{$kegiatan->nama_kegiatan}\" telah dicairkan (Termin $tahapKe).",
+                        'link' => "/bendahara/pencairan-dana/show/{$kegiatanId}",
+                    ],
+                ]);
+            }
 
             // Create notification log in log_statuses for the actor (Bendahara)
             if ($userId && $userId !== $kegiatan->user_id) {

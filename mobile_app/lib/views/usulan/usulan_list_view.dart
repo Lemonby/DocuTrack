@@ -223,7 +223,7 @@ class _UsulanListViewState extends State<UsulanListView> {
                 final int posId = kegiatan.posisiId ?? 0;
                 final int statId = kegiatan.status?.id ?? 0;
 
-                if (posId == 1 && statId == 3) {
+                if (posId == 1 && statId == 2) {
                   // Revisi KAK -> Go to KAK Form
                   await Navigator.push(context, MaterialPageRoute(builder: (_) => UsulanFormView(usulan: kegiatan.rawData)));
                 } else {
@@ -235,11 +235,11 @@ class _UsulanListViewState extends State<UsulanListView> {
                 context.read<UsulanProvider>().fetchUsulans(isRefresh: true);
               },
               icon: Icon(
-                (kegiatan.posisiId == 1 && kegiatan.status?.id == 3) ? Icons.edit_note : btnIcon, 
+                (kegiatan.posisiId == 1 && kegiatan.status?.id == 2) ? Icons.edit_note : btnIcon, 
                 size: 16
               ),
               label: Text(
-                (kegiatan.posisiId == 1 && kegiatan.status?.id == 3) ? 'Perbaiki KAK' : btnText, 
+                (kegiatan.posisiId == 1 && kegiatan.status?.id == 2) ? 'Perbaiki KAK' : btnText, 
                 style: const TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1)
               ),
               style: ElevatedButton.styleFrom(

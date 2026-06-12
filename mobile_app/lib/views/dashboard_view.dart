@@ -23,6 +23,7 @@ import 'admin/admin_kegiatan_list_view.dart';
 import 'admin/admin_lpj_list_view.dart';
 import 'superadmin/superadmin_users_tab.dart';
 import 'dashboards/direktur_monitoring_view.dart';
+import 'bendahara/bendahara_riwayat_tab.dart';
 
 class DashboardView extends StatefulWidget {
   const DashboardView({super.key});
@@ -183,13 +184,18 @@ class _DashboardViewState extends State<DashboardView> {
                             activeIcon: Icon(Icons.remove_red_eye),
                             label: 'Monitoring',
                           ),
-                        ] else if (user.isBendahara)
+                        ] else if (user.isBendahara) ...[
                           const BottomNavigationBarItem(
                             icon: Icon(Icons.account_balance_wallet_outlined),
                             activeIcon: Icon(Icons.account_balance_wallet),
                             label: 'Keuangan',
-                          )
-                        else if (user.isDirektur) ...[
+                          ),
+                          const BottomNavigationBarItem(
+                            icon: Icon(Icons.history_outlined),
+                            activeIcon: Icon(Icons.history),
+                            label: 'Riwayat',
+                          ),
+                        ] else if (user.isDirektur) ...[
                           const BottomNavigationBarItem(
                             icon: Icon(Icons.remove_red_eye_outlined),
                             activeIcon: Icon(Icons.remove_red_eye),
@@ -293,8 +299,9 @@ class _DashboardViewState extends State<DashboardView> {
           _buildSidebarItem(-1, Icons.logout_outlined, 'Logout', onTap: () async {
             await authProvider.logout();
             if (!mounted) return;
-            Navigator.of(context).pushReplacement(
+            Navigator.of(context).pushAndRemoveUntil(
               MaterialPageRoute(builder: (context) => const LoginView()),
+              (Route<dynamic> route) => false,
             );
           }),
           const SizedBox(height: 16),
@@ -356,6 +363,8 @@ class _DashboardViewState extends State<DashboardView> {
           return const AdminKegiatanListView();
         } else if (authProvider.currentUser?.isPPK == true || authProvider.currentUser?.isVerifikator == true || authProvider.currentUser?.isWadir == true) {
           return const MonitoringListView(isRiwayat: true); // Riwayat
+        } else if (authProvider.currentUser?.isBendahara == true) {
+          return const BendaharaRiwayatTab();
         }
         return const ProfilView();
       case 3:
@@ -365,6 +374,8 @@ class _DashboardViewState extends State<DashboardView> {
           return const AdminLpjListView();
         } else if (authProvider.currentUser?.isPPK == true || authProvider.currentUser?.isVerifikator == true || authProvider.currentUser?.isWadir == true) {
           return const MonitoringListView(isRiwayat: false); // Monitoring
+        } else if (authProvider.currentUser?.isBendahara == true) {
+          return const ProfilView();
         }
         return const ProfilView();
       case 4:

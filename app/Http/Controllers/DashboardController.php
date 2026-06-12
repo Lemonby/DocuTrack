@@ -80,11 +80,7 @@ class DashboardController extends Controller
         $userId = Session::get('user_id') ?? 1;
 
         $listKakQuery = Kegiatan::with(['statusUtama', 'user']);
-        if (! empty($jurusan)) {
-            $listKakQuery->where('jurusan_penyelenggara', $jurusan);
-        } else {
-            $listKakQuery->where('user_id', $userId);
-        }
+        $listKakQuery->where('user_id', $userId);
         $list_kak_db = $listKakQuery->latest()->get();
 
         $list_kak = $list_kak_db->map(function ($k) {
@@ -104,11 +100,7 @@ class DashboardController extends Controller
                 6,
                 8,
             ]);
-        if (! empty($jurusan)) {
-            $listLpjQuery->where('jurusan_penyelenggara', $jurusan);
-        } else {
-            $listLpjQuery->where('user_id', $userId);
-        }
+        $listLpjQuery->where('user_id', $userId);
         $list_lpj_db = $listLpjQuery->latest()->get();
 
         $list_lpj = $list_lpj_db->map(function ($k) {
@@ -129,13 +121,24 @@ class DashboardController extends Controller
                 }
             }
 
+            $tenggatLpj = now()->addDays(14)->toDateString();
+            if ($k->lpj && $k->lpj->tenggat_lpj) {
+                $tenggatLpj = $k->lpj->tenggat_lpj->toDateString();
+            } elseif ($k->tanggal_selesai) {
+                try {
+                    $tenggatLpj = \Carbon\Carbon::parse($k->tanggal_selesai)->addDays(14)->toDateString();
+                } catch (\Exception $e) {
+                    // Fallback to now
+                }
+            }
+
             return [
                 'id' => $k->kegiatan_id,
                 'nama' => 'LPJ '.$k->nama_kegiatan,
                 'nama_mahasiswa' => $k->user->nama ?? $k->pemilik_kegiatan,
                 'jurusan' => $k->jurusan_penyelenggara,
                 'tanggal_pengajuan' => $k->lpj->submitted_at ?? $k->created_at,
-                'tenggatLpj' => $k->lpj && $k->lpj->tenggat_lpj ? $k->lpj->tenggat_lpj->toDateString() : ($k->tanggal_selesai ? $k->tanggal_selesai->copy()->addDays(14)->toDateString() : now()->addDays(14)->toDateString()),
+                'tenggatLpj' => $tenggatLpj,
                 'status' => $statusLabel,
             ];
         })->toArray();

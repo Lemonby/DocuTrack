@@ -46,10 +46,10 @@ class _WadirDetailViewState extends State<WadirDetailView> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) {
+      builder: (dialogContext) {
         return Container(
           padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+            bottom: MediaQuery.of(dialogContext).viewInsets.bottom + 24,
             top: 24, left: 24, right: 24
           ),
           decoration: const BoxDecoration(
@@ -83,7 +83,7 @@ class _WadirDetailViewState extends State<WadirDetailView> {
                 children: [
                   Expanded(
                     child: OutlinedButton(
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: () => Navigator.pop(dialogContext),
                       style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
                       child: const Text('Batal'),
                     ),
@@ -93,7 +93,7 @@ class _WadirDetailViewState extends State<WadirDetailView> {
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(backgroundColor: buttonColor, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), elevation: 4),
                       onPressed: () async {
-                        Navigator.pop(context);
+                        Navigator.pop(dialogContext);
                         final success = await provider.processAction(
                           'wadir', 
                           widget.kegiatanId, 

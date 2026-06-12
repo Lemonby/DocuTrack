@@ -20,6 +20,7 @@ class KakResource extends JsonResource
             'indikator' => IndikatorKakResource::collection($this->whenLoaded('indikators')),
             'tahapan' => TahapanPelaksanaanResource::collection($this->whenLoaded('tahapans')),
             'rab' => RabResource::collection($this->whenLoaded('rabs')),
+            'ikus' => $this->whenLoaded('ikus'),
         ];
     }
 }

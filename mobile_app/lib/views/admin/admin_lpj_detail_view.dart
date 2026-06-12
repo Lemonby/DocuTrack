@@ -37,16 +37,12 @@ class _AdminLpjDetailViewState extends State<AdminLpjDetailView> {
         _totalAnggaran = 0;
         _totalRealisasi = 0;
         for (var item in detail.items) {
-<<<<<<< HEAD
-          _controllers[item.id] = TextEditingController(text: item.realisasi?.toStringAsFixed(0) ?? '');
-=======
           final realisasi = item.realisasi ?? 0;
           _controllers[item.id] = TextEditingController(text: realisasi.toStringAsFixed(0));
           _totalAnggaran += item.totalHarga ?? 0;
           _totalRealisasi += realisasi;
           
           _controllers[item.id]!.addListener(_updateTotals);
->>>>>>> c0d5a63 (fix masalah field semua yang ga ke show di halaman utama)
         }
       });
     }
@@ -236,20 +232,6 @@ class _AdminLpjDetailViewState extends State<AdminLpjDetailView> {
         children: [
           Row(
             children: [
-<<<<<<< HEAD
-              const Text('Realisasi (Rp)', style: TextStyle(fontSize: 12, color: Colors.grey)),
-              if (isEditable)
-                SizedBox(
-                  width: 140,
-                  child: TextField(
-                    controller: _controllers[item.id],
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(isDense: true, filled: true, fillColor: Colors.grey.shade50, border: OutlineInputBorder(borderRadius: BorderRadius.circular(8))),
-                  ),
-                )
-              else
-                Text('Rp ${item.realisasi?.toStringAsFixed(0) ?? '0'}', style: const TextStyle(fontWeight: FontWeight.bold)),
-=======
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -272,7 +254,6 @@ class _AdminLpjDetailViewState extends State<AdminLpjDetailView> {
                   ],
                 ),
               ),
->>>>>>> c0d5a63 (fix masalah field semua yang ga ke show di halaman utama)
             ],
           ),
           const SizedBox(height: 20),

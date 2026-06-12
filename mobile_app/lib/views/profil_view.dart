@@ -387,7 +387,10 @@ class _ProfilViewState extends State<ProfilView> {
                     onPressed: () async {
                       await authProvider.logout();
                       if (mounted) {
-                        Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => const LoginView()));
+                        Navigator.of(context).pushAndRemoveUntil(
+                          MaterialPageRoute(builder: (context) => const LoginView()),
+                          (Route<dynamic> route) => false,
+                        );
                       }
                     },
                     icon: const Icon(Icons.logout_rounded, size: 18),

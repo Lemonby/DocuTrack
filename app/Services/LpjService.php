@@ -66,10 +66,13 @@ class LpjService
         $path = $file->store('lpj-bukti', 'public');
 
         $lpjItem = LpjItem::updateOrCreate(
-            ['lpj_id' => $lpjId, 'kategori_id' => $rabItem->kategori_id],
             [
-                'uraian' => $rabItem->uraian,
-                'rincian' => $rabItem->rincian,
+                'lpj_id' => $lpjId, 
+                'uraian' => $rabItem->uraian, 
+                'rincian' => $rabItem->rincian
+            ],
+            [
+                'kategori_id' => $rabItem->kategori_id,
                 'total_harga' => $rabItem->total_harga,
                 'sat1' => $rabItem->sat1,
                 'sat2' => $rabItem->sat2,

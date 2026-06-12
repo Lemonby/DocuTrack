@@ -28,14 +28,6 @@ class _UsulanDetailViewState extends State<UsulanDetailView> {
 
   Future<void> _loadData() async {
     final provider = context.read<UsulanProvider>();
-<<<<<<< HEAD
-    final data = await provider.getUsulanDetail(widget.kegiatanId);
-    
-    if (mounted) {
-      setState(() {
-        _kegiatan = data;
-=======
-    
     // Attempt to get from list first as a fast fallback/placeholder
     final existing = provider.usulans.cast<Kegiatan?>().firstWhere((e) => e?.id == widget.kegiatanId, orElse: () => null);
     if (existing != null && mounted) {
@@ -51,7 +43,6 @@ class _UsulanDetailViewState extends State<UsulanDetailView> {
         if (detail != null) {
           _kegiatan = detail;
         }
->>>>>>> c0d5a63 (fix masalah field semua yang ga ke show di halaman utama)
         _isLoading = false;
       });
     }
@@ -77,22 +68,7 @@ class _UsulanDetailViewState extends State<UsulanDetailView> {
     else if (status.contains('Menunggu')) statusColor = Colors.blue;
 
     final kak = _kegiatan!.rawData?['kak'] ?? {};
-<<<<<<< HEAD
     final rab = kak['rab'] as List? ?? _kegiatan!.rawData?['rab'] as List? ?? [];
-    final jadwal = kak['tahapan'] as List? ?? kak['indikator'] as List? ?? _kegiatan!.rawData?['jadwal'] as List? ?? [];
-    
-    double totalAnggaran = 0;
-    if (kak['total_rab'] != null) {
-      totalAnggaran = double.tryParse(kak['total_rab'].toString()) ?? 0;
-    } else {
-      for (var r in rab) {
-        double hrg = double.tryParse((r['harga_satuan'] ?? r['harga']).toString()) ?? 0;
-        double v1 = double.tryParse((r['volume_1'] ?? r['vol1']).toString()) ?? 1;
-        double v2 = double.tryParse((r['volume_2'] ?? r['vol2']).toString()) ?? 1;
-        totalAnggaran += (hrg * v1 * v2);
-      }
-=======
-    final rab = kak['rab'] as List? ?? [];
     final listTahapan = kak['tahapan'] as List? ?? [];
     final listIndikator = kak['indikator'] as List? ?? [];
     
@@ -113,12 +89,15 @@ class _UsulanDetailViewState extends State<UsulanDetailView> {
     }).toList();
     
     double totalAnggaran = 0;
-    for (var r in rab) {
-      double hrg = double.tryParse(r['harga']?.toString() ?? '0') ?? 0;
-      double v1 = double.tryParse(r['vol1']?.toString() ?? '1') ?? 1;
-      double v2 = double.tryParse(r['vol2']?.toString() ?? '1') ?? 1;
-      totalAnggaran += (hrg * v1 * v2);
->>>>>>> c0d5a63 (fix masalah field semua yang ga ke show di halaman utama)
+    if (kak['total_rab'] != null) {
+      totalAnggaran = double.tryParse(kak['total_rab'].toString()) ?? 0;
+    } else {
+      for (var r in rab) {
+        double hrg = double.tryParse((r['harga_satuan'] ?? r['harga'])?.toString() ?? '0') ?? 0;
+        double v1 = double.tryParse((r['volume_1'] ?? r['vol1'])?.toString() ?? '1') ?? 1;
+        double v2 = double.tryParse((r['volume_2'] ?? r['vol2'])?.toString() ?? '1') ?? 1;
+        totalAnggaran += (hrg * v1 * v2);
+      }
     }
 
     return Scaffold(

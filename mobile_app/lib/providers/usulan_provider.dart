@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
 import '../models/kegiatan.dart';
 import '../models/master_models.dart';
 import '../models/iku.dart';
@@ -52,22 +53,26 @@ class UsulanProvider with ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    final result = await _usulanService.getLpjs(page: page);
+    try {
+      final result = await _usulanService.getLpjs(page: page);
 
-    if (result['success']) {
-      if (isRefresh) {
-        _lpjs = result['data'];
+      if (result['success']) {
+        if (isRefresh) {
+          _lpjs = result['data'];
+        } else {
+          _lpjs.addAll(result['data'] as List<Lpj>);
+        }
+        _currentPage = page;
+        _lastPage = result['last_page'];
       } else {
-        _lpjs.addAll(result['data'] as List<Lpj>);
+        _errorMessage = result['message'];
       }
-      _currentPage = page;
-      _lastPage = result['last_page'];
-    } else {
-      _errorMessage = result['message'];
+    } catch (e) {
+      _errorMessage = 'Terjadi kesalahan sistem: $e';
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
-
-    _isLoading = false;
-    notifyListeners();
   }
 
   Future<Lpj?> getLpjDetail(int id) async {
@@ -88,7 +93,6 @@ class UsulanProvider with ChangeNotifier {
 
   Future<Kegiatan?> getUsulanDetail(int id) async {
     _isLoading = true;
-<<<<<<< HEAD
     _errorMessage = '';
     notifyListeners();
 
@@ -119,18 +123,6 @@ class UsulanProvider with ChangeNotifier {
     } else {
       _errorMessage = result['message'];
       notifyListeners();
-=======
-    notifyListeners();
-
-    final result = await _usulanService.getUsulanDetail(id);
-    _isLoading = false;
-    notifyListeners();
-
-    if (result['success']) {
-      return result['data'];
-    } else {
-      _errorMessage = result['message'];
->>>>>>> c0d5a63 (fix masalah field semua yang ga ke show di halaman utama)
       return null;
     }
   }
@@ -274,11 +266,12 @@ class UsulanProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> submitRincian(int id, Map<String, dynamic> data, String? filePath) async {
+  Future<bool> submitRincian(int id, Map<String, dynamic> data, PlatformFile? file) async {
     _isLoading = true;
+    _errorMessage = '';
     notifyListeners();
 
-    final result = await _usulanService.submitRincian(id, data, filePath);
+    final result = await _usulanService.submitRincian(id, data, file);
 
     if (result['success']) {
       await fetchKegiatans(page: 1, isRefresh: true);

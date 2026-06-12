@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter/foundation.dart';
+import 'package:file_picker/file_picker.dart';
 import '../../providers/telaah_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../models/kegiatan.dart';
@@ -64,10 +66,10 @@ class _VerifikatorDetailViewState extends State<VerifikatorDetailView> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) {
+      builder: (dialogContext) {
         return Container(
           padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+            bottom: MediaQuery.of(dialogContext).viewInsets.bottom + 24,
             top: 24, left: 24, right: 24
           ),
           decoration: const BoxDecoration(
@@ -167,7 +169,7 @@ class _VerifikatorDetailViewState extends State<VerifikatorDetailView> {
                     children: [
                       Expanded(
                         child: OutlinedButton(
-                          onPressed: () => Navigator.pop(context),
+                          onPressed: () => Navigator.pop(dialogContext),
                           style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
                           child: const Text('Batal'),
                         ),
@@ -179,12 +181,10 @@ class _VerifikatorDetailViewState extends State<VerifikatorDetailView> {
                           onPressed: provider.isLoading ? null : () async {
                             if (!_formKey.currentState!.validate()) return;
 
-                            // Capture view context before popping
-                            final viewContext = this.context;
-                            Navigator.pop(context); // Close bottom sheet
+                            Navigator.pop(dialogContext); // Close bottom sheet
                             
                             final success = await provider.processAction(
-                              widget.rolePrefix, 
+                              'verifikator', 
                               widget.kegiatanId, 
                               action, 
                               catatan: _catatanCtrl.text,
@@ -193,14 +193,14 @@ class _VerifikatorDetailViewState extends State<VerifikatorDetailView> {
                             );
 
                             if (mounted) {
-                              ScaffoldMessenger.of(viewContext).showSnackBar(
+                              ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(success ? 'Tindakan berhasil diproses.' : provider.errorMessage),
                                   backgroundColor: success ? Colors.green.shade600 : Colors.redAccent,
                                 ),
                               );
                               if (success) {
-                                Navigator.pop(viewContext); // Go back to list using view context
+                                Navigator.pop(context); // Go back to list using view context
                               }
                             }
                           },
@@ -210,82 +210,7 @@ class _VerifikatorDetailViewState extends State<VerifikatorDetailView> {
                     ],
                   )
                 ],
-<<<<<<< HEAD:mobile_app/lib/views/telaah/telaah_detail_view.dart
               ),
-=======
-                if (needsMak) ...[
-                  const SizedBox(height: 16),
-                  const Text('Kode MAK (Mata Anggaran Kegiatan)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.blueGrey)),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _kodeMakCtrl,
-                    decoration: InputDecoration(
-                      hintText: 'Contoh: 521111...',
-                      filled: true,
-                      fillColor: Colors.grey.shade50,
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                    ),
-                  ),
-                ],
-                if (needsDana) ...[
-                  const SizedBox(height: 16),
-                  const Text('Dana Disetujui (Rp)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.blueGrey)),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _danaCtrl,
-                    keyboardType: TextInputType.number,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                    decoration: InputDecoration(
-                      prefixText: 'Rp ',
-                      filled: true,
-                      fillColor: Colors.grey.shade50,
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                    ),
-                  ),
-                ],
-                const SizedBox(height: 24),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => Navigator.pop(context),
-                        style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                        child: const Text('Batal'),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(backgroundColor: buttonColor, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), elevation: 4),
-                        onPressed: () async {
-                          Navigator.pop(context);
-                          final success = await provider.processAction(
-                            'verifikator', 
-                            widget.kegiatanId, 
-                            action, 
-                            catatan: _catatanCtrl.text,
-                            kodeMak: needsMak ? _kodeMakCtrl.text : null,
-                            danaDisetujui: needsDana ? double.tryParse(_danaCtrl.text) ?? 0 : null,
-                          );
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(success ? 'Tindakan berhasil diproses.' : provider.errorMessage),
-                                backgroundColor: success ? Colors.green.shade600 : Colors.redAccent,
-                              ),
-                            );
-                            if (success) {
-                              Navigator.pop(context);
-                            }
-                          }
-                        },
-                        child: const Text('Konfirmasi', style: TextStyle(fontWeight: FontWeight.bold)),
-                      ),
-                    ),
-                  ],
-                )
-              ],
->>>>>>> c0d5a63 (fix masalah field semua yang ga ke show di halaman utama):mobile_app/lib/views/telaah/verifikator_detail_view.dart
             ),
           ),
         );
@@ -306,15 +231,10 @@ class _VerifikatorDetailViewState extends State<VerifikatorDetailView> {
 
   bool _canAction() {
     if (_kegiatan == null) return false;
-<<<<<<< HEAD:mobile_app/lib/views/telaah/telaah_detail_view.dart
     final status = _kegiatan!.status?.nama?.toLowerCase() ?? '';
-    if (status.contains('selesai') || status.contains('setuju') || status.contains('tolak') || status.contains('approved') || status.contains('acc') || status.contains('menunggu direvisi')) {
-=======
-    final status = _kegiatan!.statusNama?.toLowerCase() ?? '';
     // Must be at Verifikator position (2) and not finished yet
     if (_kegiatan!.posisiId != 2) return false;
-    if (status.contains('selesai') || status.contains('setuju') || status.contains('tolak') || status.contains('approved') || status.contains('acc')) {
->>>>>>> c0d5a63 (fix masalah field semua yang ga ke show di halaman utama):mobile_app/lib/views/telaah/verifikator_detail_view.dart
+    if (status.contains('selesai') || status.contains('setuju') || status.contains('tolak') || status.contains('approved') || status.contains('acc') || status.contains('menunggu direvisi')) {
       return false;
     }
     return true;
@@ -472,6 +392,7 @@ class _VerifikatorDetailViewState extends State<VerifikatorDetailView> {
               icon: Icons.description_rounded,
               color: Colors.purple,
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildInfoRow('Indikator Kinerja Utama', kak['iku'] ?? '-'),
                   _buildDivider(),
@@ -655,6 +576,7 @@ class _VerifikatorDetailViewState extends State<VerifikatorDetailView> {
         boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 15, offset: Offset(0, 5))],
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -673,7 +595,8 @@ class _VerifikatorDetailViewState extends State<VerifikatorDetailView> {
               ],
             ),
           ),
-          Padding(
+          Container(
+            width: double.infinity,
             padding: const EdgeInsets.all(20),
             child: child,
           )

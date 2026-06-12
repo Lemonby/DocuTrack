@@ -19,7 +19,7 @@ class LpjController extends Controller
     public function index()
     {
         $userId = Session::get('user_id') ?? 1;
-        $jurusan = Session::get('jurusan');
+        $role = Session::get('role') ?? 'admin';
 
         $query = Kegiatan::with(['statusUtama', 'user', 'lpj'])
             ->whereIn('status_utama_id', [
@@ -28,11 +28,8 @@ class LpjController extends Controller
                 8,
             ]);
 
-        if (! empty($jurusan)) {
-            $query->where('jurusan_penyelenggara', $jurusan);
-        } else {
-            $query->where('user_id', $userId);
-        }
+        // For "admin" (Mahasiswa), only show their own LPJs.
+        $query->where('user_id', $userId);
 
         $kegiatanList = $query->latest()->get();
 
@@ -54,13 +51,24 @@ class LpjController extends Controller
                 }
             }
 
+            $tenggatLpj = now()->addDays(14)->toDateString();
+            if ($kegiatan->lpj && $kegiatan->lpj->tenggat_lpj) {
+                $tenggatLpj = $kegiatan->lpj->tenggat_lpj->toDateString();
+            } elseif ($kegiatan->tanggal_selesai) {
+                try {
+                    $tenggatLpj = \Carbon\Carbon::parse($kegiatan->tanggal_selesai)->addDays(14)->toDateString();
+                } catch (\Exception $e) {
+                    // Fallback to now
+                }
+            }
+
             return [
                 'id' => $kegiatan->kegiatan_id,
                 'nama' => 'LPJ '.$kegiatan->nama_kegiatan,
                 'nama_mahasiswa' => $kegiatan->user->nama ?? $kegiatan->pemilik_kegiatan,
                 'jurusan' => $kegiatan->jurusan_penyelenggara,
                 'tanggal_pengajuan' => $kegiatan->lpj ? ($kegiatan->lpj->submitted_at ?? $kegiatan->lpj->created_at ?? $kegiatan->created_at) : $kegiatan->created_at,
-                'tenggatLpj' => $kegiatan->lpj && $kegiatan->lpj->tenggat_lpj ? $kegiatan->lpj->tenggat_lpj->toDateString() : ($kegiatan->tanggal_selesai ? $kegiatan->tanggal_selesai->copy()->addDays(14)->toDateString() : now()->addDays(14)->toDateString()),
+                'tenggatLpj' => $tenggatLpj,
                 'status' => $statusLabel,
             ];
         })->toArray();

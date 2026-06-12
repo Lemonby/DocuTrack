@@ -91,7 +91,7 @@ class Kegiatan extends Model
         }
 
         return match ((int) $this->posisi_id) {
-            1 => 20, 2 => 40, 4 => 60, 3 => 80, 5 => 100,
+            1 => 20, 2 => 40, 3 => 60, 4 => 80, 5 => 100,
             default => 0,
         };
     }

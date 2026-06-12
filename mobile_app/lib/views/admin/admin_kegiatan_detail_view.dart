@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter/foundation.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../theme/app_theme.dart';
 import '../../models/kegiatan.dart';
@@ -21,8 +22,7 @@ class _AdminKegiatanDetailViewState extends State<AdminKegiatanDetailView> {
   late TextEditingController _tglMulaiController;
   late TextEditingController _tglSelesaiController;
   
-  String? _selectedFilePath;
-  String? _selectedFileName;
+  PlatformFile? _selectedFile;
   DateTime? _startDate;
   DateTime? _endDate;
 
@@ -77,12 +77,12 @@ class _AdminKegiatanDetailViewState extends State<AdminKegiatanDetailView> {
     final result = await FilePicker.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['pdf', 'doc', 'docx'],
+      withData: kIsWeb,
     );
 
     if (result != null) {
       setState(() {
-        _selectedFilePath = result.files.single.path;
-        _selectedFileName = result.files.single.name;
+        _selectedFile = result.files.single;
       });
     }
   }
@@ -114,13 +114,13 @@ class _AdminKegiatanDetailViewState extends State<AdminKegiatanDetailView> {
     final provider = context.read<UsulanProvider>();
     
     final data = {
-      'nama_pj': _pjController.text,
-      'nip': _nimPjController.text,
+      'penanggung_jawab': _pjController.text,
+      'nim_nip_pj': _nimPjController.text,
       'tanggal_mulai': _tglMulaiController.text,
       'tanggal_selesai': _tglSelesaiController.text,
     };
 
-    final success = await provider.submitRincian(widget.kegiatan.id, data, _selectedFilePath);
+    final success = await provider.submitRincian(widget.kegiatan.id, data, _selectedFile);
 
     if (mounted) {
       if (success) {
@@ -138,18 +138,13 @@ class _AdminKegiatanDetailViewState extends State<AdminKegiatanDetailView> {
 
   @override
   Widget build(BuildContext context) {
-<<<<<<< HEAD
     if (_isLoadingDetail) return const Scaffold(body: Center(child: CircularProgressIndicator()));
     
     final curKegiatan = _kegiatan ?? widget.kegiatan;
-    final status = curKegiatan.status?.nama ?? 'Proses';
-    final isReadonly = (status == 'Disetujui' || status == 'Review' || status == 'Ditolak');
-=======
-    final status = widget.kegiatan.statusNama ?? 'Proses';
+    final status = curKegiatan.statusNama ?? curKegiatan.status?.nama ?? 'Proses';
     final statusLower = status.toLowerCase();
     final isEditable = (statusLower == 'telah diverifikasi' || statusLower == 'disetujui' || statusLower == 'revisi');
     final isReadonly = !isEditable;
->>>>>>> c0d5a63 (fix masalah field semua yang ga ke show di halaman utama)
 
     Color statusColor = Colors.blueGrey;
     IconData statusIcon = Icons.hourglass_empty;
@@ -245,7 +240,17 @@ class _AdminKegiatanDetailViewState extends State<AdminKegiatanDetailView> {
                           _buildSectionHeader('Dokumen Pendukung', Icons.file_present_rounded),
                           const SizedBox(height: 16),
                           if (!isReadonly) ...[
-                            _buildFilePicker(),
+                            if (_selectedFile != null)
+                              ListTile(
+                                leading: const Icon(Icons.file_present),
+                                title: Text(_selectedFile!.name),
+                                trailing: IconButton(
+                                  icon: const Icon(Icons.close, color: Colors.red),
+                                  onPressed: () => setState(() => _selectedFile = null),
+                                ),
+                              )
+                            else
+                              _buildFilePicker(),
                           ] else ...[
                             _buildFileDisplay(curKegiatan),
                           ],
@@ -413,7 +418,7 @@ class _AdminKegiatanDetailViewState extends State<AdminKegiatanDetailView> {
               children: [
                 Icon(Icons.cloud_upload_outlined, size: 36, color: Colors.blue.shade600),
                 const SizedBox(height: 12),
-                Text(_selectedFileName ?? 'Unggah Surat Pengantar / Undangan', 
+                Text(_selectedFile?.name ?? 'Unggah Surat Pengantar / Undangan', 
                     style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue.shade700), textAlign: TextAlign.center),
                 const SizedBox(height: 4),
                 const Text('Format: PDF, DOC (Maks. 10MB)', style: TextStyle(fontSize: 11, color: Colors.blueGrey)),

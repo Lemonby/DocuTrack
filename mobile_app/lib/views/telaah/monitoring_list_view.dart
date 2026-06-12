@@ -227,7 +227,12 @@ class _MonitoringListViewState extends State<MonitoringListView> {
                           children: [
                             const Icon(Icons.account_balance_wallet_rounded, size: 16, color: Colors.blueGrey),
                             const SizedBox(width: 6),
-                            const Text('Rp 15.000.000', style: TextStyle(fontWeight: FontWeight.w900, color: Colors.blueGrey, fontSize: 13)),
+                            Text(
+                              item.danaDiSetujui != null && item.danaDiSetujui! > 0 
+                                  ? 'Rp ${item.danaDiSetujui!.toStringAsFixed(0).replaceAll(RegExp(r'\B(?=(\d{3})+(?!\d))'), '.')}' 
+                                  : 'Belum Ada Dana', 
+                              style: const TextStyle(fontWeight: FontWeight.w900, color: Colors.blueGrey, fontSize: 13)
+                            ),
                           ],
                         ),
                         Row(
@@ -258,22 +263,40 @@ class _MonitoringListViewState extends State<MonitoringListView> {
 
   Widget _buildMonitoringStepper(Kegiatan item) {
     // Dummy stages based on web docutrack
-    final List<String> stages = ['Pengajuan', 'Verifikasi', 'ACC WD', 'ACC PPK', 'Dana Cair', 'LPJ'];
+    final List<String> stages = ['Pengajuan', 'Verifikasi', 'ACC PPK', 'ACC WD', 'Dana Cair', 'LPJ'];
     int currentStageIndex = 0;
 
-    // Dummy logic to set progress based on item ID for demonstration
-    if (item.id % 6 == 0) {
-      currentStageIndex = 5; // LPJ
-    } else if (item.id % 5 == 0) {
-      currentStageIndex = 4; // Dana Cair
-    } else if (item.id % 4 == 0) {
-      currentStageIndex = 3; // ACC PPK
-    } else if (item.id % 3 == 0) {
-      currentStageIndex = 2; // ACC WD
-    } else if (item.id % 2 == 0) {
-      currentStageIndex = 1; // Verifikasi
+    if (item.workflowProgress != null) {
+      // Map percentage (0-100) to stages index (0-5)
+      final progress = item.workflowProgress!;
+      if (progress >= 100) {
+        currentStageIndex = 4; // Dana Cair
+        if (item.status?.nama?.toLowerCase().contains('selesai') ?? false) {
+            currentStageIndex = 5; // LPJ
+        }
+      } else if (progress >= 80) {
+        currentStageIndex = 3; // ACC WD
+      } else if (progress >= 60) {
+        currentStageIndex = 2; // ACC PPK
+      } else if (progress >= 40) {
+        currentStageIndex = 1; // Verifikasi
+      } else {
+        currentStageIndex = 0; // Pengajuan
+      }
     } else {
-      currentStageIndex = 0; // Pengajuan
+      if (item.id % 6 == 0) {
+        currentStageIndex = 5; // LPJ
+      } else if (item.id % 5 == 0) {
+        currentStageIndex = 4; // Dana Cair
+      } else if (item.id % 4 == 0) {
+        currentStageIndex = 3; // ACC WD
+      } else if (item.id % 3 == 0) {
+        currentStageIndex = 2; // ACC PPK
+      } else if (item.id % 2 == 0) {
+        currentStageIndex = 1; // Verifikasi
+      } else {
+        currentStageIndex = 0; // Pengajuan
+      }
     }
 
     return Container(

@@ -72,11 +72,13 @@ class TelaahProvider with ChangeNotifier {
     Map<String, dynamic> result;
     try {
       if (action == 'approve') {
-        if (kodeMak == null || danaDisetujui == null) {
-          _errorMessage = 'Kode MAK dan Dana Disetujui wajib diisi.';
-          _isLoading = false;
-          notifyListeners();
-          return false;
+        if (rolePrefix == 'verifikator') {
+          if (kodeMak == null || danaDisetujui == null) {
+            _errorMessage = 'Kode MAK dan Dana Disetujui wajib diisi.';
+            _isLoading = false;
+            notifyListeners();
+            return false;
+          }
         }
         result = await _telaahService.approve(rolePrefix, id, kodeMak: kodeMak, danaDisetujui: danaDisetujui, catatan: catatan);
       } else if (action == 'reject') {

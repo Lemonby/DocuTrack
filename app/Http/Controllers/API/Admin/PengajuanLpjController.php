@@ -33,11 +33,8 @@ class PengajuanLpjController extends Controller
                 8, // Selesai
             ]);
 
-        if ($jurusan) {
-            $query->where('jurusan_penyelenggara', $jurusan);
-        } else {
-            $query->where('user_id', $userId);
-        }
+        // For "admin" (Mahasiswa), only show their own LPJs.
+        $query->where('user_id', $userId);
 
         $kegiatans = $query->latest()->paginate(15);
 
@@ -154,35 +151,55 @@ class PengajuanLpjController extends Controller
     public function uploadBukti(Request $request): JsonResponse
     {
         $request->validate([
-            'lpj_id' => 'required|integer', // might be kegiatan_id if virtual
-            'rab_item_id' => 'required|integer|exists:rabs,rab_item_id',
+            'lpj_id' => 'required|integer', 
+            'rab_item_id' => 'required|integer', 
             'file' => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
         ]);
 
         $lpjId = $request->input('lpj_id');
-        $lpj = Lpj::find($lpjId);
+        $itemId = $request->input('rab_item_id');
+        
+        $lpj = Lpj::where('lpj_id', $lpjId)->orWhere('kegiatan_id', $lpjId)->first();
 
         if (!$lpj) {
-            // Assume it's a kegiatan_id and create the LPJ record on-the-fly
             $kegiatan = Kegiatan::findOrFail($lpjId);
             $lpj = Lpj::create([
                 'kegiatan_id' => $kegiatan->kegiatan_id,
                 'status_id' => 1, // Menunggu Verifikasi (Draft)
                 'tenggat_lpj' => $kegiatan->tanggal_selesai ? $kegiatan->tanggal_selesai->copy()->addDays(14) : now()->addDays(14),
             ]);
-            $lpjId = $lpj->lpj_id;
         }
 
-        $item = $this->lpjService->uploadBukti(
-            $lpjId,
-            $request->input('rab_item_id'),
-            $request->file('file')
-        );
+        $lpjItem = LpjItem::where('lpj_id', $lpj->lpj_id)->where('lpj_item_id', $itemId)->first();
+        $path = $request->file('file')->store('lpj-bukti', 'public');
+
+        if ($lpjItem) {
+            $lpjItem->update(['file_bukti' => $path]);
+        } else {
+            $rabItem = Rab::findOrFail($itemId);
+            $lpjItem = LpjItem::updateOrCreate(
+                [
+                    'lpj_id' => $lpj->lpj_id, 
+                    'uraian' => $rabItem->uraian, 
+                    'rincian' => $rabItem->rincian
+                ],
+                [
+                    'kategori_id' => $rabItem->kategori_id,
+                    'total_harga' => $rabItem->total_harga,
+                    'sat1' => $rabItem->sat1,
+                    'sat2' => $rabItem->sat2,
+                    'vol1' => $rabItem->vol1,
+                    'vol2' => $rabItem->vol2,
+                    'harga' => $rabItem->harga,
+                    'file_bukti' => $path,
+                ]
+            );
+        }
 
         return response()->json([
             'success' => true,
             'message' => 'Bukti berhasil diupload.',
-            'data' => ['file_bukti' => $item->file_bukti, 'lpj_id' => $lpjId],
+            'data' => ['file_bukti' => $lpjItem->file_bukti, 'lpj_id' => $lpj->lpj_id],
         ]);
     }
 

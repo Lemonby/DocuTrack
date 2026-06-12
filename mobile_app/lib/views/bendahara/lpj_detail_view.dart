@@ -167,7 +167,7 @@ class _LpjDetailViewState extends State<LpjDetailView> {
                   const Divider(),
                   _buildDetailRow('Tanggal Pengajuan', lpj.submittedAt ?? '-'),
                   const Divider(),
-                  _buildDetailRow('Total Pengeluaran', 'Rp ${lpj.totalPengeluaran?.toStringAsFixed(0) ?? 0}'),
+                  _buildDetailRow('Total Pengeluaran', 'Rp ${lpj.grandTotalRealisasi?.toStringAsFixed(0) ?? 0}'),
                 ],
               ),
             ),

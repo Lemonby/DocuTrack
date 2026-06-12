@@ -19,6 +19,7 @@ class BendaharaRiwayatTab extends StatelessWidget {
         'date': '15 Jun 2026',
         'status': 'Sudah Dicairkan',
         'statusColor': Colors.teal,
+        'dana': 'Rp 8.500.000',
       },
       {
         'id': 203,
@@ -29,6 +30,7 @@ class BendaharaRiwayatTab extends StatelessWidget {
         'date': '28 Jun 2026',
         'status': 'Disetujui',
         'statusColor': Colors.teal,
+        'dana': 'Rp 12.000.000',
       },
     ];
 
@@ -160,7 +162,7 @@ class BendaharaRiwayatTab extends StatelessWidget {
                             children: [
                               Icon(isPencairan ? Icons.account_balance_wallet_rounded : Icons.receipt_long_rounded, size: 16, color: Colors.blueGrey),
                               const SizedBox(width: 6),
-                              Text(isPencairan ? 'Rp 15.000.000' : 'Dokumen LPJ', style: const TextStyle(fontWeight: FontWeight.w900, color: Colors.blueGrey, fontSize: 13)),
+                              Text(isPencairan ? (item['dana'] ?? 'Rp 15.000.000') : 'Dokumen LPJ', style: const TextStyle(fontWeight: FontWeight.w900, color: Colors.blueGrey, fontSize: 13)),
                             ],
                           ),
                           Row(

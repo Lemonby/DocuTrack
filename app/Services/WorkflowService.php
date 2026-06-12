@@ -248,7 +248,7 @@ class WorkflowService
             $history = $this->recordHistory($kegiatanId, self::STATUS_REVISI, auth()->id());
 
             // Store field-level revision comments
-            if (! empty($fieldComments)) {
+            if (!empty($fieldComments)) {
                 foreach ($fieldComments as $comment) {
                     RevisiComment::create([
                         'progress_history_id' => $history->progress_history_id,

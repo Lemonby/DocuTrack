@@ -214,10 +214,10 @@ class AdminDashboard extends StatelessWidget {
         final int posId = kegiatan.posisiId ?? 0;
         final int statId = kegiatan.status?.id ?? 0;
 
-        if (posId == 1 && statId == 3) {
+        if (posId == 1 && statId == 2) {
           // Revisi KAK -> Go to KAK Form
           Navigator.push(context, MaterialPageRoute(builder: (_) => UsulanFormView(usulan: kegiatan.rawData)));
-        } else if (posId == 1 && statId == 2) {
+        } else if (posId == 1 && statId == 3) {
           // KAK Approved -> Go to Rincian (PJ, Dates, File)
           Navigator.push(context, MaterialPageRoute(builder: (_) => AdminKegiatanDetailView(kegiatan: kegiatan)));
         } else {

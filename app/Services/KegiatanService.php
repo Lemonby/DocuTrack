@@ -155,7 +155,7 @@ class KegiatanService
     {
         return Kegiatan::with([
             'user', 'statusUtama', 'wadir',
-            'kak.indikators', 'kak.tahapans', 'kak.rabs.kategori',
+            'kak.ikus', 'kak.indikators', 'kak.tahapans', 'kak.rabs.kategori',
             'progressHistories.changedBy', 'progressHistories.revisiComments',
             'lpj.items.kategori', 'tahapanPencairans',
         ])->findOrFail($kegiatanId);

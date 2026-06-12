@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:file_picker/file_picker.dart';
 import 'api_service.dart';
 import '../models/kegiatan.dart';
 import '../models/lpj.dart';
@@ -169,18 +170,25 @@ class UsulanService {
   }
 
   // Submit Rincian (Add PJ, dates, and letter)
-  Future<Map<String, dynamic>> submitRincian(int id, Map<String, dynamic> data, String? filePath) async {
+  Future<Map<String, dynamic>> submitRincian(int id, Map<String, dynamic> data, PlatformFile? file) async {
     try {
       final formDataMap = {
         'kegiatan_id': id,
         ...data,
       };
 
-      if (filePath != null) {
-        formDataMap['surat_pengantar'] = await MultipartFile.fromFile(
-          filePath,
-          filename: filePath.split('/').last,
-        );
+      if (file != null) {
+        if (kIsWeb) {
+          formDataMap['surat_pengantar'] = MultipartFile.fromBytes(
+            file.bytes!,
+            filename: file.name,
+          );
+        } else {
+          formDataMap['surat_pengantar'] = await MultipartFile.fromFile(
+            file.path!,
+            filename: file.name,
+          );
+        }
       }
 
       final formData = FormData.fromMap(formDataMap);
@@ -227,6 +235,8 @@ class UsulanService {
       return {'success': false, 'message': 'Gagal memuat data LPJ.'};
     } on DioException catch (e) {
       return {'success': false, 'message': e.response?.data['message'] ?? 'Terjadi kesalahan jaringan.'};
+    } catch (e) {
+      return {'success': false, 'message': 'Terjadi kesalahan sistem: ${e.toString()}'};
     }
   }
 
