@@ -108,21 +108,15 @@ class _NotifikasiViewState extends State<NotifikasiView> {
 
         final Notifikasi item = provider.items[index];
         final isUnread = !item.isRead;
-        final pesan = item.konten?['pesan'] ?? 'Ada pembaruan status.';
-        
-        DateTime? dt;
-        if (item.createdAt != null) {
-          dt = DateTime.tryParse(item.createdAt!);
-        }
-        final timeStr = dt != null ? timeago.format(dt, locale: 'id') : '';
+        final timeStr = item.createdAt != null ? timeago.format(item.createdAt!, locale: 'id') : '';
 
         return Card(
           elevation: 0,
-          color: isUnread ? AppTheme.primaryBlue.withValues(alpha: 0.05) : Colors.white,
+          color: isUnread ? AppTheme.primaryBlue.withOpacity(0.05) : Colors.white,
           margin: const EdgeInsets.only(bottom: 8),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
-            side: BorderSide(color: isUnread ? AppTheme.primaryBlue.withValues(alpha: 0.3) : AppTheme.borderLight),
+            side: BorderSide(color: isUnread ? AppTheme.primaryBlue.withOpacity(0.3) : AppTheme.borderLight),
           ),
           child: InkWell(
             onTap: () {
@@ -143,7 +137,7 @@ class _NotifikasiViewState extends State<NotifikasiView> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          pesan,
+                          item.pesan,
                           style: TextStyle(
                             fontWeight: isUnread ? FontWeight.bold : FontWeight.normal,
                             color: AppTheme.textDark,

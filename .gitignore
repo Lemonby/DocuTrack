@@ -26,6 +26,12 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 
+# Project Metadata & Blueprints
+LARAVEL_BLUEPRINT.md
+GAP_ANALYSIS.md
+mobile_app/WORKFLOW_VERIFICATION.md
+mobile_app/TOTP_MIGRATION_TODO.md
+
 # AI Agent & Tools
 .gemini/
 .geminiignore

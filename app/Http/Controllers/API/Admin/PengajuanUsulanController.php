@@ -9,7 +9,6 @@ use App\Http\Resources\KegiatanResource;
 use App\Models\Kegiatan;
 use App\Models\ProgressHistory;
 use App\Services\KegiatanService;
-use App\Services\WorkflowService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -25,14 +24,17 @@ class PengajuanUsulanController extends Controller
 
         $kegiatans = Kegiatan::with(['statusUtama', 'user'])
             ->when($jurusan, fn ($q) => $q->byJurusan($jurusan))
-            ->atPosition(WorkflowService::POSITION_VERIFIKATOR)
             ->latest()
             ->paginate(15);
 
         return response()->json([
             'success' => true,
             'data' => KegiatanResource::collection($kegiatans),
-            'meta' => ['total' => $kegiatans->total()],
+            'meta' => [
+                'total' => $kegiatans->total(),
+                'last_page' => $kegiatans->lastPage(),
+                'current_page' => $kegiatans->currentPage(),
+            ],
         ]);
     }
 

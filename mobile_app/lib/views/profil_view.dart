@@ -367,15 +367,17 @@ class _ProfilViewState extends State<ProfilView> {
                       child: const Icon(Icons.phonelink_lock_rounded, color: Colors.orange),
                     ),
                     title: const Text('Google Authenticator 2FA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                    subtitle: Padding(
+                    subtitle: const Padding(
                       padding: const EdgeInsets.only(top: 4.0),
                       child: Text(
-                        authProvider.isTotpEnabled ? 'Sudah Aktif' : 'Belum Konfigurasi',
-                        style: TextStyle(color: authProvider.isTotpEnabled ? Colors.green : Colors.grey, fontWeight: FontWeight.bold, fontSize: 12),
+                        'Fitur segera hadir',
+                        style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold, fontSize: 12),
                       ),
                     ),
-                    trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Colors.grey),
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const TotpSetupView())),
+                    trailing: const Icon(Icons.lock_clock_outlined, size: 14, color: Colors.grey),
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Fitur 2FA sedang dalam pengembangan.')));
+                    },
                   ),
                 ),
                 const SizedBox(height: 32),

@@ -63,7 +63,7 @@ class WadirDashboard extends StatelessWidget {
             ...recentItems.asMap().entries.map((entry) {
               int index = entry.key;
               Kegiatan item = entry.value;
-              String status = item.statusNama ?? 'Menunggu';
+              String status = item.status?.nama ?? 'Menunggu';
               Color statusColor = status.toLowerCase() == 'disetujui' ? Colors.green : (status.toLowerCase() == 'ditolak' ? Colors.red : Colors.orange);
               IconData statusIcon = status.toLowerCase() == 'disetujui' ? Icons.check_circle : (status.toLowerCase() == 'ditolak' ? Icons.cancel : Icons.access_time);
               

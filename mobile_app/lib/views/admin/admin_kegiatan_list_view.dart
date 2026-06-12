@@ -4,6 +4,8 @@ import 'package:intl/intl.dart';
 import '../../theme/app_theme.dart';
 import '../../models/kegiatan.dart';
 import '../../providers/usulan_provider.dart';
+import '../usulan/usulan_form_view.dart';
+import '../usulan/usulan_detail_view.dart';
 import 'admin_kegiatan_detail_view.dart';
 
 class AdminKegiatanListView extends StatefulWidget {
@@ -101,7 +103,7 @@ class _AdminKegiatanListViewState extends State<AdminKegiatanListView> {
   }
 
   Widget _buildKegiatanCard(BuildContext context, Kegiatan kegiatan) {
-    final status = kegiatan.statusNama ?? 'Proses';
+    final status = kegiatan.status?.nama ?? 'Proses';
     Color statusColor = Colors.blueGrey;
     IconData icon = Icons.hourglass_empty;
 
@@ -210,12 +212,36 @@ class _AdminKegiatanListViewState extends State<AdminKegiatanListView> {
                   width: double.infinity,
                   child: ElevatedButton.icon(
                     onPressed: () async {
-                      await Navigator.push(context, MaterialPageRoute(builder: (_) => AdminKegiatanDetailView(kegiatan: kegiatan)));
+                      // Logic based on exact workflow IDs (matching Laravel WorkflowService)
+                      // Position 1 = Admin, Status 2 = Disetujui (KAK Approved, need Rincian)
+                      // Position 1 = Admin, Status 3 = Revisi (KAK rejected, need edit KAK)
+                      
+                      final int posId = kegiatan.posisiId ?? 0;
+                      final int statId = kegiatan.status?.id ?? 0;
+
+                      if (posId == 1 && statId == 3) {
+                        // Revisi KAK -> Go to KAK Form
+                        await Navigator.push(context, MaterialPageRoute(builder: (_) => UsulanFormView(usulan: kegiatan.rawData)));
+                      } else if (posId == 1 && statId == 2) {
+                        // KAK Approved -> Go to Rincian (PJ, Dates, File)
+                        await Navigator.push(context, MaterialPageRoute(builder: (_) => AdminKegiatanDetailView(kegiatan: kegiatan)));
+                      } else {
+                        // Others -> View Detail
+                        await Navigator.push(context, MaterialPageRoute(builder: (_) => UsulanDetailView(kegiatanId: kegiatan.id)));
+                      }
+                      
                       if (!mounted) return;
                       context.read<UsulanProvider>().fetchKegiatans(isRefresh: true);
                     },
-                    icon: Icon(isEditable ? Icons.edit : Icons.visibility, size: 16),
-                    label: Text(isEditable ? 'Lengkapi Data' : 'Lihat Detail'),
+                    icon: Icon(
+                      (kegiatan.posisiId == 1 && kegiatan.status?.id == 3) ? Icons.edit_note : 
+                      (kegiatan.posisiId == 1 && kegiatan.status?.id == 2) ? Icons.edit : Icons.visibility, 
+                      size: 16
+                    ),
+                    label: Text(
+                      (kegiatan.posisiId == 1 && kegiatan.status?.id == 3) ? 'Perbaiki KAK' : 
+                      (kegiatan.posisiId == 1 && kegiatan.status?.id == 2) ? 'Lengkapi Data' : 'Lihat Detail'
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: isEditable ? AppTheme.primaryBlue : Colors.white,
                       foregroundColor: isEditable ? Colors.white : AppTheme.textDark,

@@ -76,7 +76,7 @@ class _BendaharaPencairanDetailViewState extends State<BendaharaPencairanDetailV
               _isLoading = false;
               if (data != null) {
                   _kegiatan = data;
-                  _localStatus = _kegiatan!.statusNama ?? widget.status;
+                  _localStatus = _kegiatan!.status?.nama ?? widget.status;
                   
                   _anggaranDisetujui = double.tryParse((_kegiatan!.rawData?['dana_di_setujui'] ?? 0).toString()) ?? 0;
                   

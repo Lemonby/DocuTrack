@@ -217,8 +217,16 @@ class _RegisterViewState extends State<RegisterView> {
                             authProvider.isLoading
                                 ? const Center(child: CircularProgressIndicator())
                                 : ElevatedButton(
-                                    onPressed: _register,
-                                    child: const Text('Daftar'),
+                                    onPressed: () {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                          content: Text('Pendaftaran mandiri belum tersedia. Silakan hubungi Administrator.'),
+                                          backgroundColor: Colors.orange,
+                                        ),
+                                      );
+                                    },
+                                    style: ElevatedButton.styleFrom(backgroundColor: Colors.grey),
+                                    child: const Text('Daftar (Belum Tersedia)'),
                                   ),
                           ],
                         ),

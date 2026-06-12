@@ -46,6 +46,7 @@ class _TelaahDetailViewState extends State<TelaahDetailView> {
     final buttonColor = isApprove ? Colors.green.shade600 : (action == 'reject' ? Colors.red.shade600 : Colors.orange.shade600);
     final iconData = isApprove ? Icons.check_circle_outline_rounded : (action == 'reject' ? Icons.cancel_outlined : Icons.edit_note_rounded);
     
+    final _formKey = GlobalKey<FormState>();
     final _catatanCtrl = TextEditingController();
     final _kodeMakCtrl = TextEditingController(text: _kegiatan?.rawData?['kode_mak'] ?? '');
     
@@ -74,97 +75,111 @@ class _TelaahDetailViewState extends State<TelaahDetailView> {
             color: Colors.white,
             borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
           ),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(color: buttonColor.withOpacity(0.1), shape: BoxShape.circle),
-                      child: Icon(iconData, color: buttonColor, size: 28),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Text(title, style: TextStyle(color: AppTheme.textDark, fontSize: 18, fontWeight: FontWeight.w900)),
+          child: Form(
+            key: _formKey,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(color: buttonColor.withOpacity(0.1), shape: BoxShape.circle),
+                        child: Icon(iconData, color: buttonColor, size: 28),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Text(title, style: TextStyle(color: AppTheme.textDark, fontSize: 18, fontWeight: FontWeight.w900)),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    isApprove ? 'Anda akan menyetujui dokumen KAK ini.' : 'Berikan catatan untuk proses ini:',
+                    style: const TextStyle(fontSize: 14, color: Colors.blueGrey),
+                  ),
+                  if (!isApprove) ...[
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _catatanCtrl,
+                      maxLines: 4,
+                      decoration: InputDecoration(
+                        hintText: 'Tulis catatan...',
+                        filled: true,
+                        fillColor: Colors.grey.shade50,
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                        contentPadding: const EdgeInsets.all(16)
+                      ),
+                      validator: (v) => !isApprove && (v == null || v.trim().isEmpty) ? 'Catatan wajib diisi' : null,
+                    )
+                  ],
+                  if (needsMak) ...[
+                    const SizedBox(height: 16),
+                    const Text('Kode MAK (Mata Anggaran Kegiatan)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.blueGrey)),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      controller: _kodeMakCtrl,
+                      decoration: InputDecoration(
+                        hintText: 'Contoh: 042.01.WA...',
+                        filled: true,
+                        fillColor: Colors.grey.shade50,
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                      ),
+                      validator: (v) => needsMak && (v == null || v.trim().isEmpty) ? 'Kode MAK wajib diisi' : null,
                     ),
                   ],
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  isApprove ? 'Anda akan menyetujui dokumen KAK ini.' : 'Berikan catatan untuk proses ini:',
-                  style: const TextStyle(fontSize: 14, color: Colors.blueGrey),
-                ),
-                if (!isApprove) ...[
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: _catatanCtrl,
-                    maxLines: 4,
-                    decoration: InputDecoration(
-                      hintText: 'Tulis catatan...',
-                      filled: true,
-                      fillColor: Colors.grey.shade50,
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                      contentPadding: const EdgeInsets.all(16)
-                    ),
-                  )
-                ],
-                if (needsMak) ...[
-                  const SizedBox(height: 16),
-                  const Text('Kode MAK (Mata Anggaran Kegiatan)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.blueGrey)),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _kodeMakCtrl,
-                    decoration: InputDecoration(
-                      hintText: 'Contoh: 042.01.WA...',
-                      filled: true,
-                      fillColor: Colors.grey.shade50,
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                    ),
-                  ),
-                ],
-                if (needsDana) ...[
-                  const SizedBox(height: 16),
-                  const Text('Dana Disetujui (Rp)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.blueGrey)),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _danaCtrl,
-                    keyboardType: TextInputType.number,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                    decoration: InputDecoration(
-                      prefixText: 'Rp ',
-                      filled: true,
-                      fillColor: Colors.grey.shade50,
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                    ),
-                  ),
-                ],
-                const SizedBox(height: 24),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => Navigator.pop(context),
-                        style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                        child: const Text('Batal'),
+                  if (needsDana) ...[
+                    const SizedBox(height: 16),
+                    const Text('Dana Disetujui (Rp)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.blueGrey)),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      controller: _danaCtrl,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      decoration: InputDecoration(
+                        prefixText: 'Rp ',
+                        filled: true,
+                        fillColor: Colors.grey.shade50,
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                       ),
+                      validator: (v) {
+                        if (!needsDana) return null;
+                        if (v == null || v.trim().isEmpty) return 'Dana disetujui wajib diisi';
+                        final numVal = double.tryParse(v);
+                        if (numVal == null) return 'Nominal harus berupa angka';
+                        if (numVal <= 0) return 'Nominal harus lebih dari 0';
+                        return null;
+                      },
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(backgroundColor: buttonColor, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), elevation: 4),
-                        onPressed: () async {
-                          Navigator.pop(context);
-                          final success = await provider.processAction(
-                            widget.rolePrefix, 
-                            widget.kegiatanId, 
-                            action, 
-                            catatan: _catatanCtrl.text,
-                            kodeMak: needsMak ? _kodeMakCtrl.text : null,
-                            danaDisetujui: needsDana ? double.tryParse(_danaCtrl.text) ?? 0 : null,
-                          );
+                  ],
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                          child: const Text('Batal'),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(backgroundColor: buttonColor, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), elevation: 4),
+                          onPressed: provider.isLoading ? null : () async {
+                            if (!_formKey.currentState!.validate()) return;
+
+                            Navigator.pop(context);
+                            final success = await provider.processAction(
+                              widget.rolePrefix, 
+                              widget.kegiatanId, 
+                              action, 
+                              catatan: _catatanCtrl.text,
+                              kodeMak: needsMak ? _kodeMakCtrl.text : null,
+                              danaDisetujui: needsDana ? double.tryParse(_danaCtrl.text) ?? 0 : null,
+                            );
                           if (mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
@@ -203,7 +218,7 @@ class _TelaahDetailViewState extends State<TelaahDetailView> {
 
   bool _canAction() {
     if (_kegiatan == null) return false;
-    final status = _kegiatan!.statusNama?.toLowerCase() ?? '';
+    final status = _kegiatan!.status?.nama?.toLowerCase() ?? '';
     if (status.contains('selesai') || status.contains('setuju') || status.contains('tolak') || status.contains('approved') || status.contains('acc') || status.contains('menunggu direvisi')) {
       return false;
     }
@@ -264,7 +279,7 @@ class _TelaahDetailViewState extends State<TelaahDetailView> {
                         border: Border.all(color: _canAction() ? Colors.orange.shade300 : Colors.green.shade300),
                       ),
                       child: Text(
-                        (kegiatan.statusNama ?? 'Menunggu').toUpperCase(),
+                        (kegiatan.status?.nama ?? 'Menunggu').toUpperCase(),
                         style: TextStyle(
                           color: _canAction() ? Colors.orange.shade700 : Colors.green.shade700,
                           fontSize: 10,

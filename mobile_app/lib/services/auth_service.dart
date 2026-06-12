@@ -127,96 +127,21 @@ class AuthService {
     return {'success': false, 'message': 'Sesi telah kedaluwarsa. Silakan masuk manual.'};
   }
 
-  // Register Simulation
+  // OPSI B: Features not yet implemented in backend
   Future<Map<String, dynamic>> register({
     required String name,
     required String email,
     required String password,
     String? department,
   }) async {
-    await Future.delayed(const Duration(seconds: 1)); // Simulate server delay
-    
-    // Check local database/simulation
-    if (email.contains('taken')) {
-      return {'success': false, 'message': 'Email sudah terdaftar.'};
-    }
-
-    // Mock create a SuperAdmin user for the sake of demo
-    final mockUser = User(
-      userId: 99,
-      name: name,
-      email: email,
-      departmentName: department ?? 'Teknik Informatika',
-      status: 'Aktif',
-      role: 'SuperAdmin', // Grant superadmin for CRUD access in mobile demo
-    );
-
-    // Save a mock token
-    await _apiService.saveToken('mock_sanctum_token_for_$email');
-
-    return {
-      'success': true,
-      'message': 'Registrasi berhasil. Selamat datang!',
-      'user': mockUser,
-    };
+    throw UnimplementedError('Fitur pendaftaran belum tersedia di backend.');
   }
 
-  // Forgot Password Simulation
-  Future<Map<String, dynamic>> forgotPassword(String email) async {
-    await Future.delayed(const Duration(seconds: 1));
-    return {
-      'success': true,
-      'message': 'Instruksi reset password telah dikirim ke email Anda.',
-    };
-  }
-
-  // Google Login (with simulation fallback)
   Future<Map<String, dynamic>> loginWithGoogle() async {
-    try {
-      // Attempt actual google sign in
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn().timeout(
-        const Duration(seconds: 5),
-        onTimeout: () => throw Exception('Timeout Google Login'),
-      );
-      
-      if (googleUser != null) {
-        // Mock token issuing for Google account
-        final token = 'mock_google_token_${googleUser.id}';
-        await _apiService.saveToken(token);
-        
-        final user = User(
-          userId: 100 + int.parse(googleUser.id.substring(0, 4)),
-          name: googleUser.displayName ?? 'Google User',
-          email: googleUser.email,
-          status: 'Aktif',
-          role: 'SuperAdmin', // Grant SuperAdmin for IKU CRUD testing convenience
-        );
-        
-        return {'success': true, 'user': user};
-      }
-      return {'success': false, 'message': 'Login Google dibatalkan.'};
-    } catch (e) {
-      // Catch platform configuration errors (like missing debug SHA1 or services json)
-      // and provide an elegant Simulation dialog alternative
-      print('Google Sign In failed or unconfigured, running mock selection: $e');
-      
-      // Simulate Google selection
-      await Future.delayed(const Duration(milliseconds: 800));
-      final token = 'mock_google_token_12345';
-      await _apiService.saveToken(token);
-      
-      final user = User(
-        userId: 999,
-        name: 'Demo Google User',
-        email: 'demouser@gmail.com',
-        status: 'Aktif',
-        role: 'SuperAdmin', // Default to SuperAdmin for Demo
-      );
-      return {
-        'success': true,
-        'user': user,
-        'simulated': true,
-      };
-    }
+    throw UnimplementedError('Fitur login Google belum tersedia di backend.');
+  }
+
+  Future<Map<String, dynamic>> forgotPassword(String email) async {
+    throw UnimplementedError('Fitur lupa password belum tersedia di backend.');
   }
 }

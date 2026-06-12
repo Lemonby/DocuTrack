@@ -66,7 +66,7 @@ class PpkDashboard extends StatelessWidget {
             )
           else
             ...recentItems.map((item) {
-              String status = item.statusNama ?? 'Menunggu';
+              String status = item.status?.nama ?? 'Menunggu';
               Color statusColor = status.toLowerCase() == 'disetujui' ? Colors.green : (status.toLowerCase() == 'ditolak' ? Colors.red : Colors.orange);
               return _buildApprovalCard(
                 context: context,

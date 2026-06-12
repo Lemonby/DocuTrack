@@ -2,6 +2,16 @@ import 'dart:math';
 import 'package:crypto/crypto.dart';
 import 'dart:convert';
 
+// ⚠️ SECURITY NOTE: TOTP saat ini dikelola sepenuhnya di sisi Flutter.
+// Server (Laravel) BELUM memiliki endpoint untuk verifikasi TOTP.
+// Ini berarti 2FA saat ini hanya berfungsi sebagai UI security, bukan server-side security.
+//
+// TODO: Saat Laravel mengimplementasikan endpoint TOTP, implementasi ini HARUS diganti dengan:
+// 1. POST /v1/auth/2fa/setup    — server generate secret, Flutter hanya tampilkan QR
+// 2. POST /v1/auth/2fa/verify   — kirim kode ke server, server yang validasi
+// 3. Hapus semua logika TOTP dari Flutter setelah migrasi selesai
+//
+// Referensi endpoint yang diperlukan: [koordinasikan dengan tim backend Laravel]
 class TotpService {
   // Generate a mock 16-character Base32 secret key
   String generateSecret() {

@@ -67,18 +67,10 @@ class AuthProvider extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    // Check if 2FA is enabled locally
-    _isTotpEnabled = (await _storage.read(key: 'totp_enabled')) == 'true';
-    _totpSecret = await _storage.read(key: 'totp_secret') ?? '';
-
     final user = await _authService.checkSession();
     if (user != null) {
       _currentUser = user;
-      if (_isTotpEnabled) {
-        _status = AuthStatus.totpRequired;
-      } else {
-        _status = AuthStatus.authenticated;
-      }
+      _status = AuthStatus.authenticated;
     } else {
       _status = AuthStatus.unauthenticated;
       refreshCaptcha();
@@ -129,13 +121,7 @@ class AuthProvider extends ChangeNotifier {
     _isLoading = false;
     if (result['success']) {
       _currentUser = result['user'];
-      
-      // If 2FA is enabled, route to 2FA page
-      if (_isTotpEnabled) {
-        _status = AuthStatus.totpRequired;
-      } else {
-        _status = AuthStatus.authenticated;
-      }
+      _status = AuthStatus.authenticated;
       notifyListeners();
       return true;
     } else {
@@ -156,11 +142,7 @@ class AuthProvider extends ChangeNotifier {
 
     if (result['success']) {
       _currentUser = result['user'];
-      if (_isTotpEnabled) {
-        _status = AuthStatus.totpRequired;
-      } else {
-        _status = AuthStatus.authenticated;
-      }
+      _status = AuthStatus.authenticated;
       notifyListeners();
       return true;
     } else {
@@ -171,72 +153,29 @@ class AuthProvider extends ChangeNotifier {
 
   // Login via Google
   Future<bool> loginWithGoogle() async {
-    _isLoading = true;
-    _errorMessage = '';
-    notifyListeners();
-
-    final result = await _authService.loginWithGoogle();
-    _isLoading = false;
-
-    if (result['success']) {
-      _currentUser = result['user'];
-      if (_isTotpEnabled) {
-        _status = AuthStatus.totpRequired;
-      } else {
-        _status = AuthStatus.authenticated;
-      }
-      notifyListeners();
-      return true;
-    } else {
-      _setError(result['message'] ?? 'Login Google Gagal.');
-      return false;
-    }
+    _setError('Login Google saat ini tidak tersedia.');
+    return false;
   }
 
   // Register simulation
   Future<bool> register(String name, String email, String password, String department) async {
-    _isLoading = true;
-    _errorMessage = '';
-    notifyListeners();
-
-    final result = await _authService.register(
-      name: name,
-      email: email,
-      password: password,
-      department: department,
-    );
-    
-    _isLoading = false;
-    if (result['success']) {
-      _currentUser = result['user'];
-      _status = AuthStatus.authenticated;
-      notifyListeners();
-      return true;
-    } else {
-      _setError(result['message']);
-      return false;
-    }
+    _setError('Registrasi saat ini hanya dapat dilakukan melalui Admin.');
+    return false;
   }
 
   // Forgot Password
   Future<bool> forgotPassword(String email) async {
-    _isLoading = true;
-    _errorMessage = '';
-    notifyListeners();
-
-    final result = await _authService.forgotPassword(email);
-    _isLoading = false;
-    if (result['success']) {
-      notifyListeners();
-      return true;
-    } else {
-      _setError(result['message']);
-      return false;
-    }
+    _setError('Fitur reset password sedang dalam pemeliharaan.');
+    return false;
   }
+
+  // ⚠️ SECURITY NOTE: TOTP saat ini dikelola sepenuhnya di sisi Flutter.
+  // Server (Laravel) BELUM memiliki endpoint untuk verifikasi TOTP.
+  // TODO: Migrasi ke server-side verification saat backend siap.
 
   // Initialize/Setup Google Authenticator 2FA Secret
   void initTotpSetup() {
+    // ⚠️ SECURITY NOTE: This logic should happen on the server.
     if (_currentUser == null) return;
     _totpSecret = _totpService.generateSecret();
     _totpQrUrl = _totpService.getOtpAuthUrl(_currentUser!.email, _totpSecret);
@@ -245,6 +184,7 @@ class AuthProvider extends ChangeNotifier {
 
   // Confirm and Save Google Authenticator 2FA
   Future<bool> confirmTotpSetup(String code) async {
+    // ⚠️ SECURITY NOTE: Validation should happen on the server via POST /v1/auth/2fa/verify.
     if (_totpSecret.isEmpty) return false;
     
     final verified = _totpService.verifyCode(_totpSecret, code);
@@ -262,38 +202,12 @@ class AuthProvider extends ChangeNotifier {
 
   // Disable 2FA
   Future<void> disableTotp() async {
+    // ⚠️ SECURITY NOTE: Server should revoke the secret.
     _isTotpEnabled = false;
     _totpSecret = '';
     _totpQrUrl = '';
     await _storage.delete(key: 'totp_enabled');
     await _storage.delete(key: 'totp_secret');
-    notifyListeners();
-  }
-
-  // Verify TOTP 2FA code during login
-  bool verifyTotpCode(String code) {
-    if (_totpSecret.isEmpty) {
-      _setError('Konfigurasi 2FA hilang. Hubungi Admin.');
-      return false;
-    }
-
-    final verified = _totpService.verifyCode(_totpSecret, code);
-    if (verified) {
-      _status = AuthStatus.authenticated;
-      notifyListeners();
-      return true;
-    } else {
-      _setError('Kode otentikasi salah.');
-      return false;
-    }
-  }
-
-  // Cancel 2FA step
-  void cancelTotpVerification() {
-    _status = AuthStatus.unauthenticated;
-    _currentUser = null;
-    _authService.logout();
-    refreshCaptcha();
     notifyListeners();
   }
 

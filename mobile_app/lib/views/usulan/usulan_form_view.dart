@@ -221,13 +221,23 @@ class _UsulanFormViewState extends State<UsulanFormView> {
     };
 
     final provider = context.read<UsulanProvider>();
-    final success = await provider.createUsulan(data);
+    bool success;
+    
+    if (widget.usulan != null) {
+      final id = widget.usulan!['id'] ?? widget.usulan!['kegiatan_id'];
+      success = await provider.updateUsulan(id, data);
+    } else {
+      success = await provider.createUsulan(data);
+    }
 
     setState(() => _isLoadingSubmission = false);
     
     if (mounted) {
       if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Berhasil mengajukan usulan!'), backgroundColor: Colors.green));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(widget.usulan != null ? 'Berhasil memperbarui usulan!' : 'Berhasil mengajukan usulan!'), 
+          backgroundColor: Colors.green
+        ));
         Navigator.pop(context, true);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(provider.errorMessage), backgroundColor: Colors.red));
@@ -386,6 +396,47 @@ class _UsulanFormViewState extends State<UsulanFormView> {
   }
 
   Widget _buildCurrentStepContent(UsulanProvider provider) {
+    return Column(
+      children: [
+        if (widget.usulan != null && widget.usulan!['revisi_comment'] != null)
+           _buildRevisionBanner(widget.usulan!['revisi_comment']),
+        
+        _buildStepContent(provider),
+      ],
+    );
+  }
+
+  Widget _buildRevisionBanner(String comment) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 20),
+      decoration: BoxDecoration(
+        color: Colors.orange.shade50,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.orange.shade200),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.feedback_rounded, color: Colors.orange.shade800),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('CATATAN REVISI', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: Colors.orange.shade900, letterSpacing: 1)),
+                const SizedBox(height: 4),
+                Text(comment, style: TextStyle(fontSize: 12, color: Colors.orange.shade800, height: 1.4)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStepContent(UsulanProvider provider) {
     switch (_currentStep) {
       case 0: return _buildStep1(provider);
       case 1: return _buildStep2();

@@ -101,7 +101,7 @@ class _PencairanTabState extends State<PencairanTab> {
         }
 
         final Kegiatan item = items[index];
-        final bool isLunas = item.statusNama?.toLowerCase() == 'dana diberikan' || item.statusNama?.toLowerCase() == 'sudah dicairkan';
+        final bool isLunas = item.status?.nama?.toLowerCase() == 'dana diberikan' || item.status?.nama?.toLowerCase() == 'sudah dicairkan';
         final MaterialColor badgeColor = isLunas ? Colors.teal : Colors.blue;
         
         // Coba hitung total dana dari RAW RAB jika ada
@@ -146,7 +146,7 @@ class _PencairanTabState extends State<PencairanTab> {
                 await Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => BendaharaPencairanDetailView(id: item.id, status: item.statusNama ?? 'Belum Dicairkan'),
+                    builder: (context) => BendaharaPencairanDetailView(id: item.id, status: item.status?.nama ?? 'Belum Dicairkan'),
                   ),
                 );
                 _refresh();
@@ -166,7 +166,7 @@ class _PencairanTabState extends State<PencairanTab> {
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
-                            (item.statusNama ?? 'Belum Dicairkan').toUpperCase(),
+                            (item.status?.nama ?? 'Belum Dicairkan').toUpperCase(),
                             style: TextStyle(
                               color: badgeColor,
                               fontSize: 10,

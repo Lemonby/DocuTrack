@@ -1,5 +1,5 @@
 class Jurusan {
-  final int id;
+  final dynamic id;
   final String namaJurusan;
   final List<Prodi> prodis;
 
@@ -7,7 +7,7 @@ class Jurusan {
 
   factory Jurusan.fromJson(Map<String, dynamic> json) {
     return Jurusan(
-      id: json['jurusan_id'] ?? json['id'] ?? 0,
+      id: json['nama_jurusan'] ?? json['jurusan_id'] ?? json['id'] ?? 0,
       namaJurusan: json['nama_jurusan'] ?? '',
       prodis: (json['prodis'] as List<dynamic>?)?.map((e) => Prodi.fromJson(e)).toList() ?? [],
     );
@@ -15,17 +15,17 @@ class Jurusan {
 }
 
 class Prodi {
-  final int id;
+  final dynamic id;
   final String namaProdi;
-  final int? jurusanId;
+  final dynamic jurusanId;
 
   Prodi({required this.id, required this.namaProdi, this.jurusanId});
 
   factory Prodi.fromJson(Map<String, dynamic> json) {
     return Prodi(
-      id: json['prodi_id'] ?? json['id'] ?? 0,
+      id: json['nama_prodi'] ?? json['prodi_id'] ?? json['id'] ?? 0,
       namaProdi: json['nama_prodi'] ?? '',
-      jurusanId: json['jurusan_id'],
+      jurusanId: json['nama_jurusan'] ?? json['jurusan_id'],
     );
   }
 }

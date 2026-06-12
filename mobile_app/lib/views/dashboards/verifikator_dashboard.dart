@@ -69,7 +69,7 @@ class VerifikatorDashboard extends StatelessWidget {
                 prodi: item.jurusanPenyelenggara ?? '-',
                 pengusul: item.pemilikKegiatan ?? '-',
                 date: item.tanggalMulai ?? '-',
-                status: item.statusNama ?? 'Menunggu',
+                status: item.status?.nama ?? 'Menunggu',
                 statusColor: AppTheme.menungguGradient.colors.last,
               );
             }),

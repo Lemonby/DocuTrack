@@ -5,6 +5,7 @@ import '../../models/dashboard_data.dart';
 import '../../models/kegiatan.dart';
 import '../admin/admin_lpj_list_view.dart';
 import '../usulan/usulan_detail_view.dart';
+import '../usulan/usulan_form_view.dart';
 import '../admin/admin_kegiatan_detail_view.dart';
 
 class AdminDashboard extends StatelessWidget {
@@ -195,7 +196,7 @@ class AdminDashboard extends StatelessWidget {
   }
 
   Widget _buildRecentItemCard(BuildContext context, Kegiatan kegiatan) {
-    String status = kegiatan.statusNama ?? 'Proses';
+    String status = kegiatan.status?.nama ?? 'Proses';
     Color statusColor = Colors.blueGrey;
     if (status == 'Revisi') statusColor = Colors.orange;
     if (status == 'Disetujui') statusColor = Colors.green;
@@ -210,10 +211,18 @@ class AdminDashboard extends StatelessWidget {
       status,
       statusColor,
       () {
-        if (status == 'Proses' || status == 'Revisi') {
-           Navigator.push(context, MaterialPageRoute(builder: (_) => AdminKegiatanDetailView(kegiatan: kegiatan)));
+        final int posId = kegiatan.posisiId ?? 0;
+        final int statId = kegiatan.status?.id ?? 0;
+
+        if (posId == 1 && statId == 3) {
+          // Revisi KAK -> Go to KAK Form
+          Navigator.push(context, MaterialPageRoute(builder: (_) => UsulanFormView(usulan: kegiatan.rawData)));
+        } else if (posId == 1 && statId == 2) {
+          // KAK Approved -> Go to Rincian (PJ, Dates, File)
+          Navigator.push(context, MaterialPageRoute(builder: (_) => AdminKegiatanDetailView(kegiatan: kegiatan)));
         } else {
-           Navigator.push(context, MaterialPageRoute(builder: (_) => UsulanDetailView(kegiatanId: kegiatan.id)));
+          // Others -> View Detail
+          Navigator.push(context, MaterialPageRoute(builder: (_) => UsulanDetailView(kegiatanId: kegiatan.id)));
         }
       }
     );

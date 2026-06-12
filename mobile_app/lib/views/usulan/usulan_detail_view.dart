@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../theme/app_theme.dart';
 import '../../providers/usulan_provider.dart';
 import '../../models/kegiatan.dart';
+import '../admin/admin_kegiatan_detail_view.dart';
 import 'usulan_form_view.dart';
 
 class UsulanDetailView extends StatefulWidget {
@@ -27,17 +28,11 @@ class _UsulanDetailViewState extends State<UsulanDetailView> {
 
   Future<void> _loadData() async {
     final provider = context.read<UsulanProvider>();
-    // Since we already have the list, we could find it there, 
-    // but better to fetch fresh detail from API.
-    // However, UsulanProvider only has getKegiatans (for rincian) and getUsulans (for list).
-    // I'll check if I need a getUsulanDetail.
-    
-    // Attempt to get from list first as a fallback
-    final existing = provider.usulans.cast<Kegiatan?>().firstWhere((e) => e?.id == widget.kegiatanId, orElse: () => null);
+    final data = await provider.getUsulanDetail(widget.kegiatanId);
     
     if (mounted) {
       setState(() {
-        _kegiatan = existing;
+        _kegiatan = data;
         _isLoading = false;
       });
     }
@@ -50,25 +45,32 @@ class _UsulanDetailViewState extends State<UsulanDetailView> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    if (_kegiatan == null) return Scaffold(appBar: AppBar(), body: const Center(child: Text('Data tidak ditemukan')));
+    if (_kegiatan == null) {
+      final error = context.read<UsulanProvider>().errorMessage;
+      return Scaffold(appBar: AppBar(), body: Center(child: Text(error.isNotEmpty ? error : 'Data tidak ditemukan')));
+    }
 
-    final status = _kegiatan!.statusNama ?? 'Proses';
+    final status = _kegiatan!.status?.nama ?? 'Proses';
     Color statusColor = Colors.blueGrey;
     if (status.contains('Revisi')) statusColor = Colors.orange;
     else if (status.contains('Setuju') || status.contains('Selesai')) statusColor = Colors.green;
     else if (status.contains('Tolak')) statusColor = Colors.red;
     else if (status.contains('Menunggu')) statusColor = Colors.blue;
 
-    final rab = _kegiatan!.rawData?['rab'] as List? ?? [];
     final kak = _kegiatan!.rawData?['kak'] ?? {};
-    final jadwal = _kegiatan!.rawData?['jadwal'] as List? ?? [];
+    final rab = kak['rab'] as List? ?? _kegiatan!.rawData?['rab'] as List? ?? [];
+    final jadwal = kak['tahapan'] as List? ?? kak['indikator'] as List? ?? _kegiatan!.rawData?['jadwal'] as List? ?? [];
     
     double totalAnggaran = 0;
-    for (var r in rab) {
-      double hrg = double.tryParse(r['harga_satuan']?.toString() ?? '0') ?? 0;
-      double v1 = double.tryParse(r['volume_1']?.toString() ?? '1') ?? 1;
-      double v2 = double.tryParse(r['volume_2']?.toString() ?? '1') ?? 1;
-      totalAnggaran += (hrg * v1 * v2);
+    if (kak['total_rab'] != null) {
+      totalAnggaran = double.tryParse(kak['total_rab'].toString()) ?? 0;
+    } else {
+      for (var r in rab) {
+        double hrg = double.tryParse((r['harga_satuan'] ?? r['harga']).toString()) ?? 0;
+        double v1 = double.tryParse((r['volume_1'] ?? r['vol1']).toString()) ?? 1;
+        double v2 = double.tryParse((r['volume_2'] ?? r['vol2']).toString()) ?? 1;
+        totalAnggaran += (hrg * v1 * v2);
+      }
     }
 
     return Scaffold(
@@ -153,6 +155,10 @@ class _UsulanDetailViewState extends State<UsulanDetailView> {
             ),
             const SizedBox(height: 24),
 
+            _buildFinancialSection(),
+            if (_kegiatan!.danaDisetujui != null || _kegiatan!.buktiMak != null)
+              const SizedBox(height: 24),
+
             // IKU Section
             if (kak['iku'] != null) ...[
               _buildCardWrapper(
@@ -220,31 +226,19 @@ class _UsulanDetailViewState extends State<UsulanDetailView> {
                 children: [
                   const Text('AKSI TERSEDIA', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: Colors.blueGrey, letterSpacing: 1)),
                   const SizedBox(height: 16),
-                  if (status.contains('Revisi'))
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => UsulanFormView(
-                                usulan: _kegiatan!.rawData
-                              )
-                            )
-                          );
-                        },
-                        icon: const Icon(Icons.edit_document),
-                        label: const Text('REVISI SEKARANG', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1)),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.orange,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          elevation: 4,
-                          shadowColor: Colors.orange.withOpacity(0.4),
-                        ),
-                      ),
+                  if (_kegiatan!.posisiId == 1 && _kegiatan!.status?.id == 2)
+                    _buildActionButton(
+                      'REVISI KAK SEKARANG', 
+                      Colors.orange, 
+                      Icons.edit_document, 
+                      () => Navigator.push(context, MaterialPageRoute(builder: (_) => UsulanFormView(usulan: _kegiatan!.rawData))).then((_) => _loadData())
+                    )
+                  else if (_kegiatan!.posisiId == 1 && _kegiatan!.status?.id == 3)
+                    _buildActionButton(
+                      'LENGKAPI RINCIAN KEGIATAN', 
+                      Colors.blue.shade700, 
+                      Icons.assignment_add, 
+                      () => Navigator.push(context, MaterialPageRoute(builder: (_) => AdminKegiatanDetailView(kegiatan: _kegiatan!))).then((_) => _loadData())
                     )
                   else
                     Container(
@@ -257,6 +251,45 @@ class _UsulanDetailViewState extends State<UsulanDetailView> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFinancialSection() {
+    if (_kegiatan!.danaDisetujui == null && _kegiatan!.buktiMak == null) return const SizedBox();
+
+    return _buildCardWrapper(
+      title: 'Verifikasi Anggaran',
+      icon: Icons.account_balance_rounded,
+      color: Colors.green,
+      child: Column(
+        children: [
+          if (_kegiatan!.buktiMak != null)
+            _buildDataRow('Kode MAK', _kegiatan!.buktiMak!, 'Dana Disetujui', _formatRupiah(_kegiatan!.danaDisetujui ?? 0)),
+          if (_kegiatan!.umpanBaikVerifikator != null) ...[
+            const SizedBox(height: 16),
+            _buildLongTextData('Catatan Verifikator', _kegiatan!.umpanBaikVerifikator!),
+          ]
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButton(String label, Color color, IconData icon, VoidCallback onTap) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        onPressed: onTap,
+        icon: Icon(icon),
+        label: Text(label, style: const TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1)),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: color,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          elevation: 4,
+          shadowColor: color.withOpacity(0.4),
         ),
       ),
     );

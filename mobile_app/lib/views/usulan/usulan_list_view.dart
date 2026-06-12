@@ -119,7 +119,7 @@ class _UsulanListViewState extends State<UsulanListView> {
   }
 
   Widget _buildUsulanCard(BuildContext context, Kegiatan kegiatan) {
-    final status = kegiatan.statusNama ?? 'Proses';
+    final status = kegiatan.status?.nama ?? 'Proses';
     Color statusColor = Colors.blueGrey;
     String btnText = 'Lihat Progress';
     IconData btnIcon = Icons.hourglass_top_rounded;
@@ -220,12 +220,28 @@ class _UsulanListViewState extends State<UsulanListView> {
             ),
             child: ElevatedButton.icon(
               onPressed: () async {
-                await Navigator.push(context, MaterialPageRoute(builder: (_) => UsulanDetailView(kegiatanId: kegiatan.id)));
+                final int posId = kegiatan.posisiId ?? 0;
+                final int statId = kegiatan.status?.id ?? 0;
+
+                if (posId == 1 && statId == 3) {
+                  // Revisi KAK -> Go to KAK Form
+                  await Navigator.push(context, MaterialPageRoute(builder: (_) => UsulanFormView(usulan: kegiatan.rawData)));
+                } else {
+                  // Others -> View Detail
+                  await Navigator.push(context, MaterialPageRoute(builder: (_) => UsulanDetailView(kegiatanId: kegiatan.id)));
+                }
+                
                 if (!mounted) return;
                 context.read<UsulanProvider>().fetchUsulans(isRefresh: true);
               },
-              icon: Icon(btnIcon, size: 16),
-              label: Text(btnText, style: const TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1)),
+              icon: Icon(
+                (kegiatan.posisiId == 1 && kegiatan.status?.id == 3) ? Icons.edit_note : btnIcon, 
+                size: 16
+              ),
+              label: Text(
+                (kegiatan.posisiId == 1 && kegiatan.status?.id == 3) ? 'Perbaiki KAK' : btnText, 
+                style: const TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1)
+              ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: isActionable ? statusColor : Colors.white,
                 foregroundColor: isActionable ? Colors.white : AppTheme.textDark,

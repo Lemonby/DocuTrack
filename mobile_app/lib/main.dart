@@ -31,6 +31,9 @@ import 'providers/superadmin_provider.dart';
 // Themes & Views
 import 'theme/app_theme.dart';
 import 'views/splash_view.dart';
+import 'views/login_view.dart';
+
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -110,6 +113,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       title: 'DocuTrack Mobile',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,

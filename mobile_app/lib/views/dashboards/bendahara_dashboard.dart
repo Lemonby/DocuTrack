@@ -64,8 +64,8 @@ class BendaharaDashboard extends StatelessWidget {
              )
           else
             ...recentItems.map((item) {
-              bool isLpj = item.statusNama?.contains('LPJ') ?? false;
-              String status = item.statusNama ?? 'Proses';
+              bool isLpj = item.status?.nama?.contains('LPJ') ?? false;
+              String status = item.status?.nama ?? 'Proses';
               Color statusColor = isLpj ? Colors.orange : Colors.teal;
               
               return _buildApprovalCard(

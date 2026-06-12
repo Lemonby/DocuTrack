@@ -86,6 +86,42 @@ class UsulanProvider with ChangeNotifier {
     }
   }
 
+  Future<Kegiatan?> getUsulanDetail(int id) async {
+    _isLoading = true;
+    _errorMessage = '';
+    notifyListeners();
+
+    final result = await _usulanService.getUsulanDetail(id);
+    
+    _isLoading = false;
+    if (result['success']) {
+      notifyListeners();
+      return result['data'];
+    } else {
+      _errorMessage = result['message'];
+      notifyListeners();
+      return null;
+    }
+  }
+
+  Future<Kegiatan?> getKegiatanDetail(int id) async {
+    _isLoading = true;
+    _errorMessage = '';
+    notifyListeners();
+
+    final result = await _usulanService.getKegiatanDetail(id);
+    
+    _isLoading = false;
+    if (result['success']) {
+      notifyListeners();
+      return result['data'];
+    } else {
+      _errorMessage = result['message'];
+      notifyListeners();
+      return null;
+    }
+  }
+
   Future<void> fetchUsulans({int page = 1, bool isRefresh = false}) async {
     if (isRefresh) {
       _currentPage = 1;

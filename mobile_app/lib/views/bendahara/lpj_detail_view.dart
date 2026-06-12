@@ -54,9 +54,9 @@ class _LpjDetailViewState extends State<LpjDetailView> {
           'catatan_review': status == 'Revisi' ? 'Harap perbaiki kuitansi' : null,
           'items': [
             {
-              'keterangan': 'Honor Narasumber',
+              'rincian': 'Honor Narasumber',
               'kategori_nama': 'Honorarium',
-              'nominal': 300000,
+              'realisasi': 300000,
             }
           ]
         });
@@ -185,9 +185,9 @@ class _LpjDetailViewState extends State<LpjDetailView> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               child: ListTile(
                 leading: const Icon(Icons.receipt, color: AppTheme.primaryBlue),
-                title: Text(item.keterangan ?? 'Tanpa keterangan', style: const TextStyle(fontWeight: FontWeight.bold)),
+                title: Text(item.rincian ?? 'Tanpa keterangan', style: const TextStyle(fontWeight: FontWeight.bold)),
                 subtitle: Text(item.kategoriNama ?? 'Kategori tidak tersedia'),
-                trailing: Text('Rp ${item.nominal?.toStringAsFixed(0) ?? 0}', style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.accentTeal)),
+                trailing: Text('Rp ${item.realisasi?.toStringAsFixed(0) ?? 0}', style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.accentTeal)),
               ),
             )),
         ],

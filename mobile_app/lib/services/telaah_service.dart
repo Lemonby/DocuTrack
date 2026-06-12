@@ -43,10 +43,12 @@ class TelaahService {
     }
   }
 
-  Future<Map<String, dynamic>> approve(String rolePrefix, int id, {String? kodeMak, double? danaDisetujui}) async {
-    final data = <String, dynamic>{};
-    if (kodeMak != null) data['kode_mak'] = kodeMak;
-    if (danaDisetujui != null) data['dana_disetujui'] = danaDisetujui;
+  Future<Map<String, dynamic>> approve(String rolePrefix, int id, {required String kodeMak, required double danaDisetujui, String? catatan}) async {
+    final data = <String, dynamic>{
+      'kode_mak': kodeMak,
+      'dana_disetujui': danaDisetujui,
+    };
+    if (catatan != null && catatan.isNotEmpty) data['catatan'] = catatan;
     return _processAction(rolePrefix, id, 'approve', data);
   }
 

@@ -55,6 +55,38 @@ class UsulanService {
     }
   }
 
+  // Get USULAN Detail (List usulan context)
+  Future<Map<String, dynamic>> getUsulanDetail(int id) async {
+    try {
+      final response = await _apiService.client.get('/v1/admin/usulan/$id');
+      if (response.data['success'] == true) {
+        return {
+          'success': true,
+          'data': Kegiatan.fromJson(response.data['data']),
+        };
+      }
+      return {'success': false, 'message': 'Gagal memuat detail usulan.'};
+    } on DioException catch (e) {
+      return {'success': false, 'message': e.response?.data['message'] ?? 'Terjadi kesalahan jaringan.'};
+    }
+  }
+
+  // Get KEGIATAN Detail (Phase 2 context)
+  Future<Map<String, dynamic>> getKegiatanDetail(int id) async {
+    try {
+      final response = await _apiService.client.get('/v1/admin/kegiatan/$id');
+      if (response.data['success'] == true) {
+        return {
+          'success': true,
+          'data': Kegiatan.fromJson(response.data['data']),
+        };
+      }
+      return {'success': false, 'message': 'Gagal memuat detail kegiatan.'};
+    } on DioException catch (e) {
+      return {'success': false, 'message': e.response?.data['message'] ?? 'Terjadi kesalahan jaringan.'};
+    }
+  }
+
   // Create new Usulan (KAK)
   Future<Map<String, dynamic>> createUsulan(Map<String, dynamic> data) async {
     try {
@@ -103,11 +135,6 @@ class UsulanService {
       }
       return {'success': false, 'message': 'Gagal merevisi usulan.'};
     } on DioException catch (e) {
-      if (kDebugMode) {
-        print('DIO ERROR IN UPDATE USULAN: ${e.response?.statusCode}');
-        print('DIO RESPONSE DATA: ${e.response?.data}');
-        print('DIO ERROR MESSAGE: ${e.message}');
-      }
       String errorMsg = 'Terjadi kesalahan jaringan.';
       if (e.response?.statusCode == 422) {
         final errors = e.response?.data['errors'] as Map<String, dynamic>?;
@@ -120,22 +147,6 @@ class UsulanService {
         errorMsg = e.response?.data['message'] ?? errorMsg;
       }
       return {'success': false, 'message': errorMsg};
-    }
-  }
-
-  // Get Usulan Detail
-  Future<Map<String, dynamic>> getUsulanDetail(int id) async {
-    try {
-      final response = await _apiService.client.get('/v1/admin/usulan/$id');
-      if (response.data['success'] == true) {
-        return {
-          'success': true,
-          'data': Kegiatan.fromJson(response.data['data']),
-        };
-      }
-      return {'success': false, 'message': 'Gagal memuat detail KAK.'};
-    } on DioException catch (e) {
-      return {'success': false, 'message': e.response?.data['message'] ?? 'Terjadi kesalahan jaringan.'};
     }
   }
 

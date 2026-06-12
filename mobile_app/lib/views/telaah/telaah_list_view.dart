@@ -130,7 +130,7 @@ class _TelaahListViewState extends State<TelaahListView> {
         }
 
         final item = items[index];
-        final String statusText = item.statusNama?.toUpperCase() ?? 'MENUNGGU';
+        final String statusText = item.status?.nama?.toUpperCase() ?? 'MENUNGGU';
         final bool isDone = statusText.contains('TELAH DITELAAH') || statusText.contains('SELESAI');
         final bool isRevisi = statusText.contains('REVISI');
 

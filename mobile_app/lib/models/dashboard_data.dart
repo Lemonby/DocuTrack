@@ -18,8 +18,8 @@ class DashboardStats {
     
     // Attempt to map from various possible keys depending on role
     return DashboardStats(
-      totalUsulan: json['total_usulan'] ?? json['total'] ?? 0,
-      disetujui: json['disetujui'] ?? json['total_disetujui'] ?? 0,
+      totalUsulan: json['total_usulan'] ?? json['total'] ?? json['totalUsulan'] ?? 0,
+      disetujui: json['disetujui'] ?? json['total_disetujui'] ?? json['danaDiberikan'] ?? 0,
       ditolak: json['ditolak'] ?? json['total_ditolak'] ?? 0,
       menunggu: json['menunggu'] ?? json['total_menunggu'] ?? 0,
     );
@@ -50,12 +50,16 @@ class DashboardData {
   });
 
   factory DashboardData.fromJson(Map<String, dynamic> json) {
-    // Determine which key contains the list (recent_kegiatan for admin, pending for ppk/wadir)
+    // Determine which key contains the list
     List<dynamic> rawItems = [];
     if (json['recent_kegiatan'] != null) {
       rawItems = json['recent_kegiatan'];
     } else if (json['pending'] != null) {
       rawItems = json['pending'];
+    } else if (json['pending_telaah'] != null) {
+      rawItems = json['pending_telaah'];
+    } else if (json['antrian_pencairan'] != null) {
+      rawItems = json['antrian_pencairan'];
     }
 
     return DashboardData(

@@ -32,7 +32,7 @@ class _AdminLpjDetailViewState extends State<AdminLpjDetailView> {
       setState(() {
         _lpj = detail;
         for (var item in detail.items) {
-          _controllers[item.id] = TextEditingController(text: item.nominal?.toStringAsFixed(0) ?? '');
+          _controllers[item.id] = TextEditingController(text: item.realisasi?.toStringAsFixed(0) ?? '');
         }
       });
     }
@@ -160,7 +160,7 @@ class _AdminLpjDetailViewState extends State<AdminLpjDetailView> {
                   ),
                 )
               else
-                Text('Rp ${item.nominal?.toStringAsFixed(0) ?? '0'}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text('Rp ${item.realisasi?.toStringAsFixed(0) ?? '0'}', style: const TextStyle(fontWeight: FontWeight.bold)),
             ],
           ),
           const SizedBox(height: 12),

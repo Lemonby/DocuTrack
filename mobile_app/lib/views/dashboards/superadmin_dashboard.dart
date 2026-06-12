@@ -131,7 +131,7 @@ class _SuperadminDashboardState extends State<SuperadminDashboard> {
           ),
           const SizedBox(height: 12),
           if (widget.data?.recentItems != null && widget.data!.recentItems.isNotEmpty)
-            ...widget.data!.recentItems.take(2).map((item) => _buildSubmissionCard(item.namaKegiatan, item.pemilikKegiatan ?? 'Unknown', item.statusNama ?? 'Menunggu', item.statusNama == 'Disetujui' ? Colors.green : Colors.blue)),
+            ...widget.data!.recentItems.take(2).map((item) => _buildSubmissionCard(item.namaKegiatan, item.pemilikKegiatan ?? 'Unknown', item.status?.nama ?? 'Menunggu', item.status?.nama == 'Disetujui' ? Colors.green : Colors.blue)),
           const SizedBox(height: 24),
 
           // Active Directory

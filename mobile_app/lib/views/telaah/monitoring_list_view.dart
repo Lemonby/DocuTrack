@@ -115,7 +115,7 @@ class _MonitoringListViewState extends State<MonitoringListView> {
       itemCount: items.length,
       itemBuilder: (context, index) {
         final item = items[index];
-        final String statusText = item.statusNama?.toUpperCase() ?? (index % 2 == 0 ? 'TELAH DITELAAH' : 'PROSES TAHAP SELANJUTNYA');
+        final String statusText = item.status?.nama?.toUpperCase() ?? (index % 2 == 0 ? 'TELAH DITELAAH' : 'PROSES TAHAP SELANJUTNYA');
         final bool isApproved = statusText.contains('SELESAI') || statusText.contains('TELAH DITELAAH');
 
         return Container(
@@ -354,7 +354,7 @@ class _MonitoringListViewState extends State<MonitoringListView> {
             pemilikKegiatan: 'Budi Santoso',
             createdAt: '10 Nov 2026',
             jurusanPenyelenggara: 'Teknik Informatika dan Komputer',
-            statusNama: 'Telah Ditelaah',
+            status: KegiatanStatus(id: 3, nama: 'Telah Ditelaah'),
           ),
           Kegiatan(
             id: 9103,
@@ -362,7 +362,7 @@ class _MonitoringListViewState extends State<MonitoringListView> {
             pemilikKegiatan: 'Ahmad Dahlan',
             createdAt: '15 Nov 2026',
             jurusanPenyelenggara: 'Akuntansi',
-            statusNama: 'Ditolak',
+            status: KegiatanStatus(id: 4, nama: 'Ditolak'),
           ),
         ];
       }
@@ -373,7 +373,7 @@ class _MonitoringListViewState extends State<MonitoringListView> {
           pemilikKegiatan: 'Budi Santoso',
           createdAt: '10 Nov 2026',
           jurusanPenyelenggara: 'Teknik Informatika dan Komputer',
-          statusNama: 'Telah Ditelaah',
+          status: KegiatanStatus(id: 3, nama: 'Telah Ditelaah'),
         ),
         Kegiatan(
           id: 9102,
@@ -381,7 +381,7 @@ class _MonitoringListViewState extends State<MonitoringListView> {
           pemilikKegiatan: 'Siti Aminah',
           createdAt: '12 Nov 2026',
           jurusanPenyelenggara: 'Teknik Elektro',
-          statusNama: 'Menunggu Direvisi Admin TI',
+          status: KegiatanStatus(id: 2, nama: 'Menunggu Direvisi Admin TI'),
         ),
         Kegiatan(
           id: 9103,
@@ -389,7 +389,7 @@ class _MonitoringListViewState extends State<MonitoringListView> {
           pemilikKegiatan: 'Ahmad Dahlan',
           createdAt: '15 Nov 2026',
           jurusanPenyelenggara: 'Akuntansi',
-          statusNama: 'Revisi',
+          status: KegiatanStatus(id: 2, nama: 'Revisi'),
         ),
       ];
     } else {
@@ -401,7 +401,7 @@ class _MonitoringListViewState extends State<MonitoringListView> {
             pemilikKegiatan: 'Ahmad Dahlan',
             createdAt: '01 Des 2026',
             jurusanPenyelenggara: 'Teknik Sipil',
-            statusNama: 'Telah Ditelaah',
+            status: KegiatanStatus(id: 3, nama: 'Telah Ditelaah'),
           ),
         ];
       }
@@ -412,7 +412,7 @@ class _MonitoringListViewState extends State<MonitoringListView> {
           pemilikKegiatan: 'Ahmad Dahlan',
           createdAt: '01 Des 2026',
           jurusanPenyelenggara: 'Teknik Sipil',
-          statusNama: 'Telah Ditelaah',
+          status: KegiatanStatus(id: 3, nama: 'Telah Ditelaah'),
         ),
         Kegiatan(
           id: 9202,
@@ -420,7 +420,7 @@ class _MonitoringListViewState extends State<MonitoringListView> {
           pemilikKegiatan: 'Retno Widiastuti',
           createdAt: '05 Des 2026',
           jurusanPenyelenggara: 'Administrasi Niaga',
-          statusNama: 'Menunggu Direvisi Admin TI',
+          status: KegiatanStatus(id: 2, nama: 'Menunggu Direvisi Admin TI'),
         ),
       ];
     }
