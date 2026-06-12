@@ -4,17 +4,16 @@ import '../../providers/telaah_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../models/kegiatan.dart';
 
-class TelaahDetailView extends StatefulWidget {
+class VerifikatorDetailView extends StatefulWidget {
   final int kegiatanId;
-  final String rolePrefix;
 
-  const TelaahDetailView({super.key, required this.kegiatanId, required this.rolePrefix});
+  const VerifikatorDetailView({super.key, required this.kegiatanId});
 
   @override
-  State<TelaahDetailView> createState() => _TelaahDetailViewState();
+  State<VerifikatorDetailView> createState() => _VerifikatorDetailViewState();
 }
 
-class _TelaahDetailViewState extends State<TelaahDetailView> {
+class _VerifikatorDetailViewState extends State<VerifikatorDetailView> {
   Kegiatan? _kegiatan;
 
   @override
@@ -27,13 +26,13 @@ class _TelaahDetailViewState extends State<TelaahDetailView> {
 
   Future<void> _loadDetail() async {
     final provider = Provider.of<TelaahProvider>(context, listen: false);
-    final detail = await provider.getTelaahDetail(widget.rolePrefix, widget.kegiatanId);
+    final detail = await provider.getTelaahDetail('verifikator', widget.kegiatanId);
     if (mounted) {
       setState(() {
         if (detail != null) {
           _kegiatan = detail;
         } else {
-          _kegiatan = null; // Forces API error message to show
+          _kegiatan = null;
         }
       });
     }
@@ -51,15 +50,15 @@ class _TelaahDetailViewState extends State<TelaahDetailView> {
     final _kodeMakCtrl = TextEditingController(text: _kegiatan?.rawData?['kode_mak'] ?? '');
     
     double totalAwal = 0;
-    if (_kegiatan?.rawData?['rab'] != null) {
-      totalAwal = _calculateTotalRab(_kegiatan!.rawData!['rab']);
+    final tempRab = (_kegiatan?.rawData?['kak']?['rab'] ?? _kegiatan?.rawData?['rab'] ?? _kegiatan?.rawData?['rabs']) as List? ?? [];
+    if (tempRab.isNotEmpty) {
+      totalAwal = _calculateTotalRab(tempRab);
     }
     
     final _danaCtrl = TextEditingController(text: totalAwal.toStringAsFixed(0));
 
-    final isVerifikator = widget.rolePrefix == 'verifikator';
-    final needsMak = isApprove && isVerifikator;
-    final needsDana = isApprove && isVerifikator;
+    final needsMak = isApprove;
+    final needsDana = isApprove;
 
     showModalBottomSheet(
       context: context,
@@ -211,7 +210,82 @@ class _TelaahDetailViewState extends State<TelaahDetailView> {
                     ],
                   )
                 ],
+<<<<<<< HEAD:mobile_app/lib/views/telaah/telaah_detail_view.dart
               ),
+=======
+                if (needsMak) ...[
+                  const SizedBox(height: 16),
+                  const Text('Kode MAK (Mata Anggaran Kegiatan)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.blueGrey)),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _kodeMakCtrl,
+                    decoration: InputDecoration(
+                      hintText: 'Contoh: 521111...',
+                      filled: true,
+                      fillColor: Colors.grey.shade50,
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                    ),
+                  ),
+                ],
+                if (needsDana) ...[
+                  const SizedBox(height: 16),
+                  const Text('Dana Disetujui (Rp)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.blueGrey)),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _danaCtrl,
+                    keyboardType: TextInputType.number,
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    decoration: InputDecoration(
+                      prefixText: 'Rp ',
+                      filled: true,
+                      fillColor: Colors.grey.shade50,
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                        child: const Text('Batal'),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(backgroundColor: buttonColor, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), elevation: 4),
+                        onPressed: () async {
+                          Navigator.pop(context);
+                          final success = await provider.processAction(
+                            'verifikator', 
+                            widget.kegiatanId, 
+                            action, 
+                            catatan: _catatanCtrl.text,
+                            kodeMak: needsMak ? _kodeMakCtrl.text : null,
+                            danaDisetujui: needsDana ? double.tryParse(_danaCtrl.text) ?? 0 : null,
+                          );
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(success ? 'Tindakan berhasil diproses.' : provider.errorMessage),
+                                backgroundColor: success ? Colors.green.shade600 : Colors.redAccent,
+                              ),
+                            );
+                            if (success) {
+                              Navigator.pop(context);
+                            }
+                          }
+                        },
+                        child: const Text('Konfirmasi', style: TextStyle(fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                  ],
+                )
+              ],
+>>>>>>> c0d5a63 (fix masalah field semua yang ga ke show di halaman utama):mobile_app/lib/views/telaah/verifikator_detail_view.dart
             ),
           ),
         );
@@ -222,9 +296,9 @@ class _TelaahDetailViewState extends State<TelaahDetailView> {
   double _calculateTotalRab(List<dynamic> rab) {
     double total = 0;
     for (var r in rab) {
-      double hrg = r['harga_satuan'] != null ? double.parse(r['harga_satuan'].toString()) : 0;
-      double v1 = r['volume_1'] != null ? double.parse(r['volume_1'].toString()) : 1;
-      double v2 = r['volume_2'] != null ? double.parse(r['volume_2'].toString()) : 1;
+      double hrg = double.tryParse((r['harga'] ?? r['harga_satuan'] ?? 0).toString()) ?? 0;
+      double v1 = double.tryParse((r['vol1'] ?? r['volume_1'] ?? 1).toString()) ?? 1;
+      double v2 = double.tryParse((r['vol2'] ?? r['volume_2'] ?? 1).toString()) ?? 1;
       total += (hrg * v1 * v2);
     }
     return total;
@@ -232,8 +306,15 @@ class _TelaahDetailViewState extends State<TelaahDetailView> {
 
   bool _canAction() {
     if (_kegiatan == null) return false;
+<<<<<<< HEAD:mobile_app/lib/views/telaah/telaah_detail_view.dart
     final status = _kegiatan!.status?.nama?.toLowerCase() ?? '';
     if (status.contains('selesai') || status.contains('setuju') || status.contains('tolak') || status.contains('approved') || status.contains('acc') || status.contains('menunggu direvisi')) {
+=======
+    final status = _kegiatan!.statusNama?.toLowerCase() ?? '';
+    // Must be at Verifikator position (2) and not finished yet
+    if (_kegiatan!.posisiId != 2) return false;
+    if (status.contains('selesai') || status.contains('setuju') || status.contains('tolak') || status.contains('approved') || status.contains('acc')) {
+>>>>>>> c0d5a63 (fix masalah field semua yang ga ke show di halaman utama):mobile_app/lib/views/telaah/verifikator_detail_view.dart
       return false;
     }
     return true;
@@ -246,7 +327,7 @@ class _TelaahDetailViewState extends State<TelaahDetailView> {
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        title: const Text('Detail Telaah KAK', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: AppTheme.textDark)),
+        title: const Text('Detail Telaah KAK (Verifikator)', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: AppTheme.textDark)),
         backgroundColor: Colors.white,
         elevation: 1,
         iconTheme: const IconThemeData(color: AppTheme.textDark),
@@ -257,13 +338,33 @@ class _TelaahDetailViewState extends State<TelaahDetailView> {
           : _kegiatan == null
               ? Center(child: Text(provider.errorMessage))
               : _buildDetailContent(_kegiatan!),
-      bottomNavigationBar: _canAction() ? _buildActionButtons() : null,
+      bottomNavigationBar: _canAction() ? _buildActionButtons() : _buildFinishedStatus(),
+    );
+  }
+
+  Widget _buildFinishedStatus() {
+    if (_kegiatan == null) return const SizedBox.shrink();
+    final status = _kegiatan!.statusNama ?? 'Selesai';
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: Colors.black12, width: 0.5)),
+      ),
+      child: SafeArea(
+        child: Center(
+          child: Text(
+            'TELAAH SELESAI (STATUS: ${status.toUpperCase()})',
+            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 12, color: Colors.blueGrey, letterSpacing: 1),
+          ),
+        ),
+      ),
     );
   }
 
   Widget _buildDetailContent(Kegiatan kegiatan) {
     final kak = kegiatan.rawData?['kak'];
-    final rab = kegiatan.rawData?['rab'] as List? ?? [];
+    final rab = (kegiatan.rawData?['kak']?['rab'] ?? kegiatan.rawData?['rab'] ?? kegiatan.rawData?['rabs']) as List? ?? [];
     final lampiran = kegiatan.rawData?['lampiran'] as List? ?? [];
     final jadwal = kegiatan.rawData?['jadwal'] as List? ?? [];
     final tahapanKegiatan = kegiatan.rawData?['tahapan_kegiatan']?.toString();
@@ -469,9 +570,11 @@ class _TelaahDetailViewState extends State<TelaahDetailView> {
             ...rab.asMap().entries.map((entry) {
               int i = entry.key;
               var r = entry.value;
-              double hrg = r['harga_satuan'] != null ? double.parse(r['harga_satuan'].toString()) : 0;
-              double v1 = r['volume_1'] != null ? double.parse(r['volume_1'].toString()) : 1;
-              double v2 = r['volume_2'] != null ? double.parse(r['volume_2'].toString()) : 1;
+              double hrg = double.tryParse((r['harga'] ?? r['harga_satuan'] ?? 0).toString()) ?? 0;
+              double v1 = double.tryParse((r['vol1'] ?? r['volume_1'] ?? 1).toString()) ?? 1;
+              double v2 = double.tryParse((r['vol2'] ?? r['volume_2'] ?? 1).toString()) ?? 1;
+              String sat1 = r['sat1'] ?? r['satuan_1'] ?? '';
+              String sat2 = r['sat2'] ?? r['satuan_2'] ?? '';
               double total = hrg * v1 * v2;
               return Container(
                 margin: const EdgeInsets.only(bottom: 12),
@@ -499,7 +602,7 @@ class _TelaahDetailViewState extends State<TelaahDetailView> {
                         children: [
                           _buildRabRow('Rincian', r['rincian'] ?? '-'),
                           const SizedBox(height: 8),
-                          _buildRabRow('Volume', '$v1 ${r['satuan_1']} x $v2 ${r['satuan_2']}'),
+                          _buildRabRow('Volume', '${v1.toStringAsFixed(0)} $sat1 x ${v2.toStringAsFixed(0)} $sat2'),
                           const SizedBox(height: 8),
                           _buildRabRow('Harga Satuan', 'Rp ${hrg.toStringAsFixed(0).replaceAll(RegExp(r'\B(?=(\d{3})+(?!\d))'), '.')}'),
                           const Padding(padding: EdgeInsets.symmetric(vertical: 12), child: Divider(height: 1)),
@@ -618,38 +721,34 @@ class _TelaahDetailViewState extends State<TelaahDetailView> {
       child: SafeArea(
         child: Row(
           children: [
-            if (widget.rolePrefix != 'ppk') ...[
-              Expanded(
-                flex: 1,
-                child: OutlinedButton(
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.red.shade600, 
-                    side: BorderSide(color: Colors.red.shade200),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))
-                  ),
-                  onPressed: () => _showActionDialog('reject'),
-                  child: const Icon(Icons.close_rounded),
+            Expanded(
+              flex: 1,
+              child: OutlinedButton(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.red.shade600, 
+                  side: BorderSide(color: Colors.red.shade200),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))
                 ),
+                onPressed: () => _showActionDialog('reject'),
+                child: const Icon(Icons.close_rounded),
               ),
-              const SizedBox(width: 12),
-            ],
-            if (widget.rolePrefix != 'wadir' && widget.rolePrefix != 'ppk') ...[
-              Expanded(
-                flex: 1,
-                child: OutlinedButton(
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.orange.shade700, 
-                    side: BorderSide(color: Colors.orange.shade300),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))
-                  ),
-                  onPressed: () => _showActionDialog('revise'),
-                  child: const Text('Revisi', style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              flex: 1,
+              child: OutlinedButton(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.orange.shade700, 
+                  side: BorderSide(color: Colors.orange.shade300),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))
                 ),
+                onPressed: () => _showActionDialog('revise'),
+                child: const Text('Revisi', style: TextStyle(fontWeight: FontWeight.bold)),
               ),
-              const SizedBox(width: 12),
-            ],
+            ),
+            const SizedBox(width: 12),
             Expanded(
               flex: 2,
               child: ElevatedButton(

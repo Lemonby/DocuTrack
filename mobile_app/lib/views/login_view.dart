@@ -18,6 +18,19 @@ class _LoginViewState extends State<LoginView> {
   bool _obscurePassword = true;
 
   @override
+  void initState() {
+    super.initState();
+    // Fetch captcha when page opens
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final auth = Provider.of<AuthProvider>(context, listen: false);
+      // Only refresh if captcha hasn't been loaded yet
+      if (auth.captchaKey.isEmpty || auth.captchaKey == 'error') {
+        auth.refreshCaptcha();
+      }
+    });
+  }
+
+  @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
@@ -52,8 +65,9 @@ class _LoginViewState extends State<LoginView> {
         (route) => false,
       );
     } else if (mounted) {
-      // Refresh captcha on failure
-      authProvider.refreshCaptcha();
+      // authProvider.loginWithEmail sudah memanggil refreshCaptcha() di dalamnya
+      // Kita hanya perlu clear field input captcha di sini
+      _captchaController.clear();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(authProvider.errorMessage.isNotEmpty 
@@ -212,23 +226,16 @@ class _LoginViewState extends State<LoginView> {
                                     color: Colors.white, 
                                     borderRadius: BorderRadius.circular(8), 
                                     border: Border.all(color: const Color(0xFFE2E8F0)),
-                                    image: const DecorationImage(
-                                      image: AssetImage('assets/images/background/hero-sec.svg'), // fallback noise
-                                      fit: BoxFit.cover,
-                                      opacity: 0.1,
-                                    ),
                                   ),
                                   child: Center(
                                     child: Text(
                                       auth.captchaCodeText,
                                       style: const TextStyle(
-                                        fontSize: 24,
-                                        fontWeight: FontWeight.bold,
-                                        letterSpacing: 8,
-                                        fontFamily: 'Courier',
+                                        fontSize: 22,
+                                        fontWeight: FontWeight.w900,
+                                        letterSpacing: 4,
+                                        fontFamily: 'monospace',
                                         color: Color(0xFF0A2540),
-                                        decoration: TextDecoration.lineThrough,
-                                        decorationStyle: TextDecorationStyle.double,
                                       ),
                                     ),
                                   ),
@@ -244,6 +251,7 @@ class _LoginViewState extends State<LoginView> {
                             child: IconButton(
                               icon: const Icon(Icons.refresh, color: Colors.white),
                               onPressed: () {
+                                _captchaController.clear();
                                 Provider.of<AuthProvider>(context, listen: false).refreshCaptcha();
                               },
                             ),

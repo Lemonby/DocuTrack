@@ -3,7 +3,9 @@ import 'package:provider/provider.dart';
 import '../../providers/telaah_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../theme/app_theme.dart';
-import 'telaah_detail_view.dart';
+import 'verifikator_detail_view.dart';
+import 'ppk_detail_view.dart';
+import 'wadir_detail_view.dart';
 
 class TelaahListView extends StatefulWidget {
   final bool isDummy; // flag if we want to show dummy data forcibly
@@ -163,13 +165,18 @@ class _TelaahListViewState extends State<TelaahListView> {
             child: InkWell(
               borderRadius: BorderRadius.circular(20),
               onTap: () async {
+                Widget detailView;
+                if (_rolePrefix == 'ppk') {
+                  detailView = PpkDetailView(kegiatanId: item.id);
+                } else if (_rolePrefix == 'wadir') {
+                  detailView = WadirDetailView(kegiatanId: item.id);
+                } else {
+                  detailView = VerifikatorDetailView(kegiatanId: item.id);
+                }
                 await Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => TelaahDetailView(
-                      kegiatanId: item.id,
-                      rolePrefix: _rolePrefix,
-                    ),
+                    builder: (context) => detailView,
                   ),
                 );
                 _refresh();

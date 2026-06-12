@@ -138,18 +138,25 @@ class _AdminKegiatanDetailViewState extends State<AdminKegiatanDetailView> {
 
   @override
   Widget build(BuildContext context) {
+<<<<<<< HEAD
     if (_isLoadingDetail) return const Scaffold(body: Center(child: CircularProgressIndicator()));
     
     final curKegiatan = _kegiatan ?? widget.kegiatan;
     final status = curKegiatan.status?.nama ?? 'Proses';
     final isReadonly = (status == 'Disetujui' || status == 'Review' || status == 'Ditolak');
+=======
+    final status = widget.kegiatan.statusNama ?? 'Proses';
+    final statusLower = status.toLowerCase();
+    final isEditable = (statusLower == 'telah diverifikasi' || statusLower == 'disetujui' || statusLower == 'revisi');
+    final isReadonly = !isEditable;
+>>>>>>> c0d5a63 (fix masalah field semua yang ga ke show di halaman utama)
 
     Color statusColor = Colors.blueGrey;
     IconData statusIcon = Icons.hourglass_empty;
-    if (status == 'Revisi') { statusColor = Colors.orange; statusIcon = Icons.warning_amber_rounded; }
-    if (status == 'Review') { statusColor = Colors.blue; statusIcon = Icons.search; }
-    if (status == 'Disetujui') { statusColor = Colors.green; statusIcon = Icons.check_circle_outline; }
-    if (status == 'Ditolak') { statusColor = Colors.red; statusIcon = Icons.cancel_outlined; }
+    if (statusLower == 'revisi') { statusColor = Colors.orange; statusIcon = Icons.warning_amber_rounded; }
+    if (statusLower == 'review' || statusLower == 'telah diverifikasi') { statusColor = Colors.blue; statusIcon = Icons.search; }
+    if (statusLower == 'disetujui' || statusLower == 'selesai') { statusColor = Colors.green; statusIcon = Icons.check_circle_outline; }
+    if (statusLower == 'ditolak') { statusColor = Colors.red; statusIcon = Icons.cancel_outlined; }
 
     return Scaffold(
       backgroundColor: Colors.grey.shade50,

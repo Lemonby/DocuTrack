@@ -693,14 +693,20 @@ class _BendaharaPencairanDetailViewState extends State<BendaharaPencairanDetailV
   }
 
   Widget _buildRabDetailTable() {
-    final rab = _kegiatan!.rawData?['kak']?['rabs'] as List? ?? [];
+    final rab = (_kegiatan!.rawData?['kak']?['rab'] ?? _kegiatan!.rawData?['kak']?['rabs'] ?? _kegiatan!.rawData?['rab']) as List? ?? [];
     if (rab.isEmpty) return const SizedBox.shrink();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text('Rincian Anggaran Detail', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         const SizedBox(height: 16),
-        ...rab.map((item) => ListTile(title: Text(item['uraian'] ?? ''), subtitle: Text(_formatRupiah(double.tryParse(item['harga']?.toString() ?? '0') ?? 0)))),
+        ...rab.map((item) {
+          final hrg = double.tryParse((item['harga'] ?? item['harga_satuan'] ?? 0).toString()) ?? 0;
+          return ListTile(
+            title: Text(item['uraian'] ?? ''), 
+            subtitle: Text(_formatRupiah(hrg)),
+          );
+        }),
       ],
     );
   }

@@ -114,7 +114,9 @@ class _LandingViewState extends State<LandingView> with TickerProviderStateMixin
 
     return Container(
       width: double.infinity,
-      height: heroHeight,
+      constraints: BoxConstraints(
+        minHeight: heroHeight,
+      ),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topRight,
@@ -139,10 +141,11 @@ class _LandingViewState extends State<LandingView> with TickerProviderStateMixin
             left: -size.width * 0.1,
             top: 50,
             child: Image.asset(
-              'assets/images/logo/pnj.png', 
+              'assets/images/logo/logoPnj.jpeg', 
               width: isSmallScreen ? size.width * 0.8 : 400, 
               color: Colors.white.withOpacity(0.05), 
-              colorBlendMode: BlendMode.srcIn
+              colorBlendMode: BlendMode.srcIn,
+              errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
             ),
           ),
           

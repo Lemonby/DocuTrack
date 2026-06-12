@@ -3,7 +3,7 @@ import '../../theme/app_theme.dart';
 import '../../models/user.dart';
 import '../../models/dashboard_data.dart';
 import '../../models/kegiatan.dart';
-import '../telaah/telaah_detail_view.dart';
+import '../telaah/verifikator_detail_view.dart';
 
 class VerifikatorDashboard extends StatelessWidget {
   final User user;
@@ -286,9 +286,8 @@ class VerifikatorDashboard extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => TelaahDetailView(
+                        builder: (context) => VerifikatorDetailView(
                           kegiatanId: item.id,
-                          rolePrefix: 'verifikator',
                         ),
                       ),
                     );

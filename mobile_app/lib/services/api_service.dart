@@ -12,12 +12,18 @@ class ApiService {
   // Hardened Base URL: priority to environment variable, then platform default
   static const String _defaultUrl = kIsWeb
       ? 'http://127.0.0.1:8000/api'
+<<<<<<< HEAD
       : 'http://10.0.2.2:8000/api'; // Standard Android Emulator loopback
 
   static String _baseUrl = const String.fromEnvironment(
     'API_BASE_URL',
     defaultValue: _defaultUrl,
   );
+=======
+      : (Platform.isAndroid
+          ? 'http://10.21.125.93:8000/api' // Updated for current network
+          : 'http://127.0.0.1:8000/api');
+>>>>>>> c0d5a63 (fix masalah field semua yang ga ke show di halaman utama)
 
   static String get baseUrl => _baseUrl;
   

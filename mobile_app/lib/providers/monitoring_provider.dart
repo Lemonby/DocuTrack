@@ -19,7 +19,7 @@ class MonitoringProvider with ChangeNotifier {
   int get currentPage => _currentPage;
   int get lastPage => _lastPage;
 
-  Future<void> fetchList(String rolePrefix, {int page = 1, bool isRefresh = false}) async {
+  Future<void> fetchList(String rolePrefix, {int page = 1, bool isRefresh = false, bool isRiwayat = false}) async {
     if (isRefresh) {
       _currentPage = 1;
       _items.clear();
@@ -29,7 +29,7 @@ class MonitoringProvider with ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    final result = await _service.getMonitoringList(rolePrefix, page: page);
+    final result = await _service.getMonitoringList(rolePrefix, page: page, isRiwayat: isRiwayat);
 
     if (result['success']) {
       if (isRefresh) {

@@ -88,6 +88,7 @@ class UsulanProvider with ChangeNotifier {
 
   Future<Kegiatan?> getUsulanDetail(int id) async {
     _isLoading = true;
+<<<<<<< HEAD
     _errorMessage = '';
     notifyListeners();
 
@@ -118,6 +119,18 @@ class UsulanProvider with ChangeNotifier {
     } else {
       _errorMessage = result['message'];
       notifyListeners();
+=======
+    notifyListeners();
+
+    final result = await _usulanService.getUsulanDetail(id);
+    _isLoading = false;
+    notifyListeners();
+
+    if (result['success']) {
+      return result['data'];
+    } else {
+      _errorMessage = result['message'];
+>>>>>>> c0d5a63 (fix masalah field semua yang ga ke show di halaman utama)
       return null;
     }
   }

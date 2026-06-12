@@ -4,7 +4,9 @@ import '../../providers/monitoring_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../models/kegiatan.dart';
-import 'telaah_detail_view.dart';
+import 'verifikator_detail_view.dart';
+import 'ppk_detail_view.dart';
+import 'wadir_detail_view.dart';
 
 class MonitoringListView extends StatefulWidget {
   final bool isRiwayat;
@@ -39,7 +41,7 @@ class _MonitoringListViewState extends State<MonitoringListView> {
       else _rolePrefix = '';
 
       if (_rolePrefix.isNotEmpty) {
-        Provider.of<MonitoringProvider>(context, listen: false).fetchList(_rolePrefix, page: 1, isRefresh: true);
+        Provider.of<MonitoringProvider>(context, listen: false).fetchList(_rolePrefix, page: 1, isRefresh: true, isRiwayat: widget.isRiwayat);
       }
     }
   }
@@ -54,13 +56,13 @@ class _MonitoringListViewState extends State<MonitoringListView> {
     if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
       final provider = Provider.of<MonitoringProvider>(context, listen: false);
       if (!provider.isLoading && provider.currentPage < provider.lastPage) {
-        provider.fetchList(_rolePrefix, page: provider.currentPage + 1);
+        provider.fetchList(_rolePrefix, page: provider.currentPage + 1, isRiwayat: widget.isRiwayat);
       }
     }
   }
 
   Future<void> _refresh() async {
-    await Provider.of<MonitoringProvider>(context, listen: false).fetchList(_rolePrefix, page: 1, isRefresh: true);
+    await Provider.of<MonitoringProvider>(context, listen: false).fetchList(_rolePrefix, page: 1, isRefresh: true, isRiwayat: widget.isRiwayat);
   }
 
   @override
@@ -107,7 +109,7 @@ class _MonitoringListViewState extends State<MonitoringListView> {
       return const Center(child: CircularProgressIndicator());
     }
 
-    final items = provider.items.isEmpty ? _getDummyData() : [...provider.items, ..._getDummyData()];
+    final items = provider.items.isEmpty ? _getDummyData() : provider.items;
 
     return ListView.builder(
       controller: _scrollController,
@@ -142,13 +144,18 @@ class _MonitoringListViewState extends State<MonitoringListView> {
             child: InkWell(
               borderRadius: BorderRadius.circular(20),
               onTap: () {
+                Widget detailView;
+                if (_rolePrefix == 'ppk') {
+                  detailView = PpkDetailView(kegiatanId: item.id);
+                } else if (_rolePrefix == 'wadir') {
+                  detailView = WadirDetailView(kegiatanId: item.id);
+                } else {
+                  detailView = VerifikatorDetailView(kegiatanId: item.id);
+                }
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => TelaahDetailView(
-                      kegiatanId: item.id,
-                      rolePrefix: _rolePrefix,
-                    ),
+                    builder: (context) => detailView,
                   ),
                 );
               },

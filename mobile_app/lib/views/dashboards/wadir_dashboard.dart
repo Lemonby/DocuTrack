@@ -3,7 +3,7 @@ import '../../theme/app_theme.dart';
 import '../../models/user.dart';
 import '../../models/dashboard_data.dart';
 import '../../models/kegiatan.dart';
-import '../telaah/telaah_detail_view.dart';
+import '../telaah/wadir_detail_view.dart';
 
 class WadirDashboard extends StatelessWidget {
   final User user;
@@ -81,9 +81,8 @@ class WadirDashboard extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => TelaahDetailView(
+                      builder: (context) => WadirDetailView(
                         kegiatanId: item.id,
-                        rolePrefix: 'wadir',
                       ),
                     ),
                   );

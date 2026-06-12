@@ -3,7 +3,7 @@ import '../../theme/app_theme.dart';
 import '../../models/user.dart';
 import '../../models/dashboard_data.dart';
 import '../../models/kegiatan.dart';
-import '../telaah/telaah_detail_view.dart';
+import '../telaah/ppk_detail_view.dart';
 
 class PpkDashboard extends StatelessWidget {
   final User user;
@@ -329,9 +329,8 @@ class PpkDashboard extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => TelaahDetailView(
+                        builder: (context) => PpkDetailView(
                           kegiatanId: item.id,
-                          rolePrefix: 'ppk',
                         ),
                       ),
                     );

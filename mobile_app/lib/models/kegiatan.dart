@@ -122,6 +122,7 @@ class Kegiatan {
   factory Kegiatan.fromJson(Map<String, dynamic> json) {
     return Kegiatan(
       id: json['id'] ?? 0,
+<<<<<<< HEAD
       namaKegiatan: json['nama_kegiatan'] ?? 'Tanpa Judul',
       prodiPenyelenggara: json['prodi_penyelenggara'],
       pemilikKegiatan: json['pemilik_kegiatan'],
@@ -143,11 +144,22 @@ class Kegiatan {
               .map((e) => TahapanPencairan.fromJson(e))
               .toList()
           : null,
+=======
+      namaKegiatan: json['nama_kegiatan'] ?? json['nama'] ?? 'Tanpa Judul',
+      prodiPenyelenggara: json['prodi_penyelenggara'] ?? json['prodi'],
+      pemilikKegiatan: json['pemilik_kegiatan'] ?? json['pengusul'],
+      nimPelaksana: json['nim_pelaksana'] ?? json['nim'],
+      jurusanPenyelenggara: json['jurusan_penyelenggara'] ?? json['jurusan'],
+      statusId: json['status'] is Map ? json['status']['id'] : null,
+      statusNama: json['status'] is Map
+          ? (json['status']['nama'] ?? 'Menunggu')
+          : (json['status']?.toString() ?? 'Menunggu'),
+>>>>>>> c0d5a63 (fix masalah field semua yang ga ke show di halaman utama)
       posisiId: json['posisi_id'],
       workflowProgress: json['workflow_progress'] as int?,
       tanggalMulai: json['tanggal_mulai'],
       tanggalSelesai: json['tanggal_selesai'],
-      createdAt: json['created_at'],
+      createdAt: json['created_at'] ?? json['tanggal_proses'] ?? json['tgl'],
       rawData: json,
     );
   }

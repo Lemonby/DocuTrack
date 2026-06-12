@@ -82,7 +82,6 @@ class AuthProvider extends ChangeNotifier {
   // Load/Refresh CAPTCHA
   Future<void> refreshCaptcha() async {
     _isCaptchaLoading = true;
-    _errorMessage = '';
     notifyListeners();
 
     try {
@@ -91,14 +90,12 @@ class AuthProvider extends ChangeNotifier {
         _captchaKey = result['key'];
         _captchaCodeText = result['code'];
       } else {
-        _errorMessage = result['message'];
         _captchaKey = 'error'; 
-        _captchaCodeText = 'REF!';
+        _captchaCodeText = '- - - -';
       }
     } catch (e) {
-      _errorMessage = 'Gagal memuat Captcha.';
       _captchaKey = 'error';
-      _captchaCodeText = 'OFF';
+      _captchaCodeText = '- - - -';
     } finally {
       _isCaptchaLoading = false;
       notifyListeners();
@@ -125,8 +122,9 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
       return true;
     } else {
-      _setError(result['message']);
-      refreshCaptcha(); // reload captcha on failure
+      _errorMessage = result['message'] ?? 'Login gagal.';
+      // Refresh captcha after failure so new captcha is ready
+      await refreshCaptcha();
       return false;
     }
   }

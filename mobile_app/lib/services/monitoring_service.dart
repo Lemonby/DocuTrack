@@ -7,10 +7,10 @@ class MonitoringService {
 
   MonitoringService(this._apiService);
 
-  Future<Map<String, dynamic>> getMonitoringList(String rolePrefix, {int page = 1}) async {
+  Future<Map<String, dynamic>> getMonitoringList(String rolePrefix, {int page = 1, bool isRiwayat = false}) async {
     try {
-      // Endpoint is 'riwayat' for verifikator, 'monitoring' for others.
-      String endpoint = rolePrefix == 'verifikator' ? 'riwayat' : 'monitoring';
+      // Endpoint is 'riwayat' for verifikator, or if isRiwayat is true, otherwise 'monitoring'.
+      String endpoint = (rolePrefix == 'verifikator' || isRiwayat) ? 'riwayat' : 'monitoring';
       
       final response = await _apiService.client.get('/v1/$rolePrefix/$endpoint', queryParameters: {'page': page});
       

@@ -28,11 +28,30 @@ class _UsulanDetailViewState extends State<UsulanDetailView> {
 
   Future<void> _loadData() async {
     final provider = context.read<UsulanProvider>();
+<<<<<<< HEAD
     final data = await provider.getUsulanDetail(widget.kegiatanId);
     
     if (mounted) {
       setState(() {
         _kegiatan = data;
+=======
+    
+    // Attempt to get from list first as a fast fallback/placeholder
+    final existing = provider.usulans.cast<Kegiatan?>().firstWhere((e) => e?.id == widget.kegiatanId, orElse: () => null);
+    if (existing != null && mounted) {
+      setState(() {
+        _kegiatan = existing;
+      });
+    }
+    
+    // Now fetch full detail from API
+    final detail = await provider.getUsulanDetail(widget.kegiatanId);
+    if (mounted) {
+      setState(() {
+        if (detail != null) {
+          _kegiatan = detail;
+        }
+>>>>>>> c0d5a63 (fix masalah field semua yang ga ke show di halaman utama)
         _isLoading = false;
       });
     }
@@ -58,6 +77,7 @@ class _UsulanDetailViewState extends State<UsulanDetailView> {
     else if (status.contains('Menunggu')) statusColor = Colors.blue;
 
     final kak = _kegiatan!.rawData?['kak'] ?? {};
+<<<<<<< HEAD
     final rab = kak['rab'] as List? ?? _kegiatan!.rawData?['rab'] as List? ?? [];
     final jadwal = kak['tahapan'] as List? ?? kak['indikator'] as List? ?? _kegiatan!.rawData?['jadwal'] as List? ?? [];
     
@@ -71,6 +91,34 @@ class _UsulanDetailViewState extends State<UsulanDetailView> {
         double v2 = double.tryParse((r['volume_2'] ?? r['vol2']).toString()) ?? 1;
         totalAnggaran += (hrg * v1 * v2);
       }
+=======
+    final rab = kak['rab'] as List? ?? [];
+    final listTahapan = kak['tahapan'] as List? ?? [];
+    final listIndikator = kak['indikator'] as List? ?? [];
+    
+    final List<String> namaBulan = [
+      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    ];
+
+    final List<Map<String, dynamic>> jadwal = listIndikator.map((ind) {
+      int? bul = int.tryParse(ind['bulan']?.toString() ?? '');
+      String bln = (bul != null && bul >= 1 && bul <= 12) ? namaBulan[bul - 1] : 'Bulan $bul';
+      return {
+        'bulan': bln,
+        'tahapan_pelaksanaan': '-', 
+        'indikator_keberhasilan': ind['indikator_keberhasilan'] ?? '-',
+        'target': ind['target_persen'] ?? 0,
+      };
+    }).toList();
+    
+    double totalAnggaran = 0;
+    for (var r in rab) {
+      double hrg = double.tryParse(r['harga']?.toString() ?? '0') ?? 0;
+      double v1 = double.tryParse(r['vol1']?.toString() ?? '1') ?? 1;
+      double v2 = double.tryParse(r['vol2']?.toString() ?? '1') ?? 1;
+      totalAnggaran += (hrg * v1 * v2);
+>>>>>>> c0d5a63 (fix masalah field semua yang ga ke show di halaman utama)
     }
 
     return Scaffold(
@@ -143,13 +191,25 @@ class _UsulanDetailViewState extends State<UsulanDetailView> {
                   const SizedBox(height: 16),
                   _buildDataRow('Jurusan', _kegiatan!.jurusanPenyelenggara ?? '-', 'Prodi', _kegiatan!.prodiPenyelenggara ?? '-'),
                   const SizedBox(height: 16),
-                  _buildDataRow('Wadir Tujuan', 'Wadir ${_kegiatan!.rawData?['wadir_tujuan'] ?? "-"}', 'Penerima Manfaat', kak['penerima_manfaat'] ?? '-'),
+                  _buildDataRow(
+                    'Wadir Tujuan', 
+                    _kegiatan!.rawData?['wadir'] ?? _kegiatan!.rawData?['wadir_tujuan'] ?? '-', 
+                    'Penerima Manfaat', 
+                    kak['penerima_manfaat'] ?? '-'
+                  ),
                   
                   const Padding(padding: EdgeInsets.symmetric(vertical: 20), child: Divider(height: 1)),
                   
                   _buildLongTextData('Gambaran Umum', kak['gambaran_umum'] ?? '-'),
                   const SizedBox(height: 16),
                   _buildLongTextData('Metode Pelaksanaan', kak['metode_pelaksanaan'] ?? '-'),
+                  if (listTahapan.isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    _buildLongTextData(
+                      'Tahapan Pelaksanaan',
+                      listTahapan.asMap().entries.map((e) => 'Tahap ${e.key + 1}: ${e.value['nama_tahapan']}').join('\n'),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -215,6 +275,69 @@ class _UsulanDetailViewState extends State<UsulanDetailView> {
                 ],
               ),
             ),
+            if (rab.isNotEmpty) ...[
+              const SizedBox(height: 24),
+              _buildCardWrapper(
+                title: 'Rincian Anggaran (RAB)',
+                icon: Icons.account_balance_wallet_rounded,
+                color: statusColor,
+                child: Column(
+                  children: rab.asMap().entries.map((entry) {
+                    final r = entry.value;
+                    double hrg = double.tryParse(r['harga']?.toString() ?? '0') ?? 0;
+                    double v1 = double.tryParse(r['vol1']?.toString() ?? '1') ?? 1;
+                    double v2 = double.tryParse(r['vol2']?.toString() ?? '1') ?? 1;
+                    double total = hrg * v1 * v2;
+                    
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade50,
+                        border: Border.all(color: Colors.grey.shade200),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  r['uraian'] ?? '-',
+                                  style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textDark, fontSize: 13),
+                                ),
+                              ),
+                              if (r['kategori'] != null)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: statusColor.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    r['kategori'].toString(),
+                                    style: TextStyle(color: statusColor, fontSize: 9, fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                            ],
+                          ),
+                          const Divider(height: 20),
+                          _buildRabDetailRow('Rincian', r['rincian'] ?? '-'),
+                          const SizedBox(height: 6),
+                          _buildRabDetailRow('Volume', '${v1.toStringAsFixed(0)} ${r['sat1'] ?? ""} x ${v2.toStringAsFixed(0)} ${r['sat2'] ?? ""}'),
+                          const SizedBox(height: 6),
+                          _buildRabDetailRow('Harga Satuan', _formatRupiah(hrg)),
+                          const SizedBox(height: 6),
+                          _buildRabDetailRow('Total', _formatRupiah(total), isTotal: true),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ],
             const SizedBox(height: 24),
 
             // Action Card
@@ -409,6 +532,23 @@ class _UsulanDetailViewState extends State<UsulanDetailView> {
         Text(label.toUpperCase(), style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: Colors.blueGrey, letterSpacing: 1)),
         const SizedBox(height: 4),
         Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.textDark, height: 1.3)),
+      ],
+    );
+  }
+
+  Widget _buildRabDetailRow(String label, String value, {bool isTotal = false}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: const TextStyle(fontSize: 12, color: Colors.blueGrey)),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: isTotal ? 13 : 12,
+            fontWeight: isTotal ? FontWeight.w900 : FontWeight.bold,
+            color: isTotal ? Colors.green.shade700 : AppTheme.textDark,
+          ),
+        ),
       ],
     );
   }
