@@ -21,6 +21,7 @@ class RiwayatController extends Controller
                 WorkflowService::STATUS_DITOLAK,
                 WorkflowService::STATUS_LPJ_DISETUJUI,
                 WorkflowService::STATUS_SELESAI,
+                WorkflowService::STATUS_DANA_DIBERIKAN_SEBAGIAN,
             ])
             ->latest()
             ->get();
@@ -64,6 +65,7 @@ class RiwayatController extends Controller
             'gambaran_umum' => $kegiatan->kak->gambaran_umum ?? '-',
             'metode_pelaksanaan' => $kegiatan->kak->metode_pelaksanaan ?? '-',
             'tahapan_kegiatan' => $kegiatan->kak ? $kegiatan->kak->tahapans->pluck('nama_tahapan')->implode("\n") : '',
+            'surat_pengantar' => $kegiatan->surat_pengantar,
             'tanggal_mulai' => $kegiatan->tanggal_mulai ? $kegiatan->tanggal_mulai->format('Y-m-d') : null,
             'tanggal_selesai' => $kegiatan->tanggal_selesai ? $kegiatan->tanggal_selesai->format('Y-m-d') : null,
         ];

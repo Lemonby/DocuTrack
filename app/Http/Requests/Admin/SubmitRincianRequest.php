@@ -19,7 +19,7 @@ class SubmitRincianRequest extends FormRequest
             'nim_nip_pj' => ['required', 'string', 'max:30'],
             'tanggal_mulai' => ['required', 'date'],
             'tanggal_selesai' => ['required', 'date', 'after_or_equal:tanggal_mulai'],
-            'surat_pengantar' => ['nullable', 'file', 'mimes:doc,docx,pdf', 'max:10240'],
+            'surat_pengantar' => ['nullable', 'file', 'mimes:pdf', 'max:5120'],
         ];
     }
 
@@ -37,8 +37,8 @@ class SubmitRincianRequest extends FormRequest
             'tanggal_selesai.required' => 'Tanggal selesai wajib diisi.',
             'tanggal_selesai.date' => 'Format tanggal selesai tidak valid.',
             'tanggal_selesai.after_or_equal' => 'Tanggal selesai harus sama atau setelah tanggal mulai.',
-            'surat_pengantar.mimes' => 'Format file surat pengantar harus berupa doc, docx, atau pdf.',
-            'surat_pengantar.max' => 'Ukuran file surat pengantar maksimal 10MB.',
+            'surat_pengantar.mimes' => 'Format file surat pengantar harus berupa pdf.',
+            'surat_pengantar.max' => 'Ukuran file surat pengantar maksimal 5MB.',
         ];
     }
 
@@ -49,7 +49,7 @@ class SubmitRincianRequest extends FormRequest
             if (isset($_FILES['surat_pengantar']) && $_FILES['surat_pengantar']['error'] === UPLOAD_ERR_INI_SIZE) {
                 // Hapus pesan kesalahan default "surat pengantar harus berupa file" jika ada
                 $validator->errors()->forget('surat_pengantar');
-                $validator->errors()->add('surat_pengantar', 'Ukuran file surat pengantar maksimal 10MB.');
+                $validator->errors()->add('surat_pengantar', 'Ukuran file surat pengantar maksimal 5MB.');
             }
         });
     }

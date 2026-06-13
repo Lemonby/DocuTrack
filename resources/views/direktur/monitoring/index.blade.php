@@ -189,7 +189,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <div class="line-bg"></div>
                             <div class="line-fill" style="width: calc(${getProgWidth(item.tahap_sekarang)}%)"></div>
                             <div class="relative w-full flex justify-between">
-                                ${['Usulan', 'Verifikasi', 'PPK', 'WD', 'Cair', 'LPJ'].map((s, i) => `
+                                ${['Pengajuan', 'Verifikasi', 'ACC PPK', 'ACC WD', 'Dana Cair', 'LPJ'].map((s, i) => `
                                     <div class="relative flex flex-col items-center">
                                         <div class="w-5 h-5 rounded-full border-[4px] border-white shadow-lg z-20 transition-all duration-1000 ${i <= getStageIdx(item.tahap_sekarang) ? 'bg-blue-600 scale-125 shadow-blue-200' : 'bg-slate-200'}"></div>
                                         <span class="absolute -bottom-10 text-[10px] font-black uppercase tracking-tighter transition-all duration-700 ${i <= getStageIdx(item.tahap_sekarang) ? 'text-blue-600 opacity-100' : 'text-slate-400 opacity-40'}">${s}</span>
@@ -214,7 +214,7 @@ document.addEventListener('DOMContentLoaded', function() {
         `; }).join('');
     }
 
-    function getStageIdx(stage) { const stages = ['Usulan', 'Verifikasi', 'PPK', 'WD', 'Cair', 'LPJ']; return Math.max(0, stages.indexOf(stage)); }
+    function getStageIdx(stage) { const stages = ['Pengajuan', 'Verifikasi', 'ACC PPK', 'ACC WD', 'Dana Cair', 'LPJ']; return Math.max(0, stages.indexOf(stage)); }
     function getProgWidth(stage) { const idx = getStageIdx(stage); return (idx / 5) * 100; }
 
     function getStatusStyle(status) {

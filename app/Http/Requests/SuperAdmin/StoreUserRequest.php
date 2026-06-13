@@ -16,7 +16,16 @@ class StoreUserRequest extends FormRequest
         return [
             'nama' => ['required', 'string', 'max:100'],
             'email' => ['required', 'email', 'unique:users,email'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'password' => [
+                'required',
+                'string',
+                \Illuminate\Validation\Rules\Password::min(8)
+                    ->letters()
+                    ->mixedCase()
+                    ->numbers()
+                    ->symbols(),
+                'confirmed',
+            ],
             'role' => ['required', 'string', 'exists:roles,name'],
             'nama_jurusan' => ['nullable', 'string', 'exists:jurusans,nama_jurusan'],
         ];

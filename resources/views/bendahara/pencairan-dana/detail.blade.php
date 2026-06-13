@@ -377,7 +377,7 @@
                             <span class="absolute -top-2 left-4 bg-white px-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Upload Surat</span>
                             <div class="text-sm font-semibold text-slate-700 min-h-[1.5rem] mt-1 flex items-center gap-2">
                                 @if(!empty($kegiatan_data['surat_pengantar']))
-                                    <a href="{{ asset('storage/' . $kegiatan_data['surat_pengantar']) }}" target="_blank" class="text-blue-600 hover:underline flex items-center gap-1.5">
+                                    <a href="{{ route('download.file', ['folder' => 'surat-pengantar', 'filename' => basename($kegiatan_data['surat_pengantar'])]) }}" target="_blank" class="text-blue-600 hover:underline flex items-center gap-1.5">
                                         <i class="fas fa-file-pdf text-red-500 text-base"></i>
                                         Lihat Surat Pengantar
                                     </a>
@@ -386,7 +386,7 @@
                                 @endif
                             </div>
                             @if(!empty($kegiatan_data['surat_pengantar']))
-                                <a href="{{ asset('storage/' . $kegiatan_data['surat_pengantar']) }}" download class="text-slate-400 hover:text-slate-600">
+                                <a href="{{ route('download.file', ['folder' => 'surat-pengantar', 'filename' => basename($kegiatan_data['surat_pengantar'])]) }}" download class="text-slate-400 hover:text-slate-600">
                                     <i class="fas fa-upload text-sm"></i>
                                 </a>
                             @else

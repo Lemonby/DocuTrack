@@ -18,19 +18,22 @@ class MonitoringController extends Controller
             ->get();
 
         $list_proposal = $kegiatanList->map(function ($kegiatan) {
-            $tahap = 'Pengajuan';
+            // Tentukan tahap berdasarkan pencapaian tertinggi
             if ($kegiatan->status_utama_id == WorkflowService::STATUS_SELESAI || $kegiatan->status_utama_id == WorkflowService::STATUS_LPJ_DISETUJUI) {
                 $tahap = 'LPJ';
-            } elseif ($kegiatan->status_utama_id == WorkflowService::STATUS_DANA_DIBERIKAN) {
-                $tahap = 'Dana Cair';
-            } elseif ($kegiatan->posisi_id == WorkflowService::POSITION_BENDAHARA) {
+            } elseif ($kegiatan->posisi_id == WorkflowService::POSITION_BENDAHARA || $kegiatan->status_utama_id == WorkflowService::STATUS_DANA_DIBERIKAN ||
+                $kegiatan->status_utama_id == WorkflowService::STATUS_DANA_DIBERIKAN_SEBAGIAN) {
+                // Jika sudah di Bendahara, berarti sudah melewati WD, maka masuk tahap Dana Cair
                 $tahap = 'Dana Cair';
             } elseif ($kegiatan->posisi_id == WorkflowService::POSITION_WADIR) {
                 $tahap = 'ACC WD';
             } elseif ($kegiatan->posisi_id == WorkflowService::POSITION_PPK) {
                 $tahap = 'ACC PPK';
-            } elseif ($kegiatan->posisi_id == WorkflowService::POSITION_VERIFIKATOR) {
+            } elseif ($kegiatan->posisi_id == WorkflowService::POSITION_VERIFIKATOR || ($kegiatan->posisi_id > WorkflowService::POSITION_VERIFIKATOR && $kegiatan->bukti_mak ==
+                    null)) {
                 $tahap = 'Verifikasi';
+            } else {
+                $tahap = 'Pengajuan';
             }
 
             return [

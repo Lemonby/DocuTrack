@@ -88,18 +88,22 @@ class MonitoringController extends Controller
 
     private function mapTahapDirektur(Kegiatan $kegiatan): string
     {
-        if ($kegiatan->lpj && $kegiatan->lpj->submitted_at) {
+        // Tentukan tahap berdasarkan pencapaian tertinggi
+        if ($kegiatan->status_utama_id == WorkflowService::STATUS_SELESAI || $kegiatan->status_utama_id == WorkflowService::STATUS_LPJ_DISETUJUI) {
             return 'LPJ';
+        } elseif ($kegiatan->posisi_id == WorkflowService::POSITION_BENDAHARA || $kegiatan->status_utama_id == WorkflowService::STATUS_DANA_DIBERIKAN ||
+            $kegiatan->status_utama_id == WorkflowService::STATUS_DANA_DIBERIKAN_SEBAGIAN) {
+            return 'Dana Cair';
+        } elseif ($kegiatan->posisi_id == WorkflowService::POSITION_WADIR) {
+            return 'ACC WD';
+        } elseif ($kegiatan->posisi_id == WorkflowService::POSITION_PPK) {
+            return 'ACC PPK';
+        } elseif ($kegiatan->posisi_id == WorkflowService::POSITION_VERIFIKATOR || ($kegiatan->posisi_id > WorkflowService::POSITION_VERIFIKATOR && $kegiatan->bukti_mak ==
+                null)) {
+            return 'Verifikasi';
+        } else {
+            return 'Pengajuan';
         }
-
-        return match ((int) $kegiatan->posisi_id) {
-            WorkflowService::POSITION_ADMIN => 'Usulan',
-            WorkflowService::POSITION_VERIFIKATOR => 'Verifikasi',
-            WorkflowService::POSITION_PPK => 'PPK',
-            WorkflowService::POSITION_WADIR => 'WD',
-            WorkflowService::POSITION_BENDAHARA => 'Cair',
-            default => 'Usulan',
-        };
     }
 
     private function mapStatusLabel(Kegiatan $kegiatan): string

@@ -168,7 +168,19 @@
                 </div>
                 <div class="space-y-2">
                     <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Password</label>
-                    <input type="password" name="password" required placeholder="Masukkan password user..." class="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:border-blue-500 transition-all outline-none">
+                    <div class="relative">
+                        <input type="password" id="user-password-input" name="password" required placeholder="Masukkan password user..." class="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:border-blue-500 transition-all outline-none pr-12" onkeyup="checkPasswordStrength(this.value, 'strength-bar', 'strength-text')">
+                        <button type="button" onclick="togglePasswordVisibility('user-password-input', 'eye-icon-create')" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
+                            <i id="eye-icon-create" class="fas fa-eye text-sm"></i>
+                        </button>
+                    </div>
+                    <div class="w-full bg-slate-100 h-1.5 rounded-full mt-2 overflow-hidden">
+                        <div id="strength-bar" class="h-full bg-slate-200 transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                    <div class="flex justify-between items-center mt-1">
+                        <span id="strength-text" class="text-[10px] font-bold text-slate-400">Sangat Lemah</span>
+                        <span class="text-[9px] text-slate-400 font-medium">Min. 8 karakter, huruf, angka & simbol</span>
+                    </div>
                 </div>
                 <div class="pt-4 flex justify-end gap-3">
                     <button type="button" class="close-modal px-6 py-3 bg-white border border-slate-200 text-slate-600 rounded-xl text-xs font-bold hover:bg-slate-50 transition-all">Cancel</button>
@@ -223,7 +235,19 @@
                 </div>
                 <div class="space-y-2">
                     <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Password (Kosongkan jika tidak ingin diubah)</label>
-                    <input type="password" name="password" placeholder="Masukkan password baru..." class="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:border-blue-500 transition-all outline-none">
+                    <div class="relative">
+                        <input type="password" id="edit-user-password-input" name="password" placeholder="Masukkan password baru..." class="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:border-blue-500 transition-all outline-none pr-12" onkeyup="checkPasswordStrength(this.value, 'edit-strength-bar', 'edit-strength-text')">
+                        <button type="button" onclick="togglePasswordVisibility('edit-user-password-input', 'eye-icon-edit')" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
+                            <i id="eye-icon-edit" class="fas fa-eye text-sm"></i>
+                        </button>
+                    </div>
+                    <div class="w-full bg-slate-100 h-1.5 rounded-full mt-2 overflow-hidden">
+                        <div id="edit-strength-bar" class="h-full bg-slate-200 transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                    <div class="flex justify-between items-center mt-1">
+                        <span id="edit-strength-text" class="text-[10px] font-bold text-slate-400">Sangat Lemah</span>
+                        <span class="text-[9px] text-slate-400 font-medium">Min. 8 karakter, huruf, angka & simbol</span>
+                    </div>
                 </div>
                 <div class="pt-4 flex justify-end gap-3">
                     <button type="button" class="close-modal px-6 py-3 bg-white border border-slate-200 text-slate-600 rounded-xl text-xs font-bold hover:bg-slate-50 transition-all">Cancel</button>
@@ -283,6 +307,60 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     window.dataUsers = @json($list_users);
+    
+    function togglePasswordVisibility(inputId, eyeIconId) {
+        const input = document.getElementById(inputId);
+        const icon = document.getElementById(eyeIconId);
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.className = 'fas fa-eye-slash text-sm';
+        } else {
+            input.type = 'password';
+            icon.className = 'fas fa-eye text-sm';
+        }
+    }
+
+    function checkPasswordStrength(password, barId, textId) {
+        const bar = document.getElementById(barId);
+        const text = document.getElementById(textId);
+        
+        if (!password) {
+            bar.style.width = '0%';
+            bar.className = 'h-full bg-slate-200 transition-all duration-300';
+            text.innerHTML = '<span class="text-slate-400">Sangat Lemah</span>';
+            return;
+        }
+
+        let strength = 0;
+        if (password.length >= 8) strength++;
+        if (/[A-Z]/.test(password) && /[a-z]/.test(password)) strength++;
+        if (/[0-9]/.test(password)) strength++;
+        if (/[^A-Za-z0-9]/.test(password)) strength++;
+
+        switch(strength) {
+            case 0:
+            case 1:
+                bar.style.width = '25%';
+                bar.className = 'h-full bg-rose-500 transition-all duration-300';
+                text.innerHTML = '<span class="text-rose-500 font-bold">Sangat Lemah</span>';
+                break;
+            case 2:
+                bar.style.width = '50%';
+                bar.className = 'h-full bg-amber-500 transition-all duration-300';
+                text.innerHTML = '<span class="text-amber-500 font-bold">Sedang</span>';
+                break;
+            case 3:
+                bar.style.width = '75%';
+                bar.className = 'h-full bg-blue-500 transition-all duration-300';
+                text.innerHTML = '<span class="text-blue-500 font-bold">Kuat</span>';
+                break;
+            case 4:
+                bar.style.width = '100%';
+                bar.className = 'h-full bg-emerald-500 transition-all duration-300';
+                text.innerHTML = '<span class="text-emerald-500 font-bold">Sangat Kuat</span>';
+                break;
+        }
+    }
 </script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {

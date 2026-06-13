@@ -18,6 +18,7 @@ class RiwayatController extends Controller
                         WorkflowService::STATUS_DANA_DIBERIKAN,
                         WorkflowService::STATUS_LPJ_DISETUJUI,
                         WorkflowService::STATUS_SELESAI,
+                        WorkflowService::STATUS_DANA_DIBERIKAN_SEBAGIAN,
                     ]);
             })
             ->latest()

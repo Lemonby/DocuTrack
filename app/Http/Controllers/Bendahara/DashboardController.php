@@ -15,17 +15,17 @@ class DashboardController extends Controller
         $stats = (new KegiatanService)->getBendaharaDashboardStats();
 
         $kegiatanList = Kegiatan::with(['statusUtama', 'user'])
-            ->where(function ($query) {
-                $query->where('posisi_id', '>=', WorkflowService::POSITION_BENDAHARA)
-                    ->orWhere('status_utama_id', WorkflowService::STATUS_DANA_DIBERIKAN);
-            })
+            ->whereIn('posisi_id', [WorkflowService::POSITION_ADMIN, WorkflowService::POSITION_BENDAHARA])
+            ->whereIn('status_utama_id', [WorkflowService::STATUS_DANA_DIBERIKAN, WorkflowService::STATUS_DANA_DIBERIKAN_SEBAGIAN])
             ->latest()
             ->get();
 
         $list_kak = $kegiatanList->map(function ($kegiatan) {
-            $statusLabel = $kegiatan->status_utama_id === WorkflowService::STATUS_DANA_DIBERIKAN
-                ? 'Sudah Dicairkan'
-                : 'Belum Dicairkan';
+            $statusLabel = match ($kegiatan->status_utama_id) {
+                WorkflowService::STATUS_DANA_DIBERIKAN => 'Sudah Dicairkan',
+                WorkflowService::STATUS_DANA_DIBERIKAN_SEBAGIAN => 'Sudah Dicairkan Sebagian',
+                default => 'Belum Dicairkan',
+            };
 
             return [
                 'id' => $kegiatan->kegiatan_id,
@@ -40,6 +40,8 @@ class DashboardController extends Controller
         })->toArray();
 
         $lpjList = Lpj::with(['kegiatan.user'])
+            ->whereNotNull('submitted_at')
+            ->where('status_id', 1)
             ->latest('submitted_at')
             ->get();
 

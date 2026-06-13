@@ -16,11 +16,14 @@ class PpkController extends Controller
         $kegiatanList = Kegiatan::with(['statusUtama', 'user'])
             ->where(function ($q) {
                 $q->where('posisi_id', '>=', WorkflowService::POSITION_PPK)
-                    ->orWhereIn('status_utama_id', [
-                        WorkflowService::STATUS_DANA_DIBERIKAN,
-                        WorkflowService::STATUS_LPJ_DISETUJUI,
-                        WorkflowService::STATUS_SELESAI,
-                    ]);
+                    ->orWhere(function ($sub) {
+                        $sub->whereIn('status_utama_id', [
+                            WorkflowService::STATUS_DANA_DIBERIKAN,
+                            WorkflowService::STATUS_LPJ_DISETUJUI,
+                            WorkflowService::STATUS_SELESAI,
+                            WorkflowService::STATUS_DANA_DIBERIKAN_SEBAGIAN,
+                        ])->whereNotNull('tanggal_pencairan');
+                    });
             })
             ->latest()
             ->get();
@@ -32,6 +35,7 @@ class PpkController extends Controller
                     WorkflowService::STATUS_DANA_DIBERIKAN,
                     WorkflowService::STATUS_LPJ_DISETUJUI,
                     WorkflowService::STATUS_SELESAI,
+                    WorkflowService::STATUS_DANA_DIBERIKAN_SEBAGIAN,
                 ])) {
                 $statusLabel = 'Disetujui';
             }

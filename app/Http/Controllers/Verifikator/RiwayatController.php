@@ -16,7 +16,13 @@ class RiwayatController extends Controller
                     ->orWhere(function ($q2) {
                         $q2->where('posisi_id', WorkflowService::POSITION_VERIFIKATOR)
                             ->where('status_utama_id', '!=', WorkflowService::STATUS_MENUNGGU);
-                    });
+                    })
+                    ->orWhereIn('status_utama_id', [
+                        WorkflowService::STATUS_DANA_DIBERIKAN,
+                        WorkflowService::STATUS_LPJ_DISETUJUI,
+                        WorkflowService::STATUS_SELESAI,
+                        WorkflowService::STATUS_DANA_DIBERIKAN_SEBAGIAN,
+                    ]);
             })
             ->latest()
             ->get();

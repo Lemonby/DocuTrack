@@ -96,6 +96,9 @@ class TelaahController extends Controller
             'gambaran_umum' => $kegiatan->kak->gambaran_umum ?? '-',
             'metode_pelaksanaan' => $kegiatan->kak->metode_pelaksanaan ?? '-',
             'kode_mak' => $kegiatan->bukti_mak ?? null,
+            'surat_pengantar' => $kegiatan->surat_pengantar,
+            'tanggal_mulai' => $kegiatan->tanggal_mulai ? $kegiatan->tanggal_mulai->format('Y-m-d') : null,
+            'tanggal_selesai' => $kegiatan->tanggal_selesai ? $kegiatan->tanggal_selesai->format('Y-m-d') : null,
         ];
 
         $catatan_revisi = null;

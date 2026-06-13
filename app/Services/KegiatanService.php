@@ -441,7 +441,10 @@ class KegiatanService
             $q->where(function ($sub) {
                 $sub->where('posisi_id', '>', 3)
                     ->whereNotNull('bukti_mak');
-            })->orWhereIn('status_utama_id', [5, 6, 8]);
+            })->orWhere(function ($sub2) {
+                $sub2->whereIn('status_utama_id', [5, 6, 8, 9])
+                     ->whereNotNull('jumlah_dicairkan');
+            });
         })->count();
 
         return [
@@ -463,7 +466,10 @@ class KegiatanService
             $q->where(function ($sub) {
                 $sub->where('posisi_id', '>', 4)
                     ->whereNotNull('bukti_mak');
-            })->orWhereIn('status_utama_id', [5, 6, 8]);
+            })->orWhere(function ($sub2) {
+                $sub2->whereIn('status_utama_id', [5, 6, 8, 9])
+                     ->whereNotNull('jumlah_dicairkan');
+            });
         })->count();
 
         return [

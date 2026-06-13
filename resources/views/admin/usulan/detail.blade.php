@@ -435,7 +435,7 @@
                         <span class="absolute -top-2 left-4 bg-white px-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Upload Surat</span>
                         <div class="text-sm font-semibold text-slate-700 min-h-[1.5rem] mt-0.5">
                             @if(!empty($kegiatan_data['surat_pengantar']))
-                                <a href="{{ asset('storage/' . $kegiatan_data['surat_pengantar']) }}" target="_blank" class="text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-2">
+                                <a href="{{ route('download.file', ['folder' => 'surat-pengantar', 'filename' => basename($kegiatan_data['surat_pengantar'])]) }}" target="_blank" class="text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-2">
                                     <i class="fas fa-file-alt"></i> {{ basename($kegiatan_data['surat_pengantar']) }}
                                 </a>
                             @else

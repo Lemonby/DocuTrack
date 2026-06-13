@@ -14,12 +14,13 @@ class RiwayatController extends Controller
             ->where(function ($q) {
                 // Approved by PPK: currently beyond PPK desk
                 $q->where('posisi_id', '>', WorkflowService::POSITION_PPK)
-                  // Or has reached final/cair stages (posisi_id might be 1 but status is 5, 6, or 8)
-                    ->orWhereIn('status_utama_id', [
-                        WorkflowService::STATUS_DANA_DIBERIKAN,
-                        WorkflowService::STATUS_LPJ_DISETUJUI,
-                        WorkflowService::STATUS_SELESAI,
-                    ]);
+                // Or has reached final/cair stages (posisi_id might be 1 but status is 5, 6, 8, or 9)
+                  ->orWhereIn('status_utama_id', [
+                      WorkflowService::STATUS_DANA_DIBERIKAN,
+                      WorkflowService::STATUS_LPJ_DISETUJUI,
+                      WorkflowService::STATUS_SELESAI,
+                      WorkflowService::STATUS_DANA_DIBERIKAN_SEBAGIAN,
+                  ]);
             })
             ->latest()
             ->get();

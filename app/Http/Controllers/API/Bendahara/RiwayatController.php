@@ -21,6 +21,7 @@ class RiwayatController extends Controller
                 WorkflowService::STATUS_DITOLAK,
                 WorkflowService::STATUS_LPJ_DISETUJUI,
                 WorkflowService::STATUS_SELESAI,
+                WorkflowService::STATUS_DANA_DIBERIKAN_SEBAGIAN,
             ])
             ->latest()
             ->paginate(15);

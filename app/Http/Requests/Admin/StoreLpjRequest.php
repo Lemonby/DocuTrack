@@ -31,6 +31,7 @@ class StoreLpjRequest extends FormRequest
             'realisasi' => ['nullable', 'array'],
             'realisasi.*.*' => ['required', 'numeric', 'min:0'],
             'bukti' => ['nullable', 'array'],
+            'bukti.*.*' => ['nullable', 'file', 'mimes:jpg,jpeg,png', 'max:2048'],
             'lpj_item_id' => ['nullable', 'array'],
             'realisasi_tanggal_mulai' => ['required', 'date'],
             'realisasi_tanggal_selesai' => ['required', 'date', 'after_or_equal:realisasi_tanggal_mulai'],
@@ -62,6 +63,9 @@ class StoreLpjRequest extends FormRequest
             'realisasi.*.*.required' => 'Realisasi belanja harus diisi.',
             'realisasi.*.*.numeric' => 'Realisasi belanja harus berupa angka.',
             'realisasi.*.*.min' => 'Realisasi belanja minimal 0.',
+            'bukti.*.*.file' => 'Bukti LPJ harus berupa file.',
+            'bukti.*.*.mimes' => 'Format file bukti LPJ harus berupa JPG atau PNG.',
+            'bukti.*.*.max' => 'Ukuran file bukti LPJ maksimal 2MB.',
         ];
     }
 }

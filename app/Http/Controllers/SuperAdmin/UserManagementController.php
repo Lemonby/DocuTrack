@@ -57,7 +57,15 @@ class UserManagementController extends Controller
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'jurusan' => ['required', 'string', 'max:255'],
             'role' => ['required', 'string', 'max:50'],
-            'password' => ['required', 'string', 'min:8'],
+            'password' => [
+                'required',
+                'string',
+                \Illuminate\Validation\Rules\Password::min(8)
+                    ->letters()
+                    ->mixedCase()
+                    ->numbers()
+                    ->symbols(),
+            ],
         ]);
 
         $user = User::create([
@@ -102,7 +110,15 @@ class UserManagementController extends Controller
         ];
 
         if ($request->filled('password')) {
-            $rules['password'] = ['required', 'string', 'min:8'];
+            $rules['password'] = [
+                'required',
+                'string',
+                \Illuminate\Validation\Rules\Password::min(8)
+                    ->letters()
+                    ->mixedCase()
+                    ->numbers()
+                    ->symbols(),
+            ];
         }
 
         $validated = $request->validate($rules);

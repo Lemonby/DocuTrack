@@ -441,6 +441,59 @@
                 </div>
             </div>
 
+            {{-- Section: Rincian Rancangan Kegiatan --}}
+            <div class="space-y-6 pt-4 border-t border-slate-100">
+                <h3 class="text-2xl font-black text-slate-800 tracking-tight">Rincian Rancangan Kegiatan</h3>
+                
+                <div class="space-y-6">
+                    {{-- Surat Pengantar --}}
+                    <div class="space-y-2">
+                        <label class="block text-xs font-bold text-slate-700">Surat Pengantar</label>
+                        <div class="relative border border-slate-200 rounded-2xl px-4 py-3 bg-white hover:border-slate-300 transition-all duration-200 flex items-center justify-between">
+                            <span class="absolute -top-2 left-4 bg-white px-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Upload Surat</span>
+                            <div class="text-sm font-semibold text-slate-700 min-h-[1.5rem] mt-1 flex items-center gap-2">
+                                @if(!empty($kegiatan_data['surat_pengantar']))
+                                    <a href="{{ route('download.file', ['folder' => 'surat-pengantar', 'filename' => basename($kegiatan_data['surat_pengantar'])]) }}" target="_blank" class="text-blue-600 hover:underline flex items-center gap-1.5">
+                                        <i class="fas fa-file-pdf text-red-500 text-base"></i>
+                                        Lihat Surat Pengantar
+                                    </a>
+                                @else
+                                    <span class="text-slate-400 italic">Belum ada berkas</span>
+                                @endif
+                            </div>
+                            @if(!empty($kegiatan_data['surat_pengantar']))
+                                <a href="{{ route('download.file', ['folder' => 'surat-pengantar', 'filename' => basename($kegiatan_data['surat_pengantar'])]) }}" download class="text-slate-400 hover:text-slate-600">
+                                    <i class="fas fa-upload text-sm"></i>
+                                </a>
+                            @else
+                                <i class="fas fa-upload text-slate-300 text-sm"></i>
+                            @endif
+                        </div>
+                    </div>
+
+                    {{-- Kurun Waktu Pelaksanaan --}}
+                    <div class="space-y-3">
+                        <span class="text-xs font-bold text-slate-700 block">Kurun Waktu Pelaksanaan</span>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="relative border border-slate-200 rounded-2xl px-4 py-3 bg-white hover:border-slate-300 transition-all duration-200 flex items-center justify-between">
+                                <span class="absolute -top-2 left-4 bg-white px-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tanggal Mulai</span>
+                                <div class="text-xs font-semibold text-slate-700 min-h-[1.5rem] mt-1">
+                                    {{ $kegiatan_data['tanggal_mulai'] ? \Carbon\Carbon::parse($kegiatan_data['tanggal_mulai'])->translatedFormat('d M Y') : '-' }}
+                                </div>
+                                <i class="far fa-calendar-alt text-slate-400 text-sm"></i>
+                            </div>
+                            <div class="relative border border-slate-200 rounded-2xl px-4 py-3 bg-white hover:border-slate-300 transition-all duration-200 flex items-center justify-between">
+                                <span class="absolute -top-2 left-4 bg-white px-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tanggal Selesai</span>
+                                <div class="text-xs font-semibold text-slate-700 min-h-[1.5rem] mt-1">
+                                    {{ $kegiatan_data['tanggal_selesai'] ? \Carbon\Carbon::parse($kegiatan_data['tanggal_selesai'])->translatedFormat('d M Y') : '-' }}
+                                </div>
+                                <i class="far fa-calendar-alt text-slate-400 text-sm"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {{-- Mata Anggaran Section - Finalized Info --}}
             @if(!empty($kegiatan_data['kode_mak']) && $kegiatan_data['kode_mak'] !== '-')
                 <div class="p-8 bg-blue-50/50 rounded-3xl border border-blue-100 flex flex-col md:flex-row items-center justify-between gap-6 animate-reveal">

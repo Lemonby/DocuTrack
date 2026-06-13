@@ -54,8 +54,8 @@ class SuperAdminCrudTest extends TestCase
         $createUserPayload = [
             'nama' => 'New Staff User',
             'email' => 'staff@example.com',
-            'password' => 'password12345',
-            'password_confirmation' => 'password12345',
+            'password' => 'SecureP@ssw0rd!',
+            'password_confirmation' => 'SecureP@ssw0rd!',
             'role' => 'Admin',
             'nama_jurusan' => $this->jurusan->nama_jurusan,
         ];

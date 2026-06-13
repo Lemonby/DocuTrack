@@ -10,7 +10,7 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        $password = Hash::make('password123');
+        $password = Hash::make('1Password321!#');
 
         $users = [
             ['nama' => 'Admin TI', 'email' => 'adminti@gmail.com', 'nama_jurusan' => 'Teknik Informatika dan Komputer', 'role' => 'Admin'],

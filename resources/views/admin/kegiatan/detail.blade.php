@@ -203,9 +203,13 @@
                     </div>
                     <h4 class="text-sm font-black text-slate-800 mb-1">Surat Pengantar</h4>
                     <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">DOKUMEN_PENDUKUNG.PDF</p>
-                    <button class="px-6 py-2 bg-white border border-slate-200 text-slate-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-colors shadow-sm">
-                        <i class="fas fa-eye mr-1"></i> LIHAT BERKAS
-                    </button>
+                                @if(!empty($detail_data['surat_pengantar']))
+                                    <a href="{{ route('download.secure', ['encrypted_path' => encrypt('surat-pengantar/' . basename($detail_data['surat_pengantar']))]) }}" target="_blank" class="px-6 py-2 bg-white border border-slate-200 text-slate-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-colors shadow-sm">
+                                        <i class="fas fa-eye mr-1"></i> LIHAT BERKAS (SECURE)
+                                    </a>
+                                @else
+                                    <span class="text-slate-400 italic">BELUM ADA BERKAS</span>
+                                @endif
                 </div>
             </div>
 

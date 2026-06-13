@@ -55,6 +55,7 @@ class AuthController extends Controller
         Session::put('role', $sessionRole);
         Session::put('spatie_role', $role);
         Session::put('jurusan', $user->nama_jurusan ?? '');
+        Session::put('profile_image', $user->foto_profil ? asset('storage/' . $user->foto_profil) : null);
 
         // Set cookie indicating user has logged in (used for session expiration tracking)
         Cookie::queue('was_logged_in', '1', 525600); // 1 year expiry

@@ -17,7 +17,16 @@ class UpdateProfileRequest extends FormRequest
         return [
             'nama' => ['sometimes', 'string', 'max:100'],
             'email' => ['sometimes', 'email', Rule::unique('users', 'email')->ignore($this->user()->user_id, 'user_id')],
-            'password' => ['sometimes', 'string', 'min:8', 'confirmed'],
+            'password' => [
+                'nullable',
+                'string',
+                \Illuminate\Validation\Rules\Password::min(8)
+                    ->letters()
+                    ->mixedCase()
+                    ->numbers()
+                    ->symbols(),
+                'confirmed',
+            ],
         ];
     }
 

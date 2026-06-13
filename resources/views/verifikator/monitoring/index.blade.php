@@ -54,10 +54,10 @@
                             $progress_color = $is_ditolak ? 'bg-red-500' : 'bg-gradient-to-r from-blue-500 to-indigo-500';
                             
                             $status_badge = match ($status_lower) {
-                                'approved'   => 'text-green-700 bg-green-100 border-green-200',
-                                'ditolak'    => 'text-red-700 bg-red-100 border-red-200',
-                                'in process' => 'text-blue-700 bg-blue-100 border-blue-200',
-                                default      => 'text-gray-700 bg-gray-100 border-gray-200',
+                                'approved', 'disetujui', 'dana diberikan' => 'text-green-700 bg-green-100 border-green-200',
+                                'ditolak'             => 'text-red-700 bg-red-100 border-red-200',
+                                'in process', 'proses', 'menunggu' => 'text-blue-700 bg-blue-100 border-blue-200',
+                                default                => 'text-gray-700 bg-gray-100 border-gray-200',
                             };
                         @endphp
                         <tr class="monitoring-row hover:bg-blue-50/30 transition-colors group" 

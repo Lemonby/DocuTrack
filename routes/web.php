@@ -9,7 +9,7 @@ Route::get('/', function () {
 });
 
 Route::get('/captcha', [CaptchaController::class, 'generate']);
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
 
 use App\Http\Controllers\Admin\AkunController;
 use App\Http\Controllers\Admin\KegiatanController;
@@ -47,6 +47,7 @@ use App\Http\Controllers\Wadir\MonitoringController as WadirMonitoringController
 use App\Http\Controllers\Wadir\RiwayatController as WadirRiwayatController;
 use App\Http\Controllers\Wadir\WadirController;
 use App\Http\Controllers\WebNotifikasiController;
+use App\Http\Controllers\FileController;
 use App\Http\Middleware\CheckDepartmentAccess;
 use App\Http\Middleware\CheckRole;
 
@@ -56,6 +57,10 @@ Route::middleware([CheckRole::class])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index']);
     Route::get('/cetak-kak/{id}', [CetakKakController::class, 'cetak'])->name('cetak.kak')->middleware(CheckDepartmentAccess::class);
     Route::get('/cetak-lpj/{id}', [CetakLpjController::class, 'cetak'])->name('cetak.lpj')->middleware(CheckDepartmentAccess::class);
+
+    // File download routes
+    Route::get('/download/{folder}/{filename}', [FileController::class, 'servePublicFile'])->name('download.file');
+    Route::get('/download-secure/{encrypted_path}', [FileController::class, 'serveSecureFile'])->name('download.secure');
 
     // Web Notification API routes
     Route::get('/api/notifikasi', [WebNotifikasiController::class, 'index']);

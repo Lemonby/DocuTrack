@@ -24,6 +24,7 @@ class LpjController extends Controller
         $query = Kegiatan::with(['statusUtama', 'user', 'lpj'])
             ->whereIn('status_utama_id', [
                 WorkflowService::STATUS_DANA_DIBERIKAN,
+                WorkflowService::STATUS_DANA_DIBERIKAN_SEBAGIAN,
                 6,
                 8,
             ]);

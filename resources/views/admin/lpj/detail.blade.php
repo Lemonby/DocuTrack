@@ -577,10 +577,9 @@
                                                                 </label>
                                                             @else
                                                                 @if(!empty($item['file_bukti']))
-                                                                    <a href="{{ asset('storage/' . $item['file_bukti']) }}" target="_blank" class="w-12 h-12 rounded-2xl bg-{{ $statusColor }}-50 text-{{ $statusColor }}-600 border border-{{ $statusColor }}-100 hover:bg-{{ $statusColor }}-600 hover:text-white transition-all shadow-sm active:scale-90 flex items-center justify-center">
-                                                                        <i class="fas fa-file-invoice text-xs"></i>
-                                                                    </a>
-                                                                @else
+                                                                   <a href="{{ route('download.file', ['folder' => 'lpj-bukti', 'filename' => basename($item['file_bukti'])]) }}" target="_blank" class="w-12 h-12 rounded-2xl bg-{{ $statusColor }}-50 text-{{ $statusColor }}-600 border border-{{ $statusColor }}-100 hover:bg-{{ $statusColor }}-600 hover:text-white transition-all shadow-sm active:scale-90 flex items-center justify-center">
+                                                                       <i class="fas fa-file-invoice text-xs"></i>
+                                                                   </a>                                                                @else
                                                                     <span class="text-[10px] font-bold text-slate-400 italic">No File</span>
                                                                 @endif
                                                             @endif
