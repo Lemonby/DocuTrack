@@ -39,6 +39,8 @@ class WorkflowService
 
     const STATUS_SELESAI = 8;
 
+    const STATUS_DANA_DIBERIKAN_SEBAGIAN = 9;
+
     private const WORKFLOW_ROUTING = [
         self::POSITION_ADMIN => self::POSITION_VERIFIKATOR,
         self::POSITION_VERIFIKATOR => self::POSITION_ADMIN,

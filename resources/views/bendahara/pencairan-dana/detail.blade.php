@@ -90,7 +90,7 @@
                 @endphp
                 <div class="absolute top-1/2 left-0 h-1 bg-{{ $progressColor }}-500 -translate-y-1/2 z-0 transition-all duration-1000" style="width: {{ $progressWidth }}"></div>
                 
-                @foreach(['Pengajuan', 'Verifikasi', 'Selesai'] as $index => $step)
+                @foreach(['Pengajuan', 'Proses', 'Selesai'] as $index => $step)
                     @php
                         $isCompleted = $isSelesai || ($index === 0) || ($index === 1 && $s !== 'menunggu' && $s !== 'review');
                         $isActive = ($index === 2 && $isSelesai) ||
@@ -588,14 +588,14 @@
                                     <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Catatan Bendahara</label>
                                     <div class="relative border border-slate-200 rounded-2xl px-4 py-3 bg-white hover:border-slate-300 transition-all duration-200">
                                         <span class="absolute -top-2 left-4 bg-white px-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Catatan / Komentar Bendahara</span>
-                                        <textarea name="catatan" rows="3" placeholder="Tambahkan instruksi khusus pencairan..." 
+                                        <textarea name="catatan_bendahara" rows="3" placeholder="Tambahkan instruksi khusus pencairan..." 
                                             class="w-full mt-2 bg-transparent outline-none text-slate-600 font-semibold text-xs leading-relaxed border-none focus:ring-0 p-0 resize-none"></textarea>
                                     </div>
                                 </div>
 
                                 <div class="pt-4">
                                     @php
-                                        $isDisabled = ($jumlah_dicairkan > 0 && strtolower($lpj_status) !== 'disetujui');
+                                        $isDisabled = ($jumlah_dicairkan > 0 && $jumlah_dicairkan == $anggaran_disetujui && strtolower($lpj_status) !== 'disetujui');
                                     @endphp
                                     <button type="button" onclick="submitPencairan()" 
                                         class="w-full py-5 {{ $isDisabled ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none' : 'bg-blue-600 text-white shadow-2xl shadow-blue-200 hover:bg-blue-700 hover:-translate-y-1' }} rounded-[1.5rem] font-black text-[11px] uppercase tracking-widest transition-all flex items-center justify-center gap-3 group"

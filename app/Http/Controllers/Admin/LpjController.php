@@ -143,7 +143,7 @@ class LpjController extends Controller
             }
         }
 
-        $grand_total_anggaran = (float) ($kegiatan->jumlah_dicairkan ?? 0);
+        $grand_total_anggaran = (float) ($kegiatan->dana_di_setujui ?? 0);
         if ($grand_total_anggaran <= 0) {
             if ($kegiatan->kak) {
                 foreach ($kegiatan->kak->rabs as $rab) {

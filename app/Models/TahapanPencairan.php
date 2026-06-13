@@ -6,12 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class TahapanPencairan extends Model
 {
+
+    protected $table = 'tahapan_pencairans';
     protected $primaryKey = 'tahapan_id';
-
     public $timestamps = false;
-
     const UPDATED_AT = null;
-
     const CREATED_AT = 'created_at';
 
     protected $fillable = [

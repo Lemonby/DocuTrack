@@ -20,7 +20,7 @@ class PencairanService
             $kegiatan = Kegiatan::lockForUpdate()->findOrFail($kegiatanId);
             
             $metode = $data['metode_pencairan'] ?? 'penuh';
-            $catatan = $data['catatan_bendahara'] ?? '';
+            $catatan = $data['catatan_bendahara'] ?? 'defaulth nya jir ini (service)';
             $jumlahCair = (float) ($data['jumlah_cair'] ?? 0);
             $isFinal = filter_var($data['is_final'] ?? true, FILTER_VALIDATE_BOOLEAN);
 
@@ -44,8 +44,13 @@ class PencairanService
                 'catatan_bendahara' => $catatan,
             ];
 
-            if ($isFinal || $metode === 'penuh') {
+            if ($metode === 'penuh') {
                 $updateData['status_utama_id'] = WorkflowService::STATUS_DANA_DIBERIKAN;
+                $updateData['posisi_id'] = WorkflowService::POSITION_ADMIN; // Lanjut ke Admin/Pengusul
+            } 
+
+            if ($metode === 'bertahap') {
+                $updateData['status_utama_id'] = WorkflowService::STATUS_DANA_DIBERIKAN_SEBAGIAN;
                 $updateData['posisi_id'] = WorkflowService::POSITION_ADMIN; // Lanjut ke Admin/Pengusul
             }
 

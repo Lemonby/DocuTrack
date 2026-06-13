@@ -90,13 +90,13 @@
             <div class="relative flex justify-between items-center max-w-4xl mx-auto">
                 <div class="absolute top-1/2 left-0 w-full h-1 bg-slate-100 -translate-y-1/2 z-0"></div>
                 @php
-                    $isSelesai = (isset($kegiatan) && $kegiatan->status_utama_id == 8) || strtolower($status) === 'selesai';
+                    $isSelesai = (isset($kegiatan) && $kegiatan->status_utama_id == 3) || strtolower($status) === 'selesai';
                     $progressColor = $isSelesai ? 'emerald' : $statusColor;
                     $progressWidth = $isSelesai ? 'w-full' : (strtolower($status) === 'revisi' ? 'w-1/3' : 'w-2/3');
                 @endphp
                 <div class="absolute top-1/2 left-0 {{ $progressWidth }} h-1 bg-{{ $progressColor }}-500 -translate-y-1/2 z-0 transition-all duration-1000"></div>
                 
-                @foreach(['Pengajuan', 'Verifikasi', 'Selesai'] as $index => $step)
+                @foreach(['Pengajuan', 'Proses', 'Selesai'] as $index => $step)
                     @php
                         $isCompleted = $isSelesai || 
                                       ($index === 0) || 

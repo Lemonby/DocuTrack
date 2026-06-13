@@ -67,7 +67,7 @@
                 @endphp
                 <div class="absolute top-1/2 left-0 {{ $progressWidth }} h-1 bg-{{ $progressColor }}-500 -translate-y-1/2 z-0 transition-all duration-1000"></div>
                 
-                @foreach(['Pengajuan', 'Verifikasi', 'Selesai'] as $index => $step)
+                @foreach(['Pengajuan', 'Proses', 'Selesai'] as $index => $step)
                     @php
                         $isCompleted = $isSelesai || 
                                       ($index === 0) || 

@@ -47,7 +47,6 @@ class PencairanDanaController extends Controller
         $kegiatan = (new KegiatanService)->getDetailLengkap((int) $id);
 
         $rab_data = [];
-        $anggaran_disetujui = 0;
         if ($kegiatan->kak) {
             foreach ($kegiatan->kak->rabs as $rab) {
                 $cat = $rab->kategori->nama_kategori ?? 'Lainnya';
@@ -60,10 +59,9 @@ class PencairanDanaController extends Controller
                     'sat2' => $rab->sat2,
                     'harga' => $rab->harga,
                 ];
-                $anggaran_disetujui += $rab->vol1 * ($rab->vol2 ?? 1) * $rab->harga;
             }
         }
-
+        $anggaran_disetujui = $kegiatan->dana_di_setujui ?? 0;
         $jumlah_dicairkan = (float) ($kegiatan->jumlah_dicairkan ?? 0);
         $sisa_dana = $anggaran_disetujui - $jumlah_dicairkan;
 
@@ -155,7 +153,7 @@ class PencairanDanaController extends Controller
             'tanggalTahapan.*' => 'required|date',
             'terminTahapan' => 'required|array',
             'terminTahapan.*' => 'required|string',
-            'catatan' => 'nullable|string',
+            'catatan_bendahara' => 'nullable|string',
         ]);
 
         $kegiatanId = (int) $request->input('kegiatanId');
@@ -179,10 +177,10 @@ class PencairanDanaController extends Controller
         $metode = count($tahapan) > 1 ? 'bertahap' : 'penuh';
 
         $payload = [
-            'metode' => $metode,
-            'catatan' => $request->input('catatan') ?? '',
+            'metode_pencairan' => $metode,
+            'catatan_bendahara' => $request->input('catatan_bendahara') ?? 'default nya jir ini (controller)',
             'tahapan' => $tahapan,
-            'jumlah' => $tahapan[0]['nominal'],
+            'jumlah_cair' => $tahapan[0]['nominal'],
             'tanggal' => $tahapan[0]['tanggal'],
         ];
 

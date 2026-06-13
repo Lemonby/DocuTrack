@@ -7,6 +7,7 @@ use App\Models\Kegiatan;
 use App\Services\KegiatanService;
 use App\Services\WorkflowService;
 use Illuminate\Http\Request;
+use App\Http\Requests\Admin\SubmitRincianRequest;
 
 class TelaahController extends Controller
 {
@@ -102,7 +103,7 @@ class TelaahController extends Controller
         return view('verifikator.telaah.show', compact('id', 'status', 'iku_data', 'rab_data', 'kegiatan_data', 'tahapan_pelaksanaan', 'indikator_keberhasilan', 'catatan_revisi', 'kegiatan'));
     }
 
-    public function store(Request $request, $id)
+    public function store(SubmitRincianRequest $request, $id)
     {
         $workflowService = new WorkflowService;
         $action = $request->input('action');

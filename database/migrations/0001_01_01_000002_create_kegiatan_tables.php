@@ -28,9 +28,8 @@ return new class extends Migration
             $table->dateTime('tanggal_pencairan')->nullable();
             $table->decimal('jumlah_dicairkan', 15, 2)->nullable();
             $table->decimal('dana_di_setujui', 15, 2)->nullable();
-            $table->string('metode_pencairan', 50)->nullable();
+            $table->enum('metode_pencairan', ['penuh', 'bertahap'])->default('penuh')->nullable();
             $table->text('catatan_bendahara')->nullable();
-            $table->text('pencairan_tahap_json')->nullable();
             $table->text('umpan_balik_verifikator')->nullable();
             $table->timestamps();
 
@@ -83,9 +82,9 @@ return new class extends Migration
             $table->string('sat2', 50)->nullable();
             $table->decimal('vol1', 10, 2);
             $table->decimal('vol2', 10, 2);
-            $table->decimal('harga', 10, 2);
-            $table->decimal('total_harga', 10, 2)->nullable();
-            $table->decimal('subtotal', 10, 2)->nullable();
+            $table->decimal('harga', 15, 2);
+            $table->decimal('total_harga', 15, 2)->nullable();
+            $table->decimal('subtotal', 15, 2)->nullable();
 
             $table->foreign('kak_id')->references('kak_id')->on('kaks')->cascadeOnDelete();
             $table->foreign('kategori_id')->references('kategori_rab_id')->on('kategori_rabs')->cascadeOnUpdate();
