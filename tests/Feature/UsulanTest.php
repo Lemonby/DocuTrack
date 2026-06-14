@@ -264,6 +264,152 @@ class UsulanTest extends TestCase
     }
 
     /**
+     * Test verifikator rejection action.
+     */
+    #[Test]
+    #[TestDox('Memastikan verifikator berhasil menolak usulan dan mencatat alasan penolakan')]
+    public function test_verifikator_telaah_reject_works(): void
+    {
+        // 1. Create users
+        $admin = User::create([
+            'nama' => 'Pengusul TI',
+            'email' => 'pengusul_reject@example.com',
+            'password' => Hash::make('password123'),
+            'nama_jurusan' => 'Teknik Informatika dan Komputer',
+            'status' => 'Aktif',
+        ]);
+        $admin->assignRole('Admin');
+
+        $verifikator = User::create([
+            'nama' => 'Verifikator TI',
+            'email' => 'verifikator_reject@example.com',
+            'password' => Hash::make('password123'),
+            'nama_jurusan' => 'Teknik Informatika dan Komputer',
+            'status' => 'Aktif',
+        ]);
+        $verifikator->assignRole('Verifikator');
+
+        // 2. Create a mock Kegiatan at verifikator position
+        $kegiatan = Kegiatan::create([
+            'nama_kegiatan' => 'Seminar Cloud Computing 2026',
+            'prodi_penyelenggara' => 'D4 Teknik Informatika',
+            'pemilik_kegiatan' => 'Pengusul TI',
+            'nim_pelaksana' => '19200388273',
+            'user_id' => $admin->user_id,
+            'jurusan_penyelenggara' => 'Teknik Informatika dan Komputer',
+            'status_utama_id' => WorkflowService::STATUS_MENUNGGU,
+            'wadir_tujuan' => 1,
+            'posisi_id' => WorkflowService::POSITION_VERIFIKATOR,
+        ]);
+
+        $kak = Kak::create([
+            'kegiatan_id' => $kegiatan->kegiatan_id,
+            'iku' => 'Meningkatkan IKU 1',
+            'gambaran_umum' => 'Deskripsi.',
+            'metode_pelaksanaan' => 'Online',
+        ]);
+
+        // 3. Post as verifikator to store endpoint with rejection action
+        $payload = [
+            'action' => 'reject',
+            'alasan_penolakan' => 'Dokumen pendukung kurang lengkap.',
+        ];
+
+        $response = $this->withSession([
+            'user_id' => $verifikator->user_id,
+            'role' => 'verifikator',
+        ])->post("/verifikator/telaah/store/{$kegiatan->kegiatan_id}", $payload);
+
+        // 4. Assert response redirect to verifikator index
+        $response->assertRedirect(route('verifikator.telaah.index'));
+        $response->assertSessionHas('success', 'Telaah berhasil disimpan.');
+
+        // 5. Assert database updates are saved correctly
+        $kegiatan->refresh();
+        $this->assertEquals(WorkflowService::POSITION_VERIFIKATOR, $kegiatan->posisi_id);
+        $this->assertEquals(WorkflowService::STATUS_DITOLAK, $kegiatan->status_utama_id);
+
+        // 6. Assert progress history and revisi comments were saved
+        $this->assertDatabaseHas('progress_histories', [
+            'kegiatan_id' => $kegiatan->kegiatan_id,
+            'status_id' => WorkflowService::STATUS_DITOLAK,
+            'changed_by_user_id' => $verifikator->user_id,
+        ]);
+    }
+
+    /**
+     * Test verifikator revision action.
+     */
+    #[Test]
+    #[TestDox('Memastikan verifikator berhasil meminta revisi usulan dengan catatan revisi')]
+    public function test_verifikator_telaah_revise_works(): void
+    {
+        // 1. Create users
+        $admin = User::create([
+            'nama' => 'Pengusul TI',
+            'email' => 'pengusul_revise@example.com',
+            'password' => Hash::make('password123'),
+            'nama_jurusan' => 'Teknik Informatika dan Komputer',
+            'status' => 'Aktif',
+        ]);
+        $admin->assignRole('Admin');
+
+        $verifikator = User::create([
+            'nama' => 'Verifikator TI',
+            'email' => 'verifikator_revise@example.com',
+            'password' => Hash::make('password123'),
+            'nama_jurusan' => 'Teknik Informatika dan Komputer',
+            'status' => 'Aktif',
+        ]);
+        $verifikator->assignRole('Verifikator');
+
+        // 2. Create a mock Kegiatan at verifikator position
+        $kegiatan = Kegiatan::create([
+            'nama_kegiatan' => 'Seminar Cloud Computing 2026',
+            'prodi_penyelenggara' => 'D4 Teknik Informatika',
+            'pemilik_kegiatan' => 'Pengusul TI',
+            'nim_pelaksana' => '19200388273',
+            'user_id' => $admin->user_id,
+            'jurusan_penyelenggara' => 'Teknik Informatika dan Komputer',
+            'status_utama_id' => WorkflowService::STATUS_MENUNGGU,
+            'wadir_tujuan' => 1,
+            'posisi_id' => WorkflowService::POSITION_VERIFIKATOR,
+        ]);
+
+        $kak = Kak::create([
+            'kegiatan_id' => $kegiatan->kegiatan_id,
+            'iku' => 'Meningkatkan IKU 1',
+            'gambaran_umum' => 'Deskripsi.',
+            'metode_pelaksanaan' => 'Online',
+        ]);
+
+        // 3. Post as verifikator to store endpoint with revise action
+        $payload = [
+            'action' => 'revise',
+            'catatan_revisi' => 'Mohon revisi bagian Gambaran Umum.',
+            'field_comments' => [
+                'kaks' => [
+                    'gambaran_umum' => 'Gambaran umum kurang mendalam.',
+                ]
+            ]
+        ];
+
+        $response = $this->withSession([
+            'user_id' => $verifikator->user_id,
+            'role' => 'verifikator',
+        ])->post("/verifikator/telaah/store/{$kegiatan->kegiatan_id}", $payload);
+
+        // 4. Assert response redirect to verifikator index
+        $response->assertRedirect(route('verifikator.telaah.index'));
+        $response->assertSessionHas('success', 'Telaah berhasil disimpan.');
+
+        // 5. Assert database updates are saved correctly
+        $kegiatan->refresh();
+        $this->assertEquals(WorkflowService::POSITION_ADMIN, $kegiatan->posisi_id);
+        $this->assertEquals(WorkflowService::STATUS_REVISI, $kegiatan->status_utama_id);
+    }
+
+    /**
      * Test PPK and Wadir approval resets active status to STATUS_MENUNGGU (1) under Opsi 2.
      */
     #[Test]

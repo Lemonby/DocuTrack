@@ -7,7 +7,6 @@ use App\Models\Kegiatan;
 use App\Services\KegiatanService;
 use App\Services\WorkflowService;
 use Illuminate\Http\Request;
-use App\Http\Requests\Admin\SubmitRincianRequest;
 
 class TelaahController extends Controller
 {
@@ -106,18 +105,33 @@ class TelaahController extends Controller
         return view('verifikator.telaah.show', compact('id', 'status', 'iku_data', 'rab_data', 'kegiatan_data', 'tahapan_pelaksanaan', 'indikator_keberhasilan', 'catatan_revisi', 'kegiatan'));
     }
 
-    public function store(SubmitRincianRequest $request, $id)
+    public function store(Request $request, $id)
     {
         $workflowService = new WorkflowService;
         $action = $request->input('action');
 
         if ($action == 'approve') {
+            $request->validate([
+                'kode_mak' => ['required', 'string'],
+                'dana_disetujui' => ['required', 'numeric', 'min:0'],
+                'umpan_balik_verifikator' => ['nullable', 'string'],
+            ], [
+                'kode_mak.required' => 'Kode MAK wajib diisi.',
+                'dana_disetujui.required' => 'Nominal dana yang disetujui wajib diisi.',
+            ]);
+
             $workflowService->moveToNextPosition($id, WorkflowService::POSITION_VERIFIKATOR, WorkflowService::STATUS_TELAH_DIVERIFIKASI, [
                 'kode_mak' => $request->input('kode_mak'),
                 'dana_disetujui' => $request->input('dana_disetujui'),
                 'umpan_balik' => $request->input('umpan_balik_verifikator'),
             ]);
         } elseif ($action == 'reject') {
+            $request->validate([
+                'alasan_penolakan' => ['required', 'string'],
+            ], [
+                'alasan_penolakan.required' => 'Alasan penolakan wajib diisi.',
+            ]);
+
             $workflowService->reject($id, WorkflowService::POSITION_VERIFIKATOR, $request->input('alasan_penolakan') ?? 'Ditolak Verifikator');
         } elseif ($action == 'revise') {
             $fieldComments = [];

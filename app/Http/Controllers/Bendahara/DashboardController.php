@@ -16,7 +16,7 @@ class DashboardController extends Controller
 
         $kegiatanList = Kegiatan::with(['statusUtama', 'user'])
             ->whereIn('posisi_id', [WorkflowService::POSITION_ADMIN, WorkflowService::POSITION_BENDAHARA])
-            ->whereIn('status_utama_id', [WorkflowService::STATUS_DANA_DIBERIKAN, WorkflowService::STATUS_DANA_DIBERIKAN_SEBAGIAN])
+            ->whereIn('status_utama_id', [WorkflowService::STATUS_DANA_DIBERIKAN, WorkflowService::STATUS_DANA_DIBERIKAN_SEBAGIAN, WorkflowService::STATUS_MENUNGGU])
             ->latest()
             ->get();
 
