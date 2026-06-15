@@ -147,7 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
             'telah_direvisi': { text: 'Telah Direvisi', cls: 'text-cyan-800 bg-cyan-100 border border-cyan-200', icon: 'fa-history' },
             'menunggu_upload': { text: 'Perlu Upload', cls: 'status-upload', icon: 'fa-upload' },
             'siap_submit': { text: 'Siap Submit', cls: 'text-blue-700 bg-blue-100 border border-blue-200', icon: 'fa-file-upload' },
-            'menunggu': { text: 'Menunggu', cls: 'status-wait', icon: 'fa-hourglass-half' },
+            'menunggu': { text: 'Menunggu', cls: 'text-blue-700 bg-blue-100 border border-blue-200', icon: 'fa-hourglass-half' },
         };
         return m[s] || { text: 'Tidak Diketahui', cls: 'text-red-800 bg-red-100 border border-red-200', icon: 'fa-question-circle' };
     }

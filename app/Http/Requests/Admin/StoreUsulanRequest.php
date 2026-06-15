@@ -73,6 +73,8 @@ class StoreUsulanRequest extends FormRequest
                         foreach ($items as $item) {
                             $uraian = trim($item['uraian'] ?? '');
                             $harga = (float) ($item['harga'] ?? 0);
+                            $vol1 = isset($item['vol1']) && $item['vol1'] !== '' ? (float) $item['vol1'] : null;
+                            $vol2 = isset($item['vol2']) && $item['vol2'] !== '' ? (float) $item['vol2'] : null;
 
                             if (empty($uraian)) {
                                 $fail("Setiap item belanja pada kategori '{$category}' harus memiliki uraian yang jelas.");
@@ -81,6 +83,16 @@ class StoreUsulanRequest extends FormRequest
                             }
                             if ($harga <= 0) {
                                 $fail("Harga untuk item '{$uraian}' pada kategori '{$category}' harus lebih besar dari 0.");
+
+                                return;
+                            }
+                            if ($vol1 === null || $vol1 <= 0) {
+                                $fail("Volume 1 untuk item '{$uraian}' pada kategori '{$category}' harus lebih besar dari 0.");
+
+                                return;
+                            }
+                            if ($vol2 !== null && $vol2 <= 0) {
+                                $fail("Volume 2 untuk item '{$uraian}' pada kategori '{$category}' harus lebih besar dari 0.");
 
                                 return;
                             }

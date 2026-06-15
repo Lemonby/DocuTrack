@@ -457,13 +457,13 @@
                 @if($kegiatan->posisi_id == 4)
                     <form action="{{ route('wadir.kegiatan.store', $id) }}" method="POST" class="space-y-6 w-full">
                         @csrf
-                        <h3 class="text-2xl font-black text-slate-800 tracking-tight">Panel Persetujuan</h3>
+                        <!-- <h3 class="text-2xl font-black text-slate-800 tracking-tight">Panel Persetujuan</h3>
                         
                         <div class="relative border border-slate-200 rounded-2xl px-4 py-3 bg-white hover:border-slate-300 transition-all duration-200">
                             <span class="absolute -top-2 left-4 bg-white px-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Catatan / Komentar Wadir</span>
                             <textarea name="notes" rows="3" placeholder="Berikan catatan jika diperlukan..." 
                                 class="w-full mt-2 bg-transparent outline-none text-slate-600 font-semibold text-xs leading-relaxed border-none focus:ring-0 p-0 resize-none"></textarea>
-                        </div>
+                        </div> -->
 
                         <div class="flex flex-col sm:flex-row justify-between items-center pt-8 border-t border-slate-100 gap-4">
                             <div>
@@ -480,7 +480,7 @@
                         </div>
                     </form>
                 @else
-                    <h3 class="text-2xl font-black text-slate-800 tracking-tight">Panel Persetujuan</h3>
+                    <!-- <h3 class="text-2xl font-black text-slate-800 tracking-tight">Panel Persetujuan</h3> -->
                     <div class="flex flex-col sm:flex-row justify-between items-center pt-8 border-t border-slate-100 gap-4 w-full">
                         <div>
                             <a href="{{ route('wadir.kegiatan.index') }}" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#187CFC] hover:bg-blue-700 text-white rounded-2xl transition font-black text-sm shadow-lg shadow-blue-200 active:scale-95">

@@ -146,7 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let icon = 'fa-info-circle';
         let text = statusRaw || 'Proses';
 
-        if (['disetujui', 'selesai'].includes(s)) {
+        if (['disetujui', 'selesai', 'dana diberikan sebagian'].includes(s)) {
             cls = 'text-emerald-700 bg-emerald-100 border-emerald-200';
             icon = 'fa-check-circle';
         } else if (['revisi'].includes(s)) {

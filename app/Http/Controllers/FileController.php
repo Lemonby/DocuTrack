@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Crypt;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -27,8 +28,13 @@ class FileController extends Controller
      * Download or View files securely using encrypted paths.
      * Accessible only by authenticated users.
      */
-    public function serveSecureFile($encryptedPath)
+    public function serveSecureFile(Request $request)
     {
+        $encryptedPath = $request->query('path');
+        if (!$encryptedPath) {
+            abort(400, 'Parameter path tidak ditemukan.');
+        }
+
         try {
             // Decrypt the file path using AES-256 (via Laravel Crypt)
             $path = Crypt::decryptString($encryptedPath);

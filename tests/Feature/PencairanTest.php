@@ -100,6 +100,7 @@ class PencairanTest extends TestCase
             'status_utama_id' => WorkflowService::STATUS_MENUNGGU,
             'wadir_tujuan' => 1,
             'posisi_id' => WorkflowService::POSITION_BENDAHARA,
+            'dana_di_setujui' => 50000.0,
         ]);
 
         $kak = Kak::create([
@@ -222,20 +223,45 @@ class PencairanTest extends TestCase
 
         // Assert database updates
         $kegiatan->refresh();
-        $this->assertEquals(100000.00, $kegiatan->jumlah_dicairkan);
+        $this->assertEquals(40000.00, $kegiatan->jumlah_dicairkan);
         $this->assertEquals('bertahap', $kegiatan->metode_pencairan);
-        $this->assertEquals(WorkflowService::STATUS_DANA_DIBERIKAN, $kegiatan->status_utama_id);
+        $this->assertEquals(WorkflowService::STATUS_DANA_DIBERIKAN_SEBAGIAN, $kegiatan->status_utama_id);
 
         $this->assertDatabaseHas('tahapan_pencairans', [
             'kegiatan_id' => $kegiatan->kegiatan_id,
             'termin' => 'Termin 1',
             'nominal' => 40000.00,
         ]);
+    }
 
-        $this->assertDatabaseHas('tahapan_pencairans', [
-            'kegiatan_id' => $kegiatan->kegiatan_id,
-            'termin' => 'Termin 2',
-            'nominal' => 60000.00,
+    /**
+     * Memastikan Bendahara dapat melihat KAK yang sudah dicairkan sebagian pada index.
+     */
+    #[Test]
+    #[TestDox('Memastikan Bendahara dapat melihat KAK yang sudah dicairkan sebagian pada index')]
+    public function test_bendahara_can_see_kegiatan_with_status_dana_diberikan_sebagian(): void
+    {
+        $kegiatan = Kegiatan::create([
+            'nama_kegiatan' => 'Pencairan Sebagian KAK',
+            'prodi_penyelenggara' => 'D4 Teknik Informatika',
+            'pemilik_kegiatan' => 'Pengusul Test',
+            'nim_pelaksana' => '12345678',
+            'user_id' => $this->pengusul->user_id,
+            'jurusan_penyelenggara' => 'Teknik Informatika dan Komputer',
+            'status_utama_id' => WorkflowService::STATUS_DANA_DIBERIKAN_SEBAGIAN,
+            'wadir_tujuan' => 1,
+            'posisi_id' => WorkflowService::POSITION_BENDAHARA,
         ]);
+
+        $response = $this->withSession([
+            'user_id' => $this->bendahara->user_id,
+            'role' => 'bendahara',
+        ])->get('/bendahara/pencairan-dana');
+
+        $response->assertStatus(200);
+        $listKak = $response->viewData('list_kak');
+        $this->assertNotEmpty($listKak);
+        $this->assertEquals('Pencairan Sebagian KAK', $listKak[0]['nama']);
+        $this->assertEquals('Sudah Dicairkan Sebagian', $listKak[0]['status']);
     }
 }

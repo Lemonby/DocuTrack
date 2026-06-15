@@ -143,7 +143,7 @@
                 <div>
                     <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-5 flex items-center gap-2">
                         <i class="fas fa-file-upload"></i> 
-                        <span>Dokumen Pendukung</span>
+                        <span>Dokumen Pendukung @if(empty($detail_data['surat_pengantar'])) <span class="text-rose-500">*</span> @endif</span>
                     </h3>
                     <div class="p-8 border-2 border-dashed rounded-2xl bg-slate-50 hover:bg-white transition-all cursor-pointer group relative
                         {{ $errors->has('surat_pengantar') ? 'border-red-400 hover:border-red-500' : 'border-slate-200 hover:border-blue-400' }}" id="dropzone">
@@ -154,7 +154,9 @@
                                 <i class="fas fa-cloud-upload-alt text-xl"></i>
                             </div>
                             <div class="text-center">
-                                <p class="text-sm font-bold text-slate-700" id="file-label">Unggah Surat Pengantar / Undangan</p>
+                                <p class="text-sm font-bold text-slate-700" id="file-label">
+                                    Unggah Surat Pengantar / Undangan @if(empty($detail_data['surat_pengantar'])) <span class="text-rose-500">*</span> @endif
+                                </p>
                                 <p class="text-[10px] text-slate-400 font-bold mt-1 uppercase tracking-widest">Format: PDF (Maks. 5MB)</p>
                             </div>
                         </div>
@@ -204,7 +206,7 @@
                     <h4 class="text-sm font-black text-slate-800 mb-1">Surat Pengantar</h4>
                     <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">DOKUMEN_PENDUKUNG.PDF</p>
                                 @if(!empty($detail_data['surat_pengantar']))
-                                    <a href="{{ route('download.secure', ['encrypted_path' => encrypt('surat-pengantar/' . basename($detail_data['surat_pengantar']))]) }}" target="_blank" class="px-6 py-2 bg-white border border-slate-200 text-slate-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-colors shadow-sm">
+                                    <a href="{{ route('download.file', ['folder' => 'surat-pengantar', 'filename' => basename($detail_data['surat_pengantar'])]) }}" target="_blank" class="px-6 py-2 bg-white border border-slate-200 text-slate-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-colors shadow-sm">
                                         <i class="fas fa-eye mr-1"></i> LIHAT BERKAS (SECURE)
                                     </a>
                                 @else

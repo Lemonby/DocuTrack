@@ -12,7 +12,7 @@ class RiwayatController extends Controller
     {
         $kegiatanList = Kegiatan::with(['statusUtama', 'user'])
             ->where(function ($q) {
-                $q->where('posisi_id', '>', WorkflowService::POSITION_VERIFIKATOR)
+                $q->where('bukti_mak', '!=', null)
                     ->orWhere(function ($q2) {
                         $q2->where('posisi_id', WorkflowService::POSITION_VERIFIKATOR)
                             ->where('status_utama_id', '!=', WorkflowService::STATUS_MENUNGGU);

@@ -60,7 +60,7 @@ Route::middleware([CheckRole::class])->group(function () {
 
     // File download routes
     Route::get('/download/{folder}/{filename}', [FileController::class, 'servePublicFile'])->name('download.file');
-    Route::get('/download-secure/{encrypted_path}', [FileController::class, 'serveSecureFile'])->name('download.secure');
+    Route::get('/download-secure', [FileController::class, 'serveSecureFile'])->name('download.secure');
 
     // Web Notification API routes
     Route::get('/api/notifikasi', [WebNotifikasiController::class, 'index']);
@@ -197,6 +197,10 @@ Route::middleware([CheckRole::class])->group(function () {
         Route::delete('/kelola-akun/destroy/{id}', [SuperAdminUserController::class, 'destroy'])->name('superadmin.users.destroy');
         Route::patch('/kelola-akun/toggle-status/{id}', [SuperAdminUserController::class, 'toggleStatus'])->name('superadmin.users.toggle-status');
         Route::get('/buat-iku', [SuperAdminIkuController::class, 'index'])->name('superadmin.iku.index');
+        Route::post('/buat-iku/store', [SuperAdminIkuController::class, 'store'])->name('superadmin.iku.store');
+        Route::post('/buat-iku/update', [SuperAdminIkuController::class, 'update'])->name('superadmin.iku.update');
+        Route::delete('/buat-iku/destroy/{id}', [SuperAdminIkuController::class, 'destroy'])->name('superadmin.iku.destroy');
+        Route::patch('/buat-iku/toggle-status/{id}', [SuperAdminIkuController::class, 'toggleStatus'])->name('superadmin.iku.toggle-status');
         Route::get('/monitoring', [SuperAdminController::class, 'monitoring'])->name('superadmin.monitoring');
         Route::post('/monitoring/ai-setting', [SuperAdminController::class, 'updateAiSetting'])->name('superadmin.ai.setting.update');
         Route::get('/akun', [SuperAdminAkunController::class, 'index'])->name('superadmin.akun.index');

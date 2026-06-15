@@ -3,12 +3,15 @@
 namespace Tests\Feature;
 
 use App\Services\FileUploadService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\TestDox;
 use Tests\TestCase;
 
 class FileUploadTest extends TestCase
 {
+    use RefreshDatabase;
+
     private FileUploadService $fileUploadService;
 
     private string $tempUploadPath;
@@ -181,6 +184,46 @@ class FileUploadTest extends TestCase
         $deleted = $this->fileUploadService->delete('kak/'.$info['filename']);
         $this->assertTrue($deleted);
         $this->assertFileDoesNotExist($absolutePath);
+    }
+
+    /**
+     * Memastikan route /download-secure/ dapat dipanggil sukses walaupun encrypted path mengandung slash.
+     */
+    #[Test]
+    #[TestDox('Memastikan route secure download berhasil menangani path terenkripsi yang mengandung slash')]
+    public function test_secure_file_download_route_with_slashes(): void
+    {
+        // Seed master data and roles/permissions
+        $this->seed(\Database\Seeders\MasterDataSeeder::class);
+        $this->seed(\Database\Seeders\RolePermissionSeeder::class);
+
+        // 1. Create a mock file in public storage disk
+        \Illuminate\Support\Facades\Storage::disk('public')->put('surat-pengantar/test_secure.pdf', 'fake-pdf-content');
+
+        // 2. Encrypt path
+        $encryptedPath = \Illuminate\Support\Facades\Crypt::encryptString('surat-pengantar/test_secure.pdf');
+
+        // 3. Create a mock user
+        $user = \App\Models\User::create([
+            'nama' => 'Test User',
+            'email' => 'test_secure@example.com',
+            'password' => \Illuminate\Support\Facades\Hash::make('password123'),
+            'nama_jurusan' => 'Teknik Informatika dan Komputer',
+            'status' => 'Aktif',
+        ]);
+
+        // 4. Access secure download endpoint as authenticated user using custom session mock
+        $response = $this->withSession([
+            'user_id' => $user->user_id,
+            'role' => 'admin',
+        ])->get(route('download.secure', ['path' => $encryptedPath]));
+
+        // 5. Assert successful download
+        $response->assertStatus(200);
+        $this->assertEquals('fake-pdf-content', $response->streamedContent());
+
+        // 6. Cleanup
+        \Illuminate\Support\Facades\Storage::disk('public')->delete('surat-pengantar/test_secure.pdf');
     }
 }
 

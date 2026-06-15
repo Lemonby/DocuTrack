@@ -99,7 +99,7 @@ class AuthTest extends TestCase
         $response = $this->post('/login', [
             'email' => 'test@example.com',
             'password' => 'password123',
-            'captcha_code' => 'WRONG_CAPTncfsdfcsdj',
+            'captcha_code' => 'WRONG_CAPT',
         ]);
 
         $response->assertRedirect();
@@ -132,7 +132,7 @@ class AuthTest extends TestCase
         ]);
 
         $response->assertRedirect();
-        $response->assertSessionHas('login_error', 'Email atau password salah.');
+        $response->assertSessionHasErrors(['password' => 'Kredensial yang Anda masukkan salah.']);
         $this->assertFalse(Session::has('user_id'));
     }
 

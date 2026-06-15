@@ -297,9 +297,33 @@ document.addEventListener('DOMContentLoaded', function() {
                 const id = this.dataset.id;
                 const iku = dataIku.find(i => i.id == id);
                 if (iku) {
-                    iku.status = this.checked ? 'Aktif' : 'Non-Aktif';
-                    showNotif(`"${iku.nama}" is now ${iku.status}`);
-                    updateStats();
+                    const originalStatus = iku.status;
+                    const newStatus = this.checked ? 'Aktif' : 'Non-Aktif';
+                    
+                    fetch(`{{ url('superadmin/buat-iku/toggle-status') }}/${id}`, {
+                        method: 'PATCH',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            iku.status = data.status;
+                            showNotif(data.message);
+                            updateStats();
+                        } else {
+                            this.checked = originalStatus === 'Aktif';
+                            showNotif('Failed to toggle status');
+                        }
+                    })
+                    .catch(err => {
+                        this.checked = originalStatus === 'Aktif';
+                        showNotif('An error occurred');
+                        console.error(err);
+                    });
                 }
             });
         });
@@ -313,7 +337,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     formIku.id.value = iku.id;
                     formIku.nama.value = iku.nama;
                     formIku.tahun_periode.value = iku.tahun_periode;
-                    formIku.target.value = iku.target;
+                    formIku.target.value = iku.target.replace('%', ''); // strip % if editing to avoid double-appending
                     formIku.deskripsi.value = iku.deskripsi;
                     const radio = formIku.querySelector(`input[name="type"][value="${iku.type}"]`);
                     if(radio) radio.checked = true;
@@ -350,40 +374,97 @@ document.addEventListener('DOMContentLoaded', function() {
         const id = formData.get('id');
         const type = formData.get('type');
         
-        const ikuData = {
-            id: id || Date.now(),
+        const url = id ? '{{ route("superadmin.iku.update") }}' : '{{ route("superadmin.iku.store") }}';
+        const bodyData = {
             type: type,
             nama: formData.get('nama'),
             tahun_periode: formData.get('tahun_periode'),
             target: formData.get('target'),
-            deskripsi: formData.get('deskripsi'),
-            capaian: '0%',
-            status: 'Aktif'
+            deskripsi: formData.get('deskripsi')
         };
-
         if (id) {
-            const index = dataIku.findIndex(i => i.id == id);
-            if (index !== -1) {
-                ikuData.capaian = dataIku[index].capaian;
-                ikuData.status = dataIku[index].status;
-                dataIku[index] = ikuData;
-            }
-            showNotif('Indicator updated successfully');
-        } else {
-            dataIku.unshift(ikuData);
-            showNotif('New indicator registered successfully');
+            bodyData.id = id;
         }
 
-        modalIku.classList.add('hidden');
-        applyFilters();
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn.textContent;
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Saving...';
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(bodyData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+            
+            if (data.success) {
+                const updatedIku = data.iku;
+                if (id) {
+                    const index = dataIku.findIndex(i => i.id == id);
+                    if (index !== -1) {
+                        dataIku[index] = updatedIku;
+                    }
+                } else {
+                    dataIku.unshift(updatedIku);
+                }
+                modalIku.classList.add('hidden');
+                applyFilters();
+                showNotif(data.message);
+            } else {
+                showNotif(data.message || 'Validation failed or error occurred');
+            }
+        })
+        .catch(err => {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+            showNotif('An error occurred while saving');
+            console.error(err);
+        });
     });
 
     document.getElementById('confirm-delete-btn').addEventListener('click', function() {
         if (deleteId) {
-            dataIku = dataIku.filter(i => i.id != deleteId);
-            modalDelete.classList.add('hidden');
-            applyFilters();
-            showNotif('Indicator removed from registry');
+            const deleteBtn = this;
+            const originalText = deleteBtn.textContent;
+            deleteBtn.disabled = true;
+            deleteBtn.textContent = 'Deleting...';
+
+            fetch(`{{ url('superadmin/buat-iku/destroy') }}/${deleteId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                deleteBtn.disabled = false;
+                deleteBtn.textContent = originalText;
+                
+                if (data.success) {
+                    dataIku = dataIku.filter(i => i.id != deleteId);
+                    modalDelete.classList.add('hidden');
+                    applyFilters();
+                    showNotif(data.message);
+                } else {
+                    showNotif('Failed to delete indicator');
+                }
+            })
+            .catch(err => {
+                deleteBtn.disabled = false;
+                deleteBtn.textContent = originalText;
+                showNotif('An error occurred while deleting');
+                console.error(err);
+            });
         }
     });
 

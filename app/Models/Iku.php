@@ -10,7 +10,7 @@ class Iku extends Model
 
     protected $table = 'ikus';
 
-    protected $fillable = ['kode_iku', 'indikator_kinerja', 'deskripsi', 'target', 'realisasi', 'tahun'];
+    protected $fillable = ['kode_iku', 'indikator_kinerja', 'deskripsi', 'target', 'realisasi', 'tahun', 'status'];
 
     protected function casts(): array
     {

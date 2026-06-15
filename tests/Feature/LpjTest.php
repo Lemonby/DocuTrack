@@ -135,7 +135,7 @@ class LpjTest extends TestCase
     public function test_admin_can_submit_lpj_via_web(): void
     {
         Storage::fake('public');
-        $file = UploadedFile::fake()->create('receipt.pdf', 100);
+        $file = UploadedFile::fake()->create('receipt.jpg', 100);
 
         $lpj = Lpj::create([
             'kegiatan_id' => $this->kegiatan->kegiatan_id,

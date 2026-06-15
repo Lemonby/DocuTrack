@@ -17,15 +17,20 @@ class PencairanDanaController extends Controller
         $kegiatanList = Kegiatan::with(['statusUtama', 'user'])
             ->where(function ($query) {
                 $query->where('posisi_id', '>=', WorkflowService::POSITION_BENDAHARA)
-                    ->orWhere('status_utama_id', WorkflowService::STATUS_DANA_DIBERIKAN);
+                    ->orWhere('status_utama_id', WorkflowService::STATUS_DANA_DIBERIKAN)
+                    ->orWhere('status_utama_id', WorkflowService::STATUS_DANA_DIBERIKAN_SEBAGIAN);
             })
             ->latest()
             ->get();
 
         $list_kak = $kegiatanList->map(function ($kegiatan) {
-            $statusLabel = $kegiatan->status_utama_id === WorkflowService::STATUS_DANA_DIBERIKAN
-                ? 'Sudah Dicairkan'
-                : 'Belum Dicairkan';
+            if ($kegiatan->status_utama_id === WorkflowService::STATUS_DANA_DIBERIKAN) {
+                $statusLabel = 'Sudah Dicairkan';
+            } elseif ($kegiatan->status_utama_id === WorkflowService::STATUS_DANA_DIBERIKAN_SEBAGIAN) {
+                $statusLabel = 'Sudah Dicairkan Sebagian';
+            } else {
+                $statusLabel = 'Belum Dicairkan';
+            }
 
             return [
                 'id' => $kegiatan->kegiatan_id,

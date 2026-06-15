@@ -15,6 +15,7 @@
                     <select id="filter-status" class="pl-9 pr-9 py-2.5 border border-gray-300 rounded-lg text-sm font-semibold focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all appearance-none cursor-pointer">
                         <option value="">Semua Status</option>
                         <option value="belum dicairkan">Belum Dicairkan</option>
+                        <option value="sudah dicairkan sebagian">Sudah Dicairkan Sebagian</option>
                         <option value="sudah dicairkan">Sudah Dicairkan</option>
                     </select>
                     <i class="fas fa-chevron-down absolute top-1/2 right-3 -translate-y-1/2 text-gray-500 pointer-events-none text-xs"></i>
@@ -96,7 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function badge(status) {
         const s = (status||'').toLowerCase();
         let cls = 'bg-blue-100 text-blue-700 border-blue-200';
-        if (['sudah dicairkan'].includes(s)) cls = 'bg-emerald-100 text-emerald-700 border-emerald-200';
+        if (['sudah dicairkan', 'sudah dicairkan sebagian'].includes(s)) cls = 'bg-emerald-100 text-emerald-700 border-emerald-200';
         else if (['belum dicairkan'].includes(s)) cls = 'bg-amber-100 text-amber-700 border-amber-200';
         return `<span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${cls}">${esc(status||'-')}</span>`;
     }

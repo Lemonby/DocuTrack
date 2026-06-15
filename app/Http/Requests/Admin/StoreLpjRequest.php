@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Models\LpjItem;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreLpjRequest extends FormRequest
@@ -38,6 +39,33 @@ class StoreLpjRequest extends FormRequest
         ];
     }
 
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            $uraian = $this->input('uraian', []);
+            $buktiFiles = $this->file('bukti', []);
+            $lpjItemIds = $this->input('lpj_item_id', []);
+
+            foreach ($uraian as $kategori => $items) {
+                foreach ($items as $index => $val) {
+                    $hasNewFile = isset($buktiFiles[$kategori][$index]) && $buktiFiles[$kategori][$index]->isValid();
+                    $lpjItemId = $lpjItemIds[$kategori][$index] ?? null;
+
+                    $hasExistingFile = false;
+                    if ($lpjItemId) {
+                        $hasExistingFile = LpjItem::where('lpj_item_id', $lpjItemId)
+                            ->whereNotNull('file_bukti')
+                            ->exists();
+                    }
+
+                    if (!$hasNewFile && !$hasExistingFile) {
+                        $validator->errors()->add("bukti.{$kategori}.{$index}", "Bukti transaksi untuk item \"{$val}\" wajib diunggah.");
+                    }
+                }
+            }
+        });
+    }
+
     public function messages(): array
     {
         return [
@@ -64,7 +92,7 @@ class StoreLpjRequest extends FormRequest
             'realisasi.*.*.numeric' => 'Realisasi belanja harus berupa angka.',
             'realisasi.*.*.min' => 'Realisasi belanja minimal 0.',
             'bukti.*.*.file' => 'Bukti LPJ harus berupa file.',
-            'bukti.*.*.mimes' => 'Format file bukti LPJ harus berupa JPG atau PNG.',
+            'bukti.*.*.mimes' => 'Format file bukti LPJ hanya bisa format JPG.',
             'bukti.*.*.max' => 'Ukuran file bukti LPJ maksimal 2MB.',
         ];
     }

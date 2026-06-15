@@ -30,4 +30,24 @@ class LoginRequest extends FormRequest
             'captcha_code.required' => 'Kode CAPTCHA wajib diisi.',
         ];
     }
+
+    public function after(): array
+    {   
+        return [
+            function (\Illuminate\Validation\Validator $validator) {
+                if ($validator->errors()->has('email') || $validator->errors()->has('password')) {
+                    return;
+                }
+
+                $email = $this->input('email');
+                $password = $this->input('password');
+
+                $user = \App\Models\User::where('email', $email)->first();
+
+                if ($user && !\Illuminate\Support\Facades\Hash::check($password, $user->password)) {
+                    $validator->errors()->add('password', 'Kredensial yang Anda masukkan salah.');
+                }
+            }
+        ];
+    }
 }

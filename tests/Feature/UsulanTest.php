@@ -760,4 +760,118 @@ class UsulanTest extends TestCase
             'id_referensi' => $kegiatan->kegiatan_id,
         ]);
     }
+
+    /**
+     * Test successful KAK/proposal submission fails with negative volumes.
+     */
+    #[Test]
+    #[TestDox('Memastikan usulan baru gagal divalidasi jika data RAB memiliki volume negatif')]
+    public function test_kegiatan_submission_fails_with_negative_volumes(): void
+    {
+        // 1. Create an Admin user
+        $admin = User::create([
+            'nama' => 'Admin Test',
+            'email' => 'admintest@example.com',
+            'password' => Hash::make('password123'),
+            'nama_jurusan' => 'Teknik Informatika dan Komputer',
+            'status' => 'Aktif',
+        ]);
+        $admin->assignRole('Admin');
+
+        // 2. Prepare mock request payload with negative vol1
+        $rabDataJson = json_encode([
+            'Belanja Barang' => [
+                [
+                    'uraian' => 'Kertas A4',
+                    'rincian' => '1 Rim',
+                    'vol1' => -2,
+                    'sat1' => 'Rim',
+                    'vol2' => 1,
+                    'sat2' => 'Rim',
+                    'harga' => 50000,
+                ],
+            ],
+        ]);
+
+        $payload = [
+            'nama_kegiatan' => 'Workshop UI/UX Modern 2026',
+            'prodi' => 'D4 Teknik Informatika',
+            'nama_pengusul' => 'Admin Test',
+            'nim_nip' => '19200388273',
+            'jurusan' => 'Teknik Informatika dan Komputer',
+            'wadir_tujuan' => 1,
+            'indikator_kinerja' => 'Meningkatkan keterampilan mahasiswa',
+            'gambaran_umum' => 'Deskripsi.',
+            'penerima_manfaat' => 'Mahasiswa',
+            'metode_pelaksanaan' => 'Offline',
+            'rab_data' => $rabDataJson,
+        ];
+
+        // 3. Post to store route
+        $response = $this->withSession([
+            'user_id' => $admin->user_id,
+            'role' => 'admin',
+        ])->post('/admin/pengajuan-usulan/store', $payload);
+
+        // 4. Assert response redirect back with validation errors
+        $response->assertStatus(302);
+        $response->assertSessionHasErrors(['rab_data']);
+    }
+
+    /**
+     * Test successful KAK/proposal submission fails with zero volume.
+     */
+    #[Test]
+    #[TestDox('Memastikan usulan baru gagal divalidasi jika data RAB memiliki volume atau harga bernilai nol')]
+    public function test_kegiatan_submission_fails_with_zero_volume_or_price(): void
+    {
+        // 1. Create an Admin user
+        $admin = User::create([
+            'nama' => 'Admin Test',
+            'email' => 'admintest@example.com',
+            'password' => Hash::make('password123'),
+            'nama_jurusan' => 'Teknik Informatika dan Komputer',
+            'status' => 'Aktif',
+        ]);
+        $admin->assignRole('Admin');
+
+        // 2. Prepare mock request payload with zero vol1
+        $rabDataJson = json_encode([
+            'Belanja Barang' => [
+                [
+                    'uraian' => 'Kertas A4',
+                    'rincian' => '1 Rim',
+                    'vol1' => 0,
+                    'sat1' => 'Rim',
+                    'vol2' => 1,
+                    'sat2' => 'Rim',
+                    'harga' => 50000,
+                ],
+            ],
+        ]);
+
+        $payload = [
+            'nama_kegiatan' => 'Workshop UI/UX Modern 2026',
+            'prodi' => 'D4 Teknik Informatika',
+            'nama_pengusul' => 'Admin Test',
+            'nim_nip' => '19200388273',
+            'jurusan' => 'Teknik Informatika dan Komputer',
+            'wadir_tujuan' => 1,
+            'indikator_kinerja' => 'Meningkatkan keterampilan mahasiswa',
+            'gambaran_umum' => 'Deskripsi.',
+            'penerima_manfaat' => 'Mahasiswa',
+            'metode_pelaksanaan' => 'Offline',
+            'rab_data' => $rabDataJson,
+        ];
+
+        // 3. Post to store route
+        $response = $this->withSession([
+            'user_id' => $admin->user_id,
+            'role' => 'admin',
+        ])->post('/admin/pengajuan-usulan/store', $payload);
+
+        // 4. Assert response redirect back with validation errors
+        $response->assertStatus(302);
+        $response->assertSessionHasErrors(['rab_data']);
+    }
 }

@@ -541,5 +541,117 @@ document.addEventListener('DOMContentLoaded', function() {
             notifMenu.classList.add('hidden');
         }
     });
+
+    // Notification logic
+    const notifCount = document.getElementById('notification-count');
+    const notifList = document.getElementById('notification-list');
+    const markAllBtn = document.getElementById('mark-all-as-read-btn');
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    function formatNotifTime(dateStr) {
+        const date = new Date(dateStr);
+        const now = new Date();
+        const diffMs = now - date;
+        const diffMins = Math.floor(diffMs / 60000);
+        if (diffMins < 1) return 'Baru saja';
+        if (diffMins < 60) return `${diffMins}m lalu`;
+        const diffHours = Math.floor(diffMins / 60);
+        if (diffHours < 24) return `${diffHours}j lalu`;
+        return date.toLocaleDateString('id-ID', {day: '2-digit', month: 'short'});
+    }
+
+    function fetchNotifications() {
+        fetch('/api/notifikasi')
+            .then(res => res.json())
+            .then(res => {
+                if (res.success && res.data) {
+                    const { items, unread_count } = res.data;
+                    
+                    // Update count badge
+                    if (unread_count > 0) {
+                        notifCount.textContent = unread_count;
+                        notifCount.classList.remove('hidden');
+                    } else {
+                        notifCount.classList.add('hidden');
+                    }
+
+                    // Update list
+                    if (!items || items.length === 0) {
+                        notifList.innerHTML = '<div class="text-center text-gray-500 py-6 text-xs font-semibold"><i class="fas fa-bell-slash text-2xl text-gray-300 block mb-2"></i>Tidak ada notifikasi...</div>';
+                    } else {
+                        notifList.innerHTML = items.map(item => {
+                            const isUnread = item.status === 'BELUM_DIBACA';
+                            const bgClass = isUnread ? 'bg-blue-50/70 hover:bg-blue-50' : 'hover:bg-gray-50';
+                            const unreadDot = isUnread ? '<span class="h-2 w-2 rounded-full bg-blue-600 inline-block flex-shrink-0"></span>' : '';
+                            const timeText = formatNotifTime(item.created_at);
+
+                            return `
+                                <div class="notification-item border-b border-gray-100 ${bgClass} transition-colors cursor-pointer" data-id="${item.id}" data-link="${item.link}">
+                                    <div class="px-4 py-3 flex items-start gap-3">
+                                        <div class="flex-1 min-w-0">
+                                            <div class="flex justify-between items-start gap-2">
+                                                <h4 class="text-xs font-bold text-gray-900 truncate">${escapeHtml(item.judul)}</h4>
+                                                <span class="text-[9px] text-gray-400 whitespace-nowrap mt-0.5">${timeText}</span>
+                                            </div>
+                                            <p class="text-xs text-gray-600 mt-1 leading-relaxed break-words">${escapeHtml(item.pesan)}</p>
+                                        </div>
+                                        ${unreadDot}
+                                    </div>
+                                </div>
+                            `;
+                        }).join('');
+                    }
+                }
+            })
+            .catch(err => console.error('Error fetching notifications:', err));
+    }
+
+    if (notifList) {
+        notifList.addEventListener('click', function(e) {
+            const item = e.target.closest('.notification-item');
+            if (item) {
+                e.preventDefault();
+                const id = item.dataset.id;
+                const link = item.dataset.link;
+                
+                fetch(`/api/notifikasi/baca/${id}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                        'Content-Type': 'application/json'
+                    }
+                }).finally(() => {
+                    window.location.href = link;
+                });
+            }
+        });
+    }
+
+    if (markAllBtn) {
+        markAllBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            fetch('/api/notifikasi/baca-semua', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    'Content-Type': 'application/json'
+                }
+            }).then(res => res.json()).then(data => {
+                if (data.success) {
+                    fetchNotifications();
+                }
+            }).catch(err => console.error('Error marking notifications as read:', err));
+        });
+    }
+
+    // Initial fetch and poll every 60 seconds
+    fetchNotifications();
+    setInterval(fetchNotifications, 60000);
 });
 </script>

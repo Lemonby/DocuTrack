@@ -190,4 +190,99 @@ class SuperAdminCrudTest extends TestCase
             'id' => $ikuId,
         ]);
     }
+
+    /**
+     * Memastikan SuperAdmin dapat melakukan operasi CRUD untuk mengelola IKU/Renstra melalui Web UI.
+     */
+    #[Test]
+    #[TestDox('Memastikan SuperAdmin dapat melakukan operasi CRUD untuk mengelola IKU/Renstra melalui Web UI')]
+    public function test_superadmin_web_iku_crud_operations(): void
+    {
+        // 1. View IKU page (GET /superadmin/buat-iku)
+        $response = $this->withSession([
+            'role' => 'superadmin',
+            'user_id' => $this->superAdmin->user_id,
+        ])->get('/superadmin/buat-iku');
+
+        $response->assertStatus(200);
+
+        // 2. Create IKU (POST /superadmin/buat-iku/store)
+        $createPayload = [
+            'type' => 'IKU',
+            'nama' => 'Indikator Baru Web',
+            'tahun_periode' => 2026,
+            'target' => '85%',
+            'deskripsi' => 'Deskripsi indikator baru',
+        ];
+
+        $createResponse = $this->withSession([
+            'role' => 'superadmin',
+            'user_id' => $this->superAdmin->user_id,
+        ])->postJson('/superadmin/buat-iku/store', $createPayload);
+
+        $createResponse->assertStatus(200)
+            ->assertJsonPath('success', true);
+
+        $ikuId = $createResponse->json('iku.id');
+        $this->assertDatabaseHas('ikus', [
+            'id' => $ikuId,
+            'indikator_kinerja' => 'Indikator Baru Web',
+            'tahun' => 2026,
+            'target' => '85%',
+            'status' => 'Aktif',
+        ]);
+
+        // 3. Toggle Status (PATCH /superadmin/buat-iku/toggle-status/{id})
+        $toggleResponse = $this->withSession([
+            'role' => 'superadmin',
+            'user_id' => $this->superAdmin->user_id,
+        ])->patchJson("/superadmin/buat-iku/toggle-status/{$ikuId}");
+
+        $toggleResponse->assertStatus(200)
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('status', 'Non-Aktif');
+
+        $this->assertDatabaseHas('ikus', [
+            'id' => $ikuId,
+            'status' => 'Non-Aktif',
+        ]);
+
+        // 4. Update IKU (POST /superadmin/buat-iku/update)
+        $updatePayload = [
+            'id' => $ikuId,
+            'type' => 'RENSTRA',
+            'nama' => 'Indikator Diperbarui Web',
+            'tahun_periode' => 2027,
+            'target' => '90%',
+            'deskripsi' => 'Deskripsi diperbarui',
+        ];
+
+        $updateResponse = $this->withSession([
+            'role' => 'superadmin',
+            'user_id' => $this->superAdmin->user_id,
+        ])->postJson('/superadmin/buat-iku/update', $updatePayload);
+
+        $updateResponse->assertStatus(200)
+            ->assertJsonPath('success', true);
+
+        $this->assertDatabaseHas('ikus', [
+            'id' => $ikuId,
+            'indikator_kinerja' => 'Indikator Diperbarui Web',
+            'tahun' => 2027,
+            'target' => '90%',
+        ]);
+
+        // 5. Delete IKU (DELETE /superadmin/buat-iku/destroy/{id})
+        $deleteResponse = $this->withSession([
+            'role' => 'superadmin',
+            'user_id' => $this->superAdmin->user_id,
+        ])->deleteJson("/superadmin/buat-iku/destroy/{$ikuId}");
+
+        $deleteResponse->assertStatus(200)
+            ->assertJsonPath('success', true);
+
+        $this->assertDatabaseMissing('ikus', [
+            'id' => $ikuId,
+        ]);
+    }
 }

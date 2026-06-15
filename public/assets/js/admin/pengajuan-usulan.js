@@ -221,14 +221,65 @@ document.addEventListener('DOMContentLoaded', () => {
                 for (const item of budgetData[category]) {
                     const uraian = (item.uraian || '').trim();
                     const harga = parseFloat(item.harga) || 0;
+                    const vol1 = parseFloat(item.vol1);
+                    const vol2 = parseFloat(item.vol2);
+
+                    let itemError = '';
+                    let fieldClass = '';
+                    let shortError = '';
+
                     if (!uraian) {
-                        hasInvalidItem = true;
-                        errorMessage = `Setiap item belanja pada kategori '${category}' harus memiliki uraian yang jelas.`;
-                        break;
+                        itemError = `Setiap item belanja pada kategori '${category}' harus memiliki uraian yang jelas.`;
+                        fieldClass = '.uraian';
+                        shortError = 'Wajib diisi';
+                    } else if (harga <= 0) {
+                        itemError = `Harga untuk item '${uraian}' pada kategori '${category}' harus lebih besar dari 0.`;
+                        fieldClass = '.harga';
+                        shortError = 'Harus > 0';
+                    } else if (isNaN(vol1) || vol1 <= 0) {
+                        itemError = `Volume 1 untuk item '${uraian}' pada kategori '${category}' harus lebih besar dari 0.`;
+                        fieldClass = '.vol1';
+                        shortError = 'Harus > 0';
+                    } else if (!isNaN(vol2) && vol2 <= 0) {
+                        itemError = `Volume 2 untuk item '${uraian}' pada kategori '${category}' harus lebih besar dari 0.`;
+                        fieldClass = '.vol2';
+                        shortError = 'Harus > 0';
                     }
-                    if (harga <= 0) {
+
+                    if (itemError) {
                         hasInvalidItem = true;
-                        errorMessage = `Harga untuk item '${uraian}' pada kategori '${category}' harus lebih besar dari 0.`;
+                        errorMessage = itemError;
+
+                        // Switch to the category containing the invalid item if needed
+                        if (activeCategory !== category) {
+                            activeCategory = category;
+                            renderRabSidebar();
+                            renderRabContent();
+                        }
+
+                        // Highlight specific input field and append warning below it
+                        setTimeout(() => {
+                            const row = activeStepElement.querySelector(`tr[data-item-id="${item.id}"]`);
+                            if (row) {
+                                const inputField = row.querySelector(fieldClass);
+                                if (inputField) {
+                                    inputField.classList.remove('border-gray-200');
+                                    inputField.classList.add('border-red-500', 'focus:border-red-500');
+                                    
+                                    const td = inputField.parentElement;
+                                    td.querySelectorAll('.error-msg').forEach(el => el.remove());
+                                    
+                                    const errorSpan = document.createElement('span');
+                                    errorSpan.className = 'error-msg text-red-500 text-[10px] mt-1 block font-medium';
+                                    errorSpan.textContent = shortError;
+                                    td.appendChild(errorSpan);
+
+                                    inputField.focus();
+                                    inputField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                }
+                            }
+                        }, 50);
+
                         break;
                     }
                 }
@@ -780,6 +831,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 4. Pre-fill RAB
         if (window.initialBudgetData && typeof window.initialBudgetData === 'object') {
+            // Assign a unique temporary ID to each item if it doesn't have one
+            let tempIdCounter = 1;
+            for (const category in window.initialBudgetData) {
+                if (Array.isArray(window.initialBudgetData[category])) {
+                    window.initialBudgetData[category] = window.initialBudgetData[category].map(item => {
+                        if (!item.hasOwnProperty('id') || item.id === undefined) {
+                            item.id = Date.now() + tempIdCounter++;
+                        }
+                        return item;
+                    });
+                }
+            }
+
             // Merge initial data into budgetData
             budgetData = { ...budgetData, ...window.initialBudgetData };
 

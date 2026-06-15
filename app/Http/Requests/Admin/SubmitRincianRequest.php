@@ -13,13 +13,17 @@ class SubmitRincianRequest extends FormRequest
 
     public function rules(): array
     {
+        $kegiatanId = $this->input('kegiatan_id');
+        $kegiatan = \App\Models\Kegiatan::find($kegiatanId);
+        $hasExistingFile = $kegiatan && !empty($kegiatan->surat_pengantar);
+
         return [
             'kegiatan_id' => ['required', 'integer', 'exists:kegiatans,kegiatan_id'],
             'penanggung_jawab' => ['required', 'string', 'max:100'],
             'nim_nip_pj' => ['required', 'string', 'max:30'],
             'tanggal_mulai' => ['required', 'date'],
             'tanggal_selesai' => ['required', 'date', 'after_or_equal:tanggal_mulai'],
-            'surat_pengantar' => ['nullable', 'file', 'mimes:pdf', 'max:5120'],
+            'surat_pengantar' => [$hasExistingFile ? 'nullable' : 'required', 'file', 'mimes:pdf', 'max:5120'],
         ];
     }
 
@@ -37,6 +41,7 @@ class SubmitRincianRequest extends FormRequest
             'tanggal_selesai.required' => 'Tanggal selesai wajib diisi.',
             'tanggal_selesai.date' => 'Format tanggal selesai tidak valid.',
             'tanggal_selesai.after_or_equal' => 'Tanggal selesai harus sama atau setelah tanggal mulai.',
+            'surat_pengantar.required' => 'Dokumen pendukung wajib diunggah.',
             'surat_pengantar.mimes' => 'Format file surat pengantar harus berupa pdf.',
             'surat_pengantar.max' => 'Ukuran file surat pengantar maksimal 5MB.',
         ];
