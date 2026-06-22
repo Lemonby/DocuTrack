@@ -231,6 +231,179 @@
                     </div>
                 </div>
 
+                @php
+                    $c1_values = $rankings->pluck('avg_c1');
+                    $c1_max = $c1_values->isNotEmpty() ? $c1_values->max() : 1.0;
+                    $c1_min = $c1_values->isNotEmpty() ? $c1_values->min() : 0.0;
+                    $c1_diff = $c1_max - $c1_min;
+
+                    $c2_values = $rankings->pluck('avg_c2');
+                    $c2_max = $c2_values->isNotEmpty() ? $c2_values->max() : 1.0;
+                    $c2_min = $c2_values->isNotEmpty() ? $c2_values->min() : 0.0;
+                    $c2_diff = $c2_max - $c2_min;
+
+                    $c3_values = $rankings->pluck('avg_c3');
+                    $c3_max = $c3_values->isNotEmpty() ? $c3_values->max() : 1.0;
+                    $c3_min = $c3_values->isNotEmpty() ? $c3_values->min() : 0.0;
+                    $c3_diff = $c3_max - $c3_min;
+
+                    $c4_values = $rankings->pluck('avg_c4');
+                    $c4_max = $c4_values->isNotEmpty() ? $c4_values->max() : 1.0;
+                    $c4_min = $c4_values->isNotEmpty() ? $c4_values->min() : 0.0;
+                    $c4_diff = $c4_max - $c4_min;
+                @endphp
+
+                <!-- MATRIKS & PROSES NORMALISASI MAUT -->
+                <div class="bg-white rounded-[2.5rem] p-6 md:p-8 border border-slate-100 shadow-xl shadow-slate-150 relative overflow-hidden mb-10">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+                        <div>
+                            <h2 class="text-2xl font-black text-slate-900 tracking-tight">Matriks &amp; Proses Normalisasi MAUT</h2>
+                            <p class="text-xs text-slate-400 font-medium">Langkah-langkah pemrosesan data kriteria jurusan menggunakan metode Multi-Attribute Utility Theory</p>
+                        </div>
+                        <div class="px-4 py-2 bg-blue-50 text-blue-700 rounded-xl text-xs font-black uppercase tracking-wider border border-blue-100">
+                            Proses SPK
+                        </div>
+                    </div>
+
+                    <!-- Grid Layout for Table 1 and Table 2 side by side -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+                        
+                        <!-- Table 1: Matriks Keputusan Awal -->
+                        <div class="bg-slate-50/50 rounded-3xl p-5 border border-slate-100">
+                            <h3 class="text-sm font-black text-slate-800 uppercase tracking-wider mb-4 flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                                Matriks Keputusan Awal (<i>x<sub>ij</sub></i>)
+                            </h3>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr class="border-b border-slate-200">
+                                            <th class="py-3 px-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Alternatif</th>
+                                            <th class="py-3 px-3 text-[10px] font-black uppercase tracking-widest text-slate-400 text-center">C1</th>
+                                            <th class="py-3 px-3 text-[10px] font-black uppercase tracking-widest text-slate-400 text-center">C2</th>
+                                            <th class="py-3 px-3 text-[10px] font-black uppercase tracking-widest text-slate-400 text-center">C3</th>
+                                            <th class="py-3 px-3 text-[10px] font-black uppercase tracking-widest text-slate-400 text-center">C4</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-100">
+                                        @foreach($rankings as $index => $rank)
+                                            <tr class="hover:bg-white transition-colors {{ $selectedJurusan === $rank['jurusan'] ? 'bg-blue-50/40 font-semibold' : '' }}">
+                                                <td class="py-3 px-3">
+                                                    <span class="font-black text-slate-800 text-xs">A<sub>{{ $index + 1 }}</sub></span>
+                                                    <span class="text-[10px] text-slate-400 font-bold uppercase ml-1">({{ $rank['jurusan'] }})</span>
+                                                </td>
+                                                <td class="py-3 px-3 text-center text-xs font-bold text-slate-700">{{ number_format($rank['avg_c1'], 4) }}</td>
+                                                <td class="py-3 px-3 text-center text-xs font-bold text-slate-700">{{ number_format($rank['avg_c2'], 4) }}</td>
+                                                <td class="py-3 px-3 text-center text-xs font-bold text-slate-700">{{ number_format($rank['avg_c3'], 4) }}</td>
+                                                <td class="py-3 px-3 text-center text-xs font-bold text-slate-700">{{ number_format($rank['avg_c4'], 4) }}</td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Table 2: Nilai Batas Kriteria (x_min, x_max, selisih) -->
+                        <div class="bg-slate-50/50 rounded-3xl p-5 border border-slate-100">
+                            <h3 class="text-sm font-black text-slate-800 uppercase tracking-wider mb-4 flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                Nilai Batas &amp; Selisih Kriteria (<i>x<sub>j</sub><sup>+</sup></i> / <i>x<sub>j</sub><sup>-</sup></i>)
+                            </h3>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr class="border-b border-slate-200">
+                                            <th class="py-3 px-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Kriteria</th>
+                                            <th class="py-3 px-3 text-[10px] font-black uppercase tracking-widest text-slate-400 text-center">Nilai Tertinggi (<i>x<sub>j</sub><sup>+</sup></i>)</th>
+                                            <th class="py-3 px-3 text-[10px] font-black uppercase tracking-widest text-slate-400 text-center">Nilai Terendah (<i>x<sub>j</sub><sup>-</sup></i>)</th>
+                                            <th class="py-3 px-3 text-[10px] font-black uppercase tracking-widest text-slate-400 text-center">Selisih (<i>x<sub>j</sub><sup>+</sup> - x<sub>j</sub><sup>-</sup></i>)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-100">
+                                        <!-- C1 -->
+                                        <tr class="hover:bg-white transition-colors">
+                                            <td class="py-3 px-3 text-xs font-black text-slate-800">C1 (Durasi)</td>
+                                            <td class="py-3 px-3 text-center text-xs font-semibold text-slate-600"><i>x<sub>1</sub><sup>+</sup></i> = {{ number_format($c1_max, 4) }}</td>
+                                            <td class="py-3 px-3 text-center text-xs font-semibold text-slate-600"><i>x<sub>1</sub><sup>-</sup></i> = {{ number_format($c1_min, 4) }}</td>
+                                            <td class="py-3 px-3 text-center text-xs font-bold text-slate-700"><i>x<sub>1</sub><sup>+</sup> - x<sub>1</sub><sup>-</sup></i> = {{ number_format($c1_diff, 4) }}</td>
+                                        </tr>
+                                        <!-- C2 -->
+                                        <tr class="hover:bg-white transition-colors">
+                                            <td class="py-3 px-3 text-xs font-black text-slate-800">C2 (Anggaran)</td>
+                                            <td class="py-3 px-3 text-center text-xs font-semibold text-slate-600"><i>x<sub>2</sub><sup>+</sup></i> = {{ number_format($c2_max, 4) }}</td>
+                                            <td class="py-3 px-3 text-center text-xs font-semibold text-slate-600"><i>x<sub>2</sub><sup>-</sup></i> = {{ number_format($c2_min, 4) }}</td>
+                                            <td class="py-3 px-3 text-center text-xs font-bold text-slate-700"><i>x<sub>2</sub><sup>+</sup> - x<sub>2</sub><sup>-</sup></i> = {{ number_format($c2_diff, 4) }}</td>
+                                        </tr>
+                                        <!-- C3 -->
+                                        <tr class="hover:bg-white transition-colors">
+                                            <td class="py-3 px-3 text-xs font-black text-slate-800">C3 (IKU)</td>
+                                            <td class="py-3 px-3 text-center text-xs font-semibold text-slate-600"><i>x<sub>3</sub><sup>+</sup></i> = {{ number_format($c3_max, 4) }}</td>
+                                            <td class="py-3 px-3 text-center text-xs font-semibold text-slate-600"><i>x<sub>3</sub><sup>-</sup></i> = {{ number_format($c3_min, 4) }}</td>
+                                            <td class="py-3 px-3 text-center text-xs font-bold text-slate-700"><i>x<sub>3</sub><sup>+</sup> - x<sub>3</sub><sup>-</sup></i> = {{ number_format($c3_diff, 4) }}</td>
+                                        </tr>
+                                        <!-- C4 -->
+                                        <tr class="hover:bg-white transition-colors">
+                                            <td class="py-3 px-3 text-xs font-black text-slate-800">C4 (LPJ)</td>
+                                            <td class="py-3 px-3 text-center text-xs font-semibold text-slate-600"><i>x<sub>4</sub><sup>+</sup></i> = {{ number_format($c4_max, 4) }}</td>
+                                            <td class="py-3 px-3 text-center text-xs font-semibold text-slate-600"><i>x<sub>4</sub><sup>-</sup></i> = {{ number_format($c4_min, 4) }}</td>
+                                            <td class="py-3 px-3 text-center text-xs font-bold text-slate-700">
+                                                @if($c4_diff > 0)
+                                                    <i>x<sub>4</sub><sup>+</sup> - x<sub>4</sub><sup>-</sup></i> = {{ number_format($c4_diff, 4) }}
+                                                @else
+                                                    0.0000
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Table 3: Matriks Utilitas Hasil Normalisasi (U_ij) -->
+                    <div class="bg-slate-50/50 rounded-3xl p-5 border border-slate-100">
+                        <h3 class="text-sm font-black text-slate-800 uppercase tracking-wider mb-4 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-violet-500"></span>
+                            Matriks Utilitas Hasil Normalisasi (<i>U<sub>ij</sub></i>)
+                        </h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="border-b border-slate-200">
+                                        <th class="py-3 px-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Alternatif</th>
+                                        <th class="py-3 px-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-center">uC1</th>
+                                        <th class="py-3 px-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-center">uC2</th>
+                                        <th class="py-3 px-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-center">uC3</th>
+                                        <th class="py-3 px-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-center">uC4</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    @foreach($rankings as $index => $rank)
+                                        @php
+                                            $u_c1 = $c1_diff == 0 ? 1.0 : round(($rank['avg_c1'] - $c1_min) / $c1_diff, 4);
+                                            $u_c2 = $c2_diff == 0 ? 1.0 : round(($rank['avg_c2'] - $c2_min) / $c2_diff, 4);
+                                            $u_c3 = $c3_diff == 0 ? 1.0 : round(($rank['avg_c3'] - $c3_min) / $c3_diff, 4);
+                                            $u_c4 = $c4_diff == 0 ? 1.0 : round(($rank['avg_c4'] - $c4_min) / $c4_diff, 4);
+                                        @endphp
+                                        <tr class="hover:bg-white transition-colors {{ $selectedJurusan === $rank['jurusan'] ? 'bg-blue-50/40 font-semibold' : '' }}">
+                                            <td class="py-3 px-4">
+                                                <span class="font-black text-slate-800 text-xs">A<sub>{{ $index + 1 }}</sub></span>
+                                                <span class="text-[10px] text-slate-400 font-bold uppercase ml-1">({{ $rank['jurusan'] }})</span>
+                                            </td>
+                                            <td class="py-3 px-4 text-center text-xs font-bold text-slate-700">{{ number_format($u_c1, 4) }}</td>
+                                            <td class="py-3 px-4 text-center text-xs font-bold text-slate-700">{{ number_format($u_c2, 4) }}</td>
+                                            <td class="py-3 px-4 text-center text-xs font-bold text-slate-700">{{ number_format($u_c3, 4) }}</td>
+                                            <td class="py-3 px-4 text-center text-xs font-bold text-slate-700">{{ number_format($u_c4, 4) }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+
                 <!-- ACTIVITIES SCORE TABLE BREAKDOWN -->
                 <div class="bg-white rounded-[2.5rem] p-6 md:p-8 border border-slate-100 shadow-xl shadow-slate-150 relative overflow-hidden">
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">

@@ -11,7 +11,7 @@ class CaptchaController extends Controller
         // Generate random 5 characters (omitting easily confused ones)
         $characters = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
         $captchaCode = '';
-        for ($i = 0; $i < 5; $i++) {
+        for ($i = 0; $i < 3; $i++) {
             $captchaCode .= $characters[rand(0, strlen($characters) - 1)];
         }
 

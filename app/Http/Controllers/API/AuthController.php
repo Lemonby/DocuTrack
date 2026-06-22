@@ -25,7 +25,7 @@ class AuthController extends Controller
      */
     public function captcha(): JsonResponse
     {
-        $code = strtoupper(Str::random(5));
+        $code = strtoupper(Str::random(4));
         $key = Str::uuid()->toString();
 
         Cache::put("captcha:{$key}", $code, now()->addMinutes(5));

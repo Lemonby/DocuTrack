@@ -74,7 +74,7 @@ class AcademicActivitiesSeeder extends Seeder
             $prodiName = $prodi ? $prodi->nama_prodi : $jurusan;
 
             // =========================================================================
-            // KATEGORI 1: 5 Usulan Menunggu Verifikator (Awaiting MAK)
+            // KATEGORI 1: 5 Usulan Telah Diverifikasi (status_utama_id == 7 & Ada MAK)
             // =========================================================================
             for ($i = 0; $i < 5; $i++) {
                 $namaKegiatan = $templatesMenunggu[$i].' '.$jurusan;
@@ -88,11 +88,12 @@ class AcademicActivitiesSeeder extends Seeder
                     'nama_pj' => 'PJ Kegiatan '.$jurusan,
                     'user_id' => $userId,
                     'jurusan_penyelenggara' => $jurusan,
-                    'status_utama_id' => 1, // Menunggu
-                    'posisi_id' => 2,       // Verifikator
+                    'status_utama_id' => 7, // Telah Diverifikasi
+                    'posisi_id' => 1,       // Admin (agar siap dilengkapi oleh Admin)
                     'wadir_tujuan' => 1,
                     'tanggal_mulai' => '2026-07-01',
                     'tanggal_selesai' => '2026-07-05',
+                    'bukti_mak' => 'MAK-'.strtoupper(substr(md5($jurusan.$i), 0, 8)), // Kode MAK terisi
                     'jumlah_dicairkan' => 12000000.00,
                 ]);
 
@@ -105,9 +106,13 @@ class AcademicActivitiesSeeder extends Seeder
                     'tgl_pembuatan' => '2026-06-01',
                 ]);
 
-                // Hubungkan IKU secara acak (1 s.d 3 IKU)
-                $ikus = Iku::inRandomOrder()->take(rand(1, 3))->get();
-                $kak->ikus()->sync($ikus->pluck('id')->toArray());
+                // Hubungkan IKU secara acak (1 s.d 3 IKU), kecuali untuk kegiatan pertama ($i === 0)
+                if ($i === 0) {
+                    $kak->ikus()->sync([]); // Tidak memiliki IKU
+                } else {
+                    $ikus = Iku::inRandomOrder()->take(rand(1, 3))->get();
+                    $kak->ikus()->sync($ikus->pluck('id')->toArray());
+                }
 
                 // 3. Indikator Keberhasilan (3 bulan)
                 for ($m = 1; $m <= 3; $m++) {
